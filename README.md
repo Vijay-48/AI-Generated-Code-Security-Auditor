@@ -1,70 +1,85 @@
-# 🛡️ AI-Generated Code Security Auditor
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vijay-48/ai-code-security-auditor/main/assets/logo-light.svg" alt="AI Code Security Auditor" width="360"/>
+</p>
 
-An automated security auditing service that scans code snippets or repository events, detects vulnerabilities, and generates ready-to-apply git diffs to fix them—powered by static analysis, retrieval-augmented generation (RAG), and the Deepseek R1 LLM via OpenRouter.
+<p align="center">
+  <b>Automated Security Audits with LLM-Powered Fixes</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Vijay-48/ai-code-security-auditor/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/your-org/ai-code-security-auditor.svg"></a>
+  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg"></a>
+  <a href="https://hub.docker.com/r/vijay48/ai-code-security-auditor"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/your-org/ai-code-security-auditor"></a>
+</p>
+
+---
+
+# 🔐 AI-Generated Code Security Auditor
+
+An automated security auditing service that scans code or repositories, detects vulnerabilities, and generates ready-to-apply **git diffs** using static analysis, RAG-enhanced context, and Deepseek R1 LLM via OpenRouter.
 
 ---
 
 ## 🚀 What It Does
 
 1. **Ingest Code**  
-   - Accepts raw code via REST API or GitHub push/PR webhooks.
+   Accepts raw code via REST API or GitHub push/PR webhooks.
 
 2. **Static Analysis**  
-   - Uses Bandit (for Python) and Semgrep (multi-language) to detect vulnerabilities.
+   Uses [Bandit](https://bandit.readthedocs.io/en/latest/) (Python) and [Semgrep](https://semgrep.dev/) (multi-language) for scanning.
 
 3. **Normalize Findings**  
-   - Unifies scanner output into a common schema: `ID`, `title`, `CWE`, `severity`, `snippet`, etc.
+   Outputs standardized vulnerability reports (CWE ID, severity, snippet, etc.).
 
-4. **Retrieval-Augmented Remediation**  
-   - Performs RAG lookups from ChromaDB (seeded with CWE-to-fix patterns).
+4. **RAG Remediation**  
+   Queries a ChromaDB vector store of fix patterns for the identified issues.
 
-5. **Diff Generation**  
-   - Prompts Deepseek R1 via OpenRouter to generate minimal, commented `git diff` patches.
+5. **LLM-Powered Diff Generation**  
+   Prompts Deepseek R1 via OpenRouter to generate secure, minimal git diff patches with in-line comments.
 
 6. **Patch Assessment**  
-   - LLM scores each fix on correctness, completeness, code quality, and performance impact.
+   Uses LLM scoring on correctness, quality, and performance impact.
 
 7. **Response Aggregation**  
-   - Returns a full JSON payload: scan results, vulnerability list, fix suggestions, diffs, and assessments.
+   Returns JSON with full audit results, patches, and fix quality scores.
 
-8. **CI/CD & GitHub Integration**  
-   - Can auto-comment on pull requests or apply fixes once approved via GitHub Actions/webhooks.
+8. **CI/CD Integration**  
+   Easily integrates with GitHub webhooks and Actions for automated security PR reviews.
 
 ---
 
 ## 🔑 Key Features
 
-- ✅ **Multi-Language Support**: Python, JavaScript, Java, Go (easily extendable).
-- 🧠 **Static + AI-Driven**: Combines deterministic analysis with LLM diff generation.
-- 📚 **Retrieval-Augmented Generation**: Uses vector DB of secure remediation templates.
-- 🔧 **Autonomous Patching**: Minimal and readable git diffs with inline comments.
-- 📊 **Quality Scoring**: Each patch rated 0–10 for transparency.
-- 🔐 **Secure Webhooks**: GitHub webhook payload verification via HMAC.
-- 📦 **Containerized**: Dockerfile + Compose for simple deployment.
+- 🔎 Static + LLM: Combines deterministic scanners with AI patching.
+- 🌐 Multi-Language Support: Python, JavaScript, Java, Go (extendable).
+- 💡 RAG-Driven: Fixes guided by best-practice CWE remediation patterns.
+- 🧠 Smart Patching: Diff includes only minimal, necessary edits.
+- 🎯 Quality Scoring: Fixes rated 0–10 for transparency.
+- 🔒 Secure: Verifies GitHub webhook payloads via HMAC signature.
+- 🐳 Containerized: Comes with Docker and Docker Compose support.
 
 ---
 
 ## 📦 Prerequisites
 
-- Docker Desktop (for containerized deployments)  
-- Python 3.11+ (for local development)  
-- OpenRouter API key (for Deepseek R1)  
-- (Optional) GitHub Personal Access Token & Webhook Secret  
+- Docker Desktop *(for container deployment)*
+- Python 3.11+ *(for local running)*
+- OpenRouter API Key (for Deepseek R1)
+- Optional: GitHub Personal Access Token and Webhook Secret
 
 ---
 
 ## ⚙️ Installation
 
-### 1. Clone the Repository
-
+### 1. Clone the repository
 ```bash
-git clone https://github.com/your-org/ai-code-security-auditor.git
+git clone https://github.com/Vijay-48/ai-code-security-auditor.git
 cd ai-code-security-auditor
 ````
 
-### 2. Configure Environment
+### 2. Configure your environment
 
-Copy `.env.example` to `.env` and fill in required values:
+Create and update your `.env`:
 
 ```ini
 OPENROUTER_API_KEY=sk-...
@@ -74,20 +89,20 @@ GITHUB_TOKEN=ghp_...
 GITHUB_WEBHOOK_SECRET=your_webhook_secret
 ```
 
-### 3. With Docker Compose
+### 3. Start the application
+
+**Using Docker Compose**
 
 ```bash
 docker compose up --build
+# App running at http://localhost:8000
 ```
 
-The app will be running at: [http://localhost:8000](http://localhost:8000)
-
-### 4. Without Docker
+**Or run locally**
 
 ```bash
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install --upgrade pip
+source venv/bin/activate  # (Windows: venv\Scripts\activate)
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
@@ -96,47 +111,32 @@ uvicorn app.main:app --reload
 
 ## 🛠 Configuration
 
-You can modify settings in `app/config.py` or via `.env`.
-
-| Variable                   | Default                    | Description                                |
-| -------------------------- | -------------------------- | ------------------------------------------ |
-| `OPENROUTER_API_KEY`       | *none*                     | API key for Deepseek R1 via OpenRouter     |
-| `OPENROUTER_REFERER`       | `http://localhost:8000`    | HTTP-Referer header for OpenRouter         |
-| `OPENROUTER_TITLE`         | `AI Code Security Auditor` | Title header for OpenRouter ranking        |
-| `GITHUB_TOKEN`             | *none*                     | GitHub token for API interactions          |
-| `GITHUB_WEBHOOK_SECRET`    | *none*                     | Secret to verify GitHub webhook payloads   |
-| `CHROMA_PERSIST_DIRECTORY` | `./chroma_db`              | Directory to persist Chroma vector store   |
-| `BANDIT_CONFIG_PATH`       | `./configs/bandit.yaml`    | Optional custom Bandit rules file          |
-| `SEMGREP_RULES_PATH`       | `./configs/semgrep-rules`  | Optional custom Semgrep rule set directory |
+| Variable                   | Default                   | Description                               |
+| -------------------------- | ------------------------- | ----------------------------------------- |
+| `OPENROUTER_API_KEY`       | *(required)*              | API key for Deepseek R1 via OpenRouter    |
+| `GITHUB_TOKEN`             | *(optional)*              | Used for commenting on PRs                |
+| `GITHUB_WEBHOOK_SECRET`    | *(optional)*              | Secret to verify incoming GitHub webhooks |
+| `CHROMA_PERSIST_DIRECTORY` | `./chroma_db`             | Local vector DB storage                   |
+| `BANDIT_CONFIG_PATH`       | `./configs/bandit.yaml`   | Custom Bandit rules (optional)            |
+| `SEMGREP_RULES_PATH`       | `./configs/semgrep-rules` | Custom Semgrep rules (optional)           |
 
 ---
 
 ## 📡 Usage
 
-### Health Check
+### ✅ Health Check
 
-```http
+```bash
 GET /health
+# Response: { "status": "ok", "version": "1.0.0" }
 ```
 
-**Response:**
+### 🔍 Audit Raw Code
 
-```json
-{ "status": "ok", "version": "1.0.0" }
-```
-
----
-
-### Audit Code
-
-```http
+```bash
 POST /audit
 Content-Type: application/json
-```
 
-**Body:**
-
-```json
 {
   "code": "import os\ndef insecure(): os.system('rm -rf /')",
   "language": "python",
@@ -144,65 +144,64 @@ Content-Type: application/json
 }
 ```
 
-**Response:**
+**Response JSON**
 
 ```json
 {
-  "scan_results": { … },
-  "vulnerabilities": [ … ],
-  "remediation_suggestions": [ … ],
-  "patches": [ … ],
-  "assessments": [ … ]
+  "scan_results": { ... },
+  "vulnerabilities": [ ... ],
+  "remediation_suggestions": [ ... ],
+  "patches": [ ... ],
+  "assessments": [ ... ]
 }
 ```
 
 ---
 
-### GitHub Webhook
+## 🔁 GitHub Webhook Setup
 
-In your GitHub repository:
+1. Go to `Settings → Webhooks → Add Webhook`
+2. Use:
 
-**Settings → Webhooks → Add webhook**
+   * **Payload URL**: `https://your-app.com/webhook/github`
+   * **Content type**: `application/json`
+   * **Secret**: your `GITHUB_WEBHOOK_SECRET`
+3. Enable on events: `Push`, `Pull requests`
 
-* **Payload URL**: `https://ai-security.viam.com/webhook/github`
-* **Content type**: `application/json`
-* **Secret**: Your `GITHUB_WEBHOOK_SECRET`
-* **Events**: *Pushes*, *Pull requests*
-
-The FastAPI app will handle `/webhook/github`, verify the `X-Hub-Signature-256`, and then audit changed files.
+Your FastAPI app will verify webhook signatures and auto-audit changed files.
 
 ---
 
-## 📁 Project Structure
+## 🧱 Project Structure
 
 ```bash
 .
 ├── app/
 │   ├── agents/
-│   │   └── security_agent.py        # LangGraph logic
+│   │   └── security_agent.py        # LangGraph security workflow
 │   ├── services/
-│   │   ├── scanner.py               # Bandit & Semgrep
-│   │   ├── rag_service.py           # ChromaDB RAG lookup
-│   │   └── llm_service.py           # Deepseek R1 via OpenRouter
+│   │   ├── scanner.py               # Bandit + Semgrep logic
+│   │   ├── rag_service.py           # ChromaDB lookup
+│   │   └── llm_service.py           # Deepseek R1 integration
 │   ├── main.py                      # FastAPI entrypoint
 │   └── config.py                    # Pydantic settings
 ├── data/
-│   ├── remediation_patterns/        # Optional fix templates
+│   ├── remediation_patterns/        # Fix template embeddings
 │   └── vulnerability_templates/
 ├── configs/
-│   ├── bandit.yaml                  # Bandit config override
-│   └── semgrep-rules/               # Custom Semgrep rules
-├── requirements.txt
+│   ├── bandit.yaml
+│   └── semgrep-rules/
 ├── Dockerfile
 ├── docker-compose.yml
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 🔄 CI/CD Integration
+## ⚙️ CI/CD Integration
 
-Example GitHub Actions workflow:
+Example **GitHub Action** for PRs:
 
 ```yaml
 name: Security Audit
@@ -216,18 +215,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Security Auditor
         run: |
-          curl -X POST https://ai-security.viam.com/audit \
+          curl -X POST https://your-app.com/audit \
             -H "Content-Type: application/json" \
             -d "$(jq -n '{ code: input, language: "python" }')"
 ```
-
-You can also auto-comment on PRs using the `GITHUB_TOKEN` and the JSON response.
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork and clone the repo.
-2. Create a branch: `git checkout -b feat/your-feature`
-3. Add tests under `tests/`
-4. Submit a pull request describing your change.
+We welcome PRs!
+
+```bash
+# Create a feature branch
+git checkout -b feat/your-feature
+
+# Add tests in `tests/`
+# Then open a PR 🚀
+```
