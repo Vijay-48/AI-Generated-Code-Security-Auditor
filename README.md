@@ -8,7 +8,6 @@
 
 <p align="center">
   <a href="https://github.com/Vijay-48/ai-code-security-auditor/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/your-org/ai-code-security-auditor.svg"></a>
-  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg"></a>
   <a href="https://hub.docker.com/r/vijay48/ai-code-security-auditor"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/your-org/ai-code-security-auditor"></a>
 </p>
 
