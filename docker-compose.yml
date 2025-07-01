@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_REFERER=${OPENROUTER_REFERER}
+      - OPENROUTER_TITLE=${OPENROUTER_TITLE}
+    volumes:
+      - ./chroma_db:/app/chroma_db

@@ -1,0 +1,105 @@
+A:\Project\ai-code-security-auditor\tests>pytest tests/test_scanner.py -v       # Test the Security Scanner
+INFO: Could not find files for the given pattern(s).
+ImportError while loading conftest 'A:\Project\ai-code-security-auditor\tests\conftest.py'.
+conftest.py:4: in <module>
+    from app.services.rag_service import RAGRemediationService
+..\app\services\rag_service.py:3: in <module>
+    from sentence_transformers import SentenceTransformer
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\__init__.py:14: in <module>
+    from sentence_transformers.cross_encoder import (
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py:3: in <module>
+    from .CrossEncoder import CrossEncoder
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py:19: in <module>
+    from transformers import (
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1955: in __getattr__
+    module = self._get_module(self._class_to_module[name])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1969: in _get_module
+    raise RuntimeError(
+E   RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+E   module 'torch' has no attribute 'compiler'
+
+A:\Project\ai-code-security-auditor\tests>pytest tests/test_rag_service.py -v   # Test RAG Knowledge Base
+INFO: Could not find files for the given pattern(s).
+ImportError while loading conftest 'A:\Project\ai-code-security-auditor\tests\conftest.py'.
+conftest.py:4: in <module>
+    from app.services.rag_service import RAGRemediationService
+..\app\services\rag_service.py:3: in <module>
+    from sentence_transformers import SentenceTransformer
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\__init__.py:14: in <module>
+    from sentence_transformers.cross_encoder import (
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py:3: in <module>
+    from .CrossEncoder import CrossEncoder
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py:19: in <module>
+    from transformers import (
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1955: in __getattr__
+    module = self._get_module(self._class_to_module[name])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1969: in _get_module
+    raise RuntimeError(
+E   RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+E   module 'torch' has no attribute 'compiler'
+
+A:\Project\ai-code-security-auditor\tests>pytest tests/test_llm_service.py -v   # Test AI Fix Generation
+INFO: Could not find files for the given pattern(s).
+ImportError while loading conftest 'A:\Project\ai-code-security-auditor\tests\conftest.py'.
+conftest.py:4: in <module>
+    from app.services.rag_service import RAGRemediationService
+..\app\services\rag_service.py:3: in <module>
+    from sentence_transformers import SentenceTransformer
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\__init__.py:14: in <module>
+    from sentence_transformers.cross_encoder import (
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py:3: in <module>
+    from .CrossEncoder import CrossEncoder
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py:19: in <module>
+    from transformers import (
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1955: in __getattr__
+    module = self._get_module(self._class_to_module[name])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1969: in _get_module
+    raise RuntimeError(
+E   RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+E   module 'torch' has no attribute 'compiler'
+
+A:\Project\ai-code-security-auditor\tests>pytest tests/test_agent.py -v         # Test the Security Agent
+INFO: Could not find files for the given pattern(s).
+ImportError while loading conftest 'A:\Project\ai-code-security-auditor\tests\conftest.py'.
+conftest.py:4: in <module>
+    from app.services.rag_service import RAGRemediationService
+..\app\services\rag_service.py:3: in <module>
+    from sentence_transformers import SentenceTransformer
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\__init__.py:14: in <module>
+    from sentence_transformers.cross_encoder import (
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py:3: in <module>
+    from .CrossEncoder import CrossEncoder
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py:19: in <module>
+    from transformers import (
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1955: in __getattr__
+    module = self._get_module(self._class_to_module[name])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1969: in _get_module
+    raise RuntimeError(
+E   RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+E   module 'torch' has no attribute 'compiler'
+
+A:\Project\ai-code-security-auditor\tests>pytest tests/test_api.py -v           # Test API Endpoints
+INFO: Could not find files for the given pattern(s).
+ImportError while loading conftest 'A:\Project\ai-code-security-auditor\tests\conftest.py'.
+conftest.py:4: in <module>
+    from app.services.rag_service import RAGRemediationService
+..\app\services\rag_service.py:3: in <module>
+    from sentence_transformers import SentenceTransformer
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\__init__.py:14: in <module>
+    from sentence_transformers.cross_encoder import (
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py:3: in <module>
+    from .CrossEncoder import CrossEncoder
+C:\Users\rocky\anaconda3\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py:19: in <module>
+    from transformers import (
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1955: in __getattr__
+    module = self._get_module(self._class_to_module[name])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\rocky\anaconda3\Lib\site-packages\transformers\utils\import_utils.py:1969: in _get_module
+    raise RuntimeError(
+E   RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+E   module 'torch' has no attribute 'compiler'
+
