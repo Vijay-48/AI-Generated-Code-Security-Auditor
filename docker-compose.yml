@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 version: '3.8'
 services:
   app:
@@ -10,3 +11,25 @@ services:
       - OPENROUTER_TITLE=${OPENROUTER_TITLE}
     volumes:
       - ./chroma_db:/app/chroma_db
+=======
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_REFERER=${OPENROUTER_REFERER}
+      - OPENROUTER_TITLE=${OPENROUTER_TITLE}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+    volumes:
+      - ./chroma_db:/usr/src/app/chroma_db
+      - ./data:/usr/src/app/data
+    # Force IPv4 to avoid connectivity issues
+    command: ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 1
+>>>>>>> 6beaaa9d992e786be91fc4cc04bf2dff00a41321

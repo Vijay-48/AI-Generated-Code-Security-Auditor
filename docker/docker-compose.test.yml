@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 services:
   app:
     command: ["pytest"]
     environment:
+=======
+services:
+  app:
+    command: ["pytest"]
+    environment:
+>>>>>>> 6beaaa9d992e786be91fc4cc04bf2dff00a41321
       - ENVIRONMENT=test

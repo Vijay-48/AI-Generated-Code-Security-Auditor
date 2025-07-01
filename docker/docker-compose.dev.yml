@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 services:
   app:
     build: .
@@ -5,4 +6,13 @@ services:
       - ./:/usr/src/app
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
+=======
+services:
+  app:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    environment:
+>>>>>>> 6beaaa9d992e786be91fc4cc04bf2dff00a41321
       - ENVIRONMENT=development
