@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 fastapi
 uvicorn[standard]
 sqlalchemy
@@ -18,25 +17,4 @@ aiofiles
 pydantic-settings
 langchain-community
 langchain-core
-=======
-fastapi
-uvicorn[standard]
-sqlalchemy
-alembic
-bandit
-semgrep
-langchain
-langchain-openai
-langgraph
-chromadb
-sentence-transformers
-httpx
-pytest
-pytest-asyncio
-python-multipart
-aiofiles
-pydantic-settings
-langchain-community
-langchain-core
->>>>>>> 6beaaa9d992e786be91fc4cc04bf2dff00a41321
 langchain-deepseek
