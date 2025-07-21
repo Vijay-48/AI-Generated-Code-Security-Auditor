@@ -200,6 +200,30 @@ def discover_files(path: str, include: tuple, exclude: tuple) -> List[Path]:
     path_obj = Path(path)
     files = []
     
+    # Default exclude patterns to prevent scanning too many files
+    default_excludes = [
+        '*/__pycache__/*',
+        '*/node_modules/*',
+        '*/.git/*',
+        '*/venv/*',
+        '*/env/*',
+        '*/myenv/*',
+        '*/.venv/*',
+        '*/build/*',
+        '*/dist/*',
+        '*/target/*',
+        '*.log',
+        '*.tmp',
+        '*.temp',
+        '*/.pytest_cache/*',
+        '*/.coverage*',
+        '*/htmlcov/*',
+        '*/chroma_db/*'
+    ]
+    
+    # Combine user excludes with defaults
+    all_excludes = list(exclude) + default_excludes
+    
     if path_obj.is_file():
         if path_obj.suffix in SUPPORTED_EXTENSIONS:
             files.append(path_obj)
@@ -209,7 +233,7 @@ def discover_files(path: str, include: tuple, exclude: tuple) -> List[Path]:
                 if file_path.is_file():
                     files.append(file_path)
     
-    # Apply include/exclude patterns
+    # Apply include patterns first
     if include:
         included_files = []
         for file_path in files:
@@ -219,11 +243,12 @@ def discover_files(path: str, include: tuple, exclude: tuple) -> List[Path]:
                     break
         files = included_files
     
-    if exclude:
+    # Apply exclude patterns (including defaults)
+    if all_excludes:
         filtered_files = []
         for file_path in files:
             excluded = False
-            for pattern in exclude:
+            for pattern in all_excludes:
                 if fnmatch.fnmatch(str(file_path), pattern):
                     excluded = True
                     break
