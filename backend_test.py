@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any
 
 # Test configuration
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8001"
 HEADERS = {"Content-Type": "application/json"}
 
 # Test data - vulnerable code samples
