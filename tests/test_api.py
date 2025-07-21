@@ -24,4 +24,4 @@ def test_health_check():
 
 def test_invalid_request():
     response = client.post("/audit", json={"code": "", "language": ""})
-    assert response.status_code == 400
+    assert response.status_code == 422
