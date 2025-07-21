@@ -14,7 +14,7 @@ app = FastAPI(
 # Add metrics middleware
 app.add_middleware(MetricsMiddleware)
 
-agent = SecurityAgent()
+# Remove global agent instance - create fresh ones per request
 
 class AuditRequest(BaseModel):
     code: str
