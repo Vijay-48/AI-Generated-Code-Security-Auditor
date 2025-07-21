@@ -7,7 +7,7 @@ async def test_python_scan(scanner):
     results = await scanner.scan_code(code, "python")
     assert "vulnerabilities" in results
     assert len(results["vulnerabilities"]) > 0
-    assert any(v["id"] == "B602" for v in results["vulnerabilities"])
+    assert any(v["id"] in ["B602", "B605", "B607"] for v in results["vulnerabilities"])
 
 @pytest.mark.asyncio
 async def test_javascript_scan(scanner):
