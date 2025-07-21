@@ -10,6 +10,7 @@ langgraph
 chromadb
 sentence-transformers
 httpx
+requests
 pytest
 pytest-asyncio
 python-multipart
