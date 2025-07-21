@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  auditor-api:
+    build: .
+    container_name: ai-code-auditor
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_REFERER=${OPENROUTER_REFERER:-https://auditor.yourdomain.com}
+      - OPENROUTER_TITLE=${OPENROUTER_TITLE:-AI Code Security Auditor}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - ENVIRONMENT=production
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - auditor-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: auditor-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - auditor-api
+    networks:
+      - auditor-network
+
+  redis:
+    image: redis:alpine
+    container_name: auditor-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - auditor-network
+    command: redis-server --appendonly yes
+
+  monitoring:
+    image: prom/prometheus:latest
+    container_name: auditor-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - auditor-network
+
+volumes:
+  redis_data:
+  prometheus_data:
+
+networks:
+  auditor-network:
+    driver: bridge
