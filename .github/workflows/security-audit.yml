@@ -143,7 +143,9 @@ jobs:
             --output-format json \
             --severity-filter high \
             --fail-on-high \
-            --exclude "*/tests/*" "*/node_modules/*" "*/.git/*"
+            --exclude "*/tests/*" \
+            --exclude "*/node_modules/*" \
+            --exclude "*/.git/*"
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
