@@ -101,6 +101,7 @@ async def audit_code(request: AuditRequest):
         # Debug logging
         print(f"DEBUG: Received request - code length: {len(request.code)}, language: {request.language}")
         print(f"DEBUG: Agent type: {type(agent)}")
+        print(f"DEBUG: Code content: {repr(request.code[:100])}")
         
         state = await agent.run(
             code=request.code,
@@ -113,6 +114,10 @@ async def audit_code(request: AuditRequest):
         # Debug logging
         print(f"DEBUG: State returned - vulnerabilities: {len(state.get('vulnerabilities', []))}")
         print(f"DEBUG: Scan results summary: {state.get('scan_results', {}).get('summary', {})}")
+        print(f"DEBUG: Scan results keys: {list(state.get('scan_results', {}).keys())}")
+        if state.get('scan_results', {}).get('vulnerabilities'):
+            print(f"DEBUG: Raw vulnerabilities from scan_results: {len(state.get('scan_results', {}).get('vulnerabilities', []))}")
+        print(f"DEBUG: Full scan_results: {state.get('scan_results', {})}")
         
         # Record metrics
         vulnerabilities = state.get("vulnerabilities", [])
