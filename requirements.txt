@@ -19,3 +19,7 @@ pydantic-settings
 langchain-community
 langchain-core
 langchain-deepseek
+click
+gunicorn
+prometheus-client
+pathlib2
