@@ -802,6 +802,43 @@ curl -X POST /audit -d '{"code": "test", "language": "python", "model": "invalid
 
 ---
 
+## Latest Updates
+
+### ✅ **RESOLVED: CLI Argument Parsing Error - December 19, 2024**
+
+**Issue**: CLI command failing with error: `Got unexpected extra arguments (*/node_modules/* */.git/*)`
+
+**Root Cause**: Incorrect syntax when using multiple `--exclude` patterns. Users were passing multiple patterns as space-separated arguments after a single `--exclude` flag.
+
+**Incorrect Command** (that was failing):
+```bash
+python auditor/cli.py scan \
+  --path . \
+  --exclude "*/tests/*" "*/node_modules/*" "*/.git/*" \
+  --no-advanced
+```
+
+**Corrected Command** (now documented clearly):
+```bash
+python auditor/cli.py scan \
+  --path . \
+  --exclude "*/tests/*" \
+  --exclude "*/node_modules/*" \
+  --exclude "*/.git/*" \
+  --no-advanced
+```
+
+**Solution Applied**:
+1. ✅ **Updated CLI Help Text**: Enhanced `--exclude` option description with clear usage examples
+2. ✅ **Updated README.md**: Added comprehensive CLI usage section with correct and incorrect syntax examples
+3. ✅ **Added Troubleshooting Section**: Specific section for common CLI errors
+4. ✅ **Verified GitHub Actions**: Confirmed workflow files already use correct syntax
+5. ✅ **Tested Solution**: Validated that both incorrect syntax fails appropriately and correct syntax works
+
+**Status**: **RESOLVED** - Users now have clear documentation and examples of correct CLI usage.
+
+---
+
 ## 🚀 **SYSTEM IS NOW PRODUCTION-READY**
 
 The **AI Code Security Auditor** is fully operational with all critical issues resolved. The system successfully:
