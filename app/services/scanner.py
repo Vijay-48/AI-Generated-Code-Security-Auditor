@@ -108,9 +108,10 @@ class SecurityScanner:
     def _normalize(self, raw: Dict[str, Any]) -> Dict[str, Any]:
         norm = {
             "vulnerabilities": [],
-            "summary": {"total": 0, "high": 0, "medium": 0, "low": 0}
+            "summary": {"total": 0, "high": 0, "medium": 0, "low": 0, "critical": 0}
         }
-        # Bandit
+        
+        # Bandit results
         bandit = raw.get('bandit', {}).get('results', [])
         for issue in bandit:
             sev = issue.get('issue_severity', 'LOW').upper()
@@ -125,7 +126,8 @@ class SecurityScanner:
                 "tool": "bandit",
                 "code_snippet": issue.get('code', '')
             })
-        # Semgrep
+            
+        # Semgrep results
         sem = raw.get('semgrep', {}).get('results', [])
         for issue in sem:
             sev = issue.get('extra', {}).get('severity', 'INFO').upper()
@@ -140,11 +142,57 @@ class SecurityScanner:
                 "tool": "semgrep",
                 "code_snippet": issue.get('extra', {}).get('lines', '')
             })
-        # summary
+            
+        # Secret detection results
+        secrets = raw.get('secrets', [])
+        for secret in secrets:
+            norm["vulnerabilities"].append({
+                "id": f"SECRET_{secret['type']}",
+                "title": f"Secret Detected: {secret['type'].replace('_', ' ').title()}",
+                "description": secret['description'],
+                "severity": secret['severity'],
+                "line_number": secret['line_number'],
+                "cwe_id": "CWE-798",  # Use of Hard-coded Credentials
+                "tool": "secrets",
+                "code_snippet": secret['context']
+            })
+        
+        # Calculate summary
         for v in norm["vulnerabilities"]:
+            severity = v["severity"].lower()
             norm["summary"]["total"] += 1
-            norm["summary"][v["severity"].lower()] += 1
+            if severity in norm["summary"]:
+                norm["summary"][severity] += 1
+        
         return norm
+
+    def _detect_secrets(self, code: str, filename: str) -> List[Dict[str, Any]]:
+        """Detect secrets and sensitive information in code"""
+        secrets = []
+        lines = code.split('\n')
+        
+        for line_num, line in enumerate(lines, 1):
+            for secret_type, config in self.secret_patterns.items():
+                pattern = config['pattern']
+                matches = re.finditer(pattern, line, re.IGNORECASE)
+                
+                for match in matches:
+                    # Get context around the match
+                    start_line = max(0, line_num - 2)
+                    end_line = min(len(lines), line_num + 1)
+                    context_lines = lines[start_line:end_line]
+                    
+                    secrets.append({
+                        'type': secret_type,
+                        'description': config['description'],
+                        'severity': config['severity'],
+                        'line_number': line_num,
+                        'context': '\n'.join(f"{start_line + i + 1}: {line}" for i, line in enumerate(context_lines)),
+                        'match': match.group(0)[:50] + "..." if len(match.group(0)) > 50 else match.group(0),
+                        'filename': filename
+                    })
+        
+        return secrets
 
     def _ext(self, lang: str) -> str:
         return { 'python':'.py','javascript':'.js','java':'.java','go':'.go' }.get(lang, '.txt')
