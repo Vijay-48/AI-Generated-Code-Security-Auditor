@@ -95,6 +95,10 @@ async def audit_code(request: AuditRequest):
     - **use_advanced_analysis**: Enable advanced multi-model features (classification, explanations)
     """
     try:
+        # Debug logging
+        print(f"DEBUG: Received request - code length: {len(request.code)}, language: {request.language}")
+        print(f"DEBUG: Agent type: {type(agent)}")
+        
         state = await agent.run(
             code=request.code,
             language=request.language,
@@ -102,6 +106,10 @@ async def audit_code(request: AuditRequest):
             preferred_model=request.model,
             use_advanced_analysis=request.use_advanced_analysis
         )
+        
+        # Debug logging
+        print(f"DEBUG: State returned - vulnerabilities: {len(state.get('vulnerabilities', []))}")
+        print(f"DEBUG: Scan results summary: {state.get('scan_results', {}).get('summary', {})}")
         
         # Record metrics
         vulnerabilities = state.get("vulnerabilities", [])
@@ -122,6 +130,9 @@ async def audit_code(request: AuditRequest):
             model_info=model_info
         )
     except Exception as e:
+        print(f"DEBUG: Exception occurred: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
