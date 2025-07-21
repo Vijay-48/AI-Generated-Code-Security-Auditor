@@ -47,7 +47,7 @@ def cli(ctx, api_url, api_key):
               type=click.Choice(['all', 'critical', 'high', 'medium', 'low']),
               help='Filter by minimum severity')
 @click.option('--include', multiple=True, help='File patterns to include (glob)')
-@click.option('--exclude', multiple=True, help='File patterns to exclude (glob)')
+@click.option('--exclude', multiple=True, help='File patterns to exclude (glob). Repeat flag for multiple patterns: --exclude "*/tests/*" --exclude "*/node_modules/*"')
 @click.option('--advanced/--no-advanced', default=False, help='Enable advanced multi-model analysis')
 @click.option('--fail-on-high/--no-fail-on-high', default=False, help='Exit with error on high/critical findings')
 @click.pass_context
