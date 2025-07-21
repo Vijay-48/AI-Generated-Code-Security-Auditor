@@ -1,0 +1,5 @@
+{
+  "code": "\nimport os\nimport subprocess\n\ndef insecure_function(user_input):\n    # SQL Injection vulnerability\n    query = f\"SELECT * FROM users WHERE name = '{user_input}'\"\n    \n    # Command injection vulnerability  \n    os.system(f\"echo {user_input}\")\n    \n    # Another command injection\n    subprocess.call(f\"ls {user_input}\", shell=True)\n    \n    return query\n",
+  "language": "python",
+  "filename": "test.py"
+}
