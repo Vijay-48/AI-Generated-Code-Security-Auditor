@@ -14,6 +14,21 @@ class AuditRequest(BaseModel):
     code: str
     language: str
     filename: Optional[str] = None
+    
+    @validator('code')
+    def code_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Code cannot be empty')
+        return v
+    
+    @validator('language')
+    def language_must_be_valid(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Language cannot be empty')
+        valid_languages = ['python', 'javascript', 'java', 'go']
+        if v.lower() not in valid_languages:
+            raise ValueError(f'Language must be one of: {valid_languages}')
+        return v.lower()
 
 class Vulnerability(BaseModel):
     id: str
