@@ -1,0 +1,1289 @@
+[
+  {
+    "scan_results": {
+      "vulnerabilities": [
+        {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        {
+          "id": "B607",
+          "title": "start_process_with_partial_path",
+          "description": "Starting a process with a partial executable path",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 11,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+        },
+        {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+        },
+        {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        {
+          "id": "B102",
+          "title": "exec_used",
+          "description": "Use of exec detected.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "high": 3,
+        "medium": 2,
+        "low": 2,
+        "critical": 0
+      }
+    },
+    "vulnerabilities": [
+      {
+        "id": "B605",
+        "title": "start_process_with_a_shell",
+        "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+        "severity": "LOW",
+        "line_number": 6,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+      },
+      {
+        "id": "B607",
+        "title": "start_process_with_partial_path",
+        "description": "Starting a process with a partial executable path",
+        "severity": "LOW",
+        "line_number": 6,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+      },
+      {
+        "id": "B605",
+        "title": "start_process_with_a_shell",
+        "description": "Starting a process with a shell, possible injection detected, security issue.",
+        "severity": "HIGH",
+        "line_number": 11,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+      },
+      {
+        "id": "B605",
+        "title": "start_process_with_a_shell",
+        "description": "Starting a process with a shell, possible injection detected, security issue.",
+        "severity": "HIGH",
+        "line_number": 18,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+      },
+      {
+        "id": "B605",
+        "title": "start_process_with_a_shell",
+        "description": "Starting a process with a shell, possible injection detected, security issue.",
+        "severity": "HIGH",
+        "line_number": 22,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+      },
+      {
+        "id": "B102",
+        "title": "exec_used",
+        "description": "Use of exec detected.",
+        "severity": "MEDIUM",
+        "line_number": 22,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+      },
+      {
+        "id": "B307",
+        "title": "blacklist",
+        "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+        "severity": "MEDIUM",
+        "line_number": 22,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+      }
+    ],
+    "remediation_suggestions": [
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.8277367353439331
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.937512993812561
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B607",
+          "title": "start_process_with_partial_path",
+          "description": "Starting a process with a partial executable path",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.8107461929321289
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -1.0485248565673828
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 11,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.8277367353439331
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.937512993812561
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.8277367353439331
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.937512993812561
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.8277367353439331
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.937512993812561
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B102",
+          "title": "exec_used",
+          "description": "Use of exec detected.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.700751781463623
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8504805564880371
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.6155573129653931
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8318758010864258
+          }
+        ]
+      }
+    ],
+    "patches": [
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B607",
+          "title": "start_process_with_partial_path",
+          "description": "Starting a process with a partial executable path",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8107461929321289
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B607",
+          "title": "start_process_with_partial_path",
+          "description": "Starting a process with a partial executable path",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -1.0485248565673828
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 11,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 11,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B102",
+          "title": "exec_used",
+          "description": "Use of exec detected.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.700751781463623
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B102",
+          "title": "exec_used",
+          "description": "Use of exec detected.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8504805564880371
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155573129653931
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      }
+    ],
+    "assessments": [
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B607",
+          "title": "start_process_with_partial_path",
+          "description": "Starting a process with a partial executable path",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8107461929321289
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B607",
+          "title": "start_process_with_partial_path",
+          "description": "Starting a process with a partial executable path",
+          "severity": "LOW",
+          "line_number": 6,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "5 def extremely_long_function_name_that_goes_on_and_on_and_on_and_should_not_break_the_parser_but_might_cause_issues_with_very_long_identifiers_and_function_names(parameter_with_extremely_long_name_that_should_be_tested, another_parameter_with_ridiculously_long_name_for_testing_purposes, third_parameter_also_with_very_long_name):\n6     os.system(\"echo 'This is a command injection with a very long function name'\")\n7 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -1.0485248565673828
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 11,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 11,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "10     \u0441\u0438\u0441\u0442\u0435\u043c\u0430 = \"rm -rf /\"  # Command injection with unicode\n11     os.system(\u0441\u0438\u0441\u0442\u0435\u043c\u0430)\n12 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17     \"\"\"\n18     os.system(command)\n19 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.937512993812561
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B102",
+          "title": "exec_used",
+          "description": "Use of exec detected.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.700751781463623
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B102",
+          "title": "exec_used",
+          "description": "Use of exec detected.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8504805564880371
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155573129653931
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "line_number": 22,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "21 def multiple_issues_single_line(user_input): \n22     os.system(f\"rm {user_input}\"); exec(\"dangerous_code\"); eval(\"more_danger\")\n23 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "Client error '429 Too Many Requests' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      }
+    ],
+    "model_info": {
+      "patch_generation": "agentica-org/deepcoder-14b-preview:free",
+      "quality_assessment": "meta-llama/llama-3.3-70b-instruct:free",
+      "fast_classification": "qwen/qwen-2.5-coder-32b-instruct:free",
+      "explanations": "moonshotai/kimi-dev-72b:free",
+      "recommendations": {
+        "code_patches": "DeepCoder - Optimized for code generation and diffs",
+        "quality_review": "LLaMA 3.3 - Balanced, high-quality analysis",
+        "fast_triage": "Qwen - Fast vulnerability classification",
+        "security_education": "Kimi - Detailed explanations and guidance"
+      }
+    },
+    "file_path": "test_edge_case_complex.py"
+  }
+]
