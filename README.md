@@ -181,12 +181,13 @@ python auditor/cli.py scan \
   --output-format github \
   --output-file security-report.md
 
-# Scan with severity filtering
+# Scan with severity filtering and exclude patterns
 python auditor/cli.py scan \
   --path ./src \
   --severity-filter high \
   --exclude "*/tests/*" \
-  --exclude "*/node_modules/*"
+  --exclude "*/node_modules/*" \
+  --exclude "*/.git/*"
 
 # Advanced analysis with multiple models
 python auditor/cli.py scan \
