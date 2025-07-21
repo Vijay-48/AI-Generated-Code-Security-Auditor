@@ -2,12 +2,67 @@ import subprocess
 import json
 import tempfile
 import os
-from typing import Dict, Any
+import re
+from typing import Dict, Any, List
 from pathlib import Path
 
 class SecurityScanner:
     def __init__(self):
         self.supported_languages = ['python', 'javascript', 'java', 'go']
+        
+        # Secret detection patterns
+        self.secret_patterns = {
+            'AWS_ACCESS_KEY': {
+                'pattern': r'AKIA[0-9A-Z]{16}',
+                'description': 'AWS Access Key ID detected',
+                'severity': 'CRITICAL'
+            },
+            'AWS_SECRET_KEY': {
+                'pattern': r'aws_secret_access_key\s*=\s*["\'][^"\']{20,}["\']',
+                'description': 'AWS Secret Access Key detected',
+                'severity': 'CRITICAL'
+            },
+            'PRIVATE_KEY': {
+                'pattern': r'-----BEGIN\s+(RSA\s+)?PRIVATE KEY-----',
+                'description': 'Private key detected in code',
+                'severity': 'HIGH'
+            },
+            'HARDCODED_PASSWORD': {
+                'pattern': r'(?i)(password|pwd|passwd)\s*[=:]\s*["\'][^"\']{8,}["\']',
+                'description': 'Hardcoded password detected',
+                'severity': 'HIGH'
+            },
+            'JWT_TOKEN': {
+                'pattern': r'eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*',
+                'description': 'JWT token detected in code',
+                'severity': 'MEDIUM'
+            },
+            'API_KEY_GENERIC': {
+                'pattern': r'(?i)(api[_-]?key|apikey|secret[_-]?key)\s*[=:]\s*["\'][^"\']{16,}["\']',
+                'description': 'Generic API key pattern detected',
+                'severity': 'HIGH'
+            },
+            'DATABASE_URL': {
+                'pattern': r'(?i)(mongodb|mysql|postgres|redis)://[^/\s]+:[^/\s]+@[^\s]+',
+                'description': 'Database connection string with credentials',
+                'severity': 'HIGH'
+            },
+            'GITHUB_TOKEN': {
+                'pattern': r'gh[pousr]_[A-Za-z0-9_]{36,255}',
+                'description': 'GitHub token detected',
+                'severity': 'HIGH'
+            },
+            'SLACK_TOKEN': {
+                'pattern': r'xox[baprs]-([0-9a-zA-Z]{10,48})',
+                'description': 'Slack token detected',
+                'severity': 'MEDIUM'
+            },
+            'GOOGLE_API_KEY': {
+                'pattern': r'AIza[0-9A-Za-z\\-_]{35}',
+                'description': 'Google API key detected',
+                'severity': 'HIGH'
+            }
+        }
 
     async def scan_code(self, code: str, language: str, filename: str = None) -> Dict[str, Any]:
         if language not in self.supported_languages:
@@ -19,11 +74,16 @@ class SecurityScanner:
 
         try:
             results = {}
+            
+            # Static analysis tools
             if language == 'python':
                 results['bandit'] = await self._run_bandit(tmp_path)
                 results['semgrep'] = await self._run_semgrep(tmp_path)
             else:
                 results['semgrep'] = await self._run_semgrep(tmp_path)
+            
+            # Secret detection (for all languages)
+            results['secrets'] = self._detect_secrets(code, filename or tmp_path)
 
             return self._normalize(results)
         finally:
