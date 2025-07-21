@@ -95,6 +95,9 @@ async def audit_code(request: AuditRequest):
     - **use_advanced_analysis**: Enable advanced multi-model features (classification, explanations)
     """
     try:
+        # Create fresh agent instance per request
+        agent = SecurityAgent()
+        
         # Debug logging
         print(f"DEBUG: Received request - code length: {len(request.code)}, language: {request.language}")
         print(f"DEBUG: Agent type: {type(agent)}")
