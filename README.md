@@ -170,17 +170,27 @@ python auditor/cli.py models
 
 #### Scan Files or Directories
 
+**Basic Scanning:**
 ```bash
 # Scan current directory
 python auditor/cli.py scan --path . --output-format table
 
-# Scan with specific model
+# Scan specific directory
+python auditor/cli.py scan --path ./src --output-format github
+```
+
+**Model Selection:**
+```bash
+# Use specific model
 python auditor/cli.py scan \
   --path ./src \
   --model "agentica-org/deepcoder-14b-preview:free" \
   --output-format github \
   --output-file security-report.md
+```
 
+**Filtering and Exclusions:**
+```bash
 # Scan with severity filtering and exclude patterns
 python auditor/cli.py scan \
   --path ./src \
@@ -189,6 +199,13 @@ python auditor/cli.py scan \
   --exclude "*/node_modules/*" \
   --exclude "*/.git/*"
 
+# ⚠️ IMPORTANT: Use separate --exclude flags for each pattern
+# ✅ Correct:   --exclude "*/tests/*" --exclude "*/node_modules/*"
+# ❌ Incorrect: --exclude "*/tests/*" "*/node_modules/*"
+```
+
+**Advanced Analysis:**
+```bash
 # Advanced analysis with multiple models
 python auditor/cli.py scan \
   --path . \
@@ -196,6 +213,35 @@ python auditor/cli.py scan \
   --output-format json \
   --output-file detailed-report.json
 ```
+
+**GitHub Actions Integration:**
+```bash
+# Generate GitHub Actions compatible output
+python auditor/cli.py scan \
+  --path . \
+  --model "agentica-org/deepcoder-14b-preview:free" \
+  --output-format github \
+  --output-file security-report.md \
+  --severity-filter medium \
+  --exclude "*/tests/*" \
+  --exclude "*/node_modules/*" \
+  --exclude "*/.git/*" \
+  --no-advanced
+```
+
+#### CLI Options Reference
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--path` | Directory or file to scan | `--path ./src` |
+| `--model` | LLM model for analysis | `--model "agentica-org/deepcoder-14b-preview:free"` |
+| `--output-format` | Output format | `--output-format github` |
+| `--output-file` | Save to file | `--output-file report.md` |
+| `--severity-filter` | Minimum severity | `--severity-filter high` |
+| `--include` | Include patterns (repeat) | `--include "*.py" --include "*.js"` |
+| `--exclude` | Exclude patterns (repeat) | `--exclude "*/tests/*" --exclude "*/build/*"` |
+| `--advanced` | Enable multi-model analysis | `--advanced` |
+| `--fail-on-high` | Fail on high/critical issues | `--fail-on-high` |
 
 #### Direct Code Analysis
 
