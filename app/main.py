@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List, Dict, Any, Optional
 from app.agents.security_agent import SecurityAgent
 
