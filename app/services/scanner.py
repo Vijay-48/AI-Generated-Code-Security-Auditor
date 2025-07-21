@@ -91,12 +91,13 @@ class SecurityScanner:
 
     async def _run_bandit(self, file_path: str) -> Dict[str, Any]:
         try:
-            cmd = ['bandit', '-f', 'json', file_path]
+            cmd = ['/root/.venv/bin/bandit', '-f', 'json', file_path]
             print(f"DEBUG: Running bandit command: {' '.join(cmd)}")
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             print(f"DEBUG: Bandit return code: {res.returncode}")
-            print(f"DEBUG: Bandit stdout: {res.stdout}")
-            print(f"DEBUG: Bandit stderr: {res.stderr}")
+            print(f"DEBUG: Bandit stdout length: {len(res.stdout) if res.stdout else 0}")
+            if res.stderr:
+                print(f"DEBUG: Bandit stderr: {res.stderr}")
             return json.loads(res.stdout) if res.stdout else {}
         except Exception as e:
             print(f"DEBUG: Bandit exception: {e}")
