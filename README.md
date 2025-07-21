@@ -185,7 +185,8 @@ python auditor/cli.py scan \
 python auditor/cli.py scan \
   --path ./src \
   --severity-filter high \
-  --exclude "*/tests/*" "*/node_modules/*"
+  --exclude "*/tests/*" \
+  --exclude "*/node_modules/*"
 
 # Advanced analysis with multiple models
 python auditor/cli.py scan \
