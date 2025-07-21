@@ -69,7 +69,9 @@ jobs:
             --output-format github \
             --output-file security-report.md \
             --severity-filter medium \
-            --exclude "*/tests/*" "*/node_modules/*" "*/.git/*" \
+            --exclude "*/tests/*" \
+            --exclude "*/node_modules/*" \
+            --exclude "*/.git/*" \
             ${{ github.event.inputs.advanced_analysis == 'true' && '--advanced' || '--no-advanced' }}
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
