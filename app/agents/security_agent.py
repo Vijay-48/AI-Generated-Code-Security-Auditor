@@ -10,17 +10,22 @@ class SecurityState(TypedDict):
     code: str
     language: str
     filename: Optional[str]
+    preferred_model: Optional[str]
+    use_advanced_analysis: Optional[bool]
     scan_results: Dict[str, Any]
     vulnerabilities: List[Dict[str, Any]]
     remediation_suggestions: List[Dict[str, Any]]
     patches: List[Dict[str, Any]]
     assessments: List[Dict[str, Any]]
+    classifications: List[Dict[str, Any]]  # New: fast classifications
+    explanations: List[Dict[str, Any]]    # New: detailed explanations
 
 class SecurityAgent:
     def __init__(self):
         self.scanner = SecurityScanner()
         self.rag = RAGRemediationService()
-        self.llm = LLMService()
+        self.llm_service = LLMService()  # Store as llm_service for access
+        self.llm = self.llm_service  # Keep backward compatibility
         self.graph = self._build_graph()
 
     def _build_graph(self) -> StateGraph:
@@ -32,6 +37,7 @@ class SecurityAgent:
         workflow.add_node("retrieve_remediation", self._retrieve_remediation_node)
         workflow.add_node("generate_patches", self._generate_patches_node)
         workflow.add_node("assess_patches", self._assess_patches_node)
+        workflow.add_node("advanced_analysis", self._advanced_analysis_node)  # New node
 
         # Define edges
         workflow.set_entry_point("scan")
@@ -39,7 +45,8 @@ class SecurityAgent:
         workflow.add_edge("extract_vulns", "retrieve_remediation")
         workflow.add_edge("retrieve_remediation", "generate_patches")
         workflow.add_edge("generate_patches", "assess_patches")
-        workflow.add_edge("assess_patches", END)
+        workflow.add_edge("assess_patches", "advanced_analysis")
+        workflow.add_edge("advanced_analysis", END)
 
         return workflow.compile()
 
@@ -77,6 +84,13 @@ class SecurityAgent:
 
     async def _generate_patches_node(self, state: SecurityState) -> SecurityState:
         patches = []
+        
+        # Use preferred model if specified
+        if state.get("preferred_model"):
+            # Temporarily override the model for patch generation
+            original_model = self.llm.patch_model
+            self.llm.patch_model = state["preferred_model"]
+        
         for suggestion in state["remediation_suggestions"]:
             for rec in suggestion["recs"]:
                 try:
@@ -96,6 +110,11 @@ class SecurityAgent:
                         "rec": rec,
                         "patch": {"error": str(e)}
                     })
+        
+        # Restore original model
+        if state.get("preferred_model"):
+            self.llm.patch_model = original_model
+            
         return {**state, "patches": patches}
 
     async def _assess_patches_node(self, state: SecurityState) -> SecurityState:
@@ -122,15 +141,83 @@ class SecurityAgent:
                 })
         return {**state, "assessments": assessments}
 
-    async def run(self, code: str, language: str, filename: str = "") -> SecurityState:
+    async def _advanced_analysis_node(self, state: SecurityState) -> SecurityState:
+        """New node for advanced multi-model analysis"""
+        classifications = []
+        explanations = []
+        
+        # Only run advanced analysis if requested
+        if not state.get("use_advanced_analysis", False):
+            return {
+                **state, 
+                "classifications": classifications,
+                "explanations": explanations
+            }
+        
+        # Fast vulnerability classification using Qwen
+        for vuln in state["vulnerabilities"]:
+            try:
+                classification = await self.llm.classify_vulnerability_fast(
+                    vuln.get("code_snippet", ""),
+                    vuln
+                )
+                classifications.append({
+                    "vuln": vuln,
+                    "classification": classification
+                })
+            except Exception as e:
+                classifications.append({
+                    "vuln": vuln,
+                    "classification": {"error": str(e)}
+                })
+        
+        # Detailed security explanations using Kimi
+        for vuln in state["vulnerabilities"]:
+            try:
+                explanation = await self.llm.explain_vulnerability(
+                    vuln.get("code_snippet", ""),
+                    vuln
+                )
+                explanations.append({
+                    "vuln": vuln,
+                    "explanation": explanation
+                })
+            except Exception as e:
+                explanations.append({
+                    "vuln": vuln,
+                    "explanation": f"Error generating explanation: {str(e)}"
+                })
+        
+        return {
+            **state, 
+            "classifications": classifications,
+            "explanations": explanations
+        }
+
+    async def run(self, code: str, language: str, filename: str = "", 
+                 preferred_model: str = None, use_advanced_analysis: bool = False) -> SecurityState:
+        """
+        Run security analysis with enhanced multi-model support
+        
+        Args:
+            code: Code to analyze
+            language: Programming language
+            filename: Optional filename
+            preferred_model: Optional preferred model for LLM operations
+            use_advanced_analysis: Enable advanced multi-model features
+        """
         init_state = SecurityState(
             code=code,
             language=language,
             filename=filename,
+            preferred_model=preferred_model,
+            use_advanced_analysis=use_advanced_analysis,
             scan_results={},
             vulnerabilities=[],
             remediation_suggestions=[],
             patches=[],
-            assessments=[]
+            assessments=[],
+            classifications=[],
+            explanations=[]
         )
         return await self.graph.ainvoke(init_state)
