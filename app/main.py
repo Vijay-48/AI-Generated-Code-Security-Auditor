@@ -3,12 +3,17 @@ from pydantic import BaseModel, field_validator
 from typing import List, Dict, Any, Optional
 from app.agents.security_agent import SecurityAgent
 from app.services.llm_client import ModelType, get_available_models
+from app.monitoring import MetricsMiddleware, metrics_endpoint, record_audit_metrics
 
 app = FastAPI(
     title="AI Code Security Auditor",
     description="Automated security scanning and remediation for AI-generated code with multi-model LLM support",
     version="1.0.0"
 )
+
+# Add metrics middleware
+app.add_middleware(MetricsMiddleware)
+
 agent = SecurityAgent()
 
 class AuditRequest(BaseModel):
@@ -98,6 +103,11 @@ async def audit_code(request: AuditRequest):
             use_advanced_analysis=request.use_advanced_analysis
         )
         
+        # Record metrics
+        vulnerabilities = state.get("vulnerabilities", [])
+        model = request.model or "agentica-org/deepcoder-14b-preview:free"
+        record_audit_metrics(request.language, model, vulnerabilities)
+        
         # Add model information to response
         model_info = None
         if hasattr(agent, 'llm_service') and hasattr(agent.llm_service, 'get_model_recommendations'):
@@ -118,6 +128,11 @@ async def audit_code(request: AuditRequest):
 def health_check():
     """Health check endpoint"""
     return {"status": "ok", "version": "1.0.0"}
+
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return await metrics_endpoint()
 
 @app.get("/models")
 def get_models():
@@ -166,11 +181,14 @@ def root():
             "Quality assessment with LLaMA 3.3",
             "Fast vulnerability classification with Qwen", 
             "Security explanations with Kimi",
-            "RAG-enhanced remediation suggestions"
+            "RAG-enhanced remediation suggestions",
+            "Secret detection and credential scanning",
+            "Production monitoring and metrics"
         ],
         "endpoints": {
             "POST /audit": "Analyze code for security vulnerabilities",
             "GET /models": "List available LLM models",
-            "GET /health": "Service health check"
+            "GET /health": "Service health check",
+            "GET /metrics": "Prometheus metrics"
         }
     }
