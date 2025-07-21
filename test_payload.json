@@ -1,0 +1,5 @@
+{
+  "code": "import os\nAWS_ACCESS_KEY_ID = \"AKIAIOSFODNN7EXAMPLE\"\nDATABASE_URL = \"mongodb://admin:password123@localhost/db\"\napi_key = \"sk-1234567890abcdef\"\npassword = \"hardcoded_password\"\nos.system(\"rm -rf /\")",
+  "language": "python",
+  "filename": "test.py"
+}
