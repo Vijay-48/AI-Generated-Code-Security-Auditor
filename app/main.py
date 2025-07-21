@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from typing import List, Dict, Any, Optional
 from app.agents.security_agent import SecurityAgent
 
@@ -15,13 +15,15 @@ class AuditRequest(BaseModel):
     language: str
     filename: Optional[str] = None
     
-    @validator('code')
+    @field_validator('code')
+    @classmethod
     def code_must_not_be_empty(cls, v):
         if not v or not v.strip():
             raise ValueError('Code cannot be empty')
         return v
     
-    @validator('language')
+    @field_validator('language')
+    @classmethod
     def language_must_be_valid(cls, v):
         if not v or not v.strip():
             raise ValueError('Language cannot be empty')
