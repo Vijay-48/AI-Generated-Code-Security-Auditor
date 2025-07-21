@@ -599,6 +599,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Common Issues
 
+### Common Issues
+
+#### CLI Command Errors
+
+**"Got unexpected extra arguments" Error**
+```bash
+# ❌ Incorrect syntax - multiple patterns after single --exclude
+python auditor/cli.py scan --exclude "*/tests/*" "*/node_modules/*" "*/.git/*"
+
+# ✅ Correct syntax - separate --exclude flags
+python auditor/cli.py scan --exclude "*/tests/*" --exclude "*/node_modules/*" --exclude "*/.git/*"
+```
+
 #### "No such file or directory: 'bandit'"
 **Solution**: Ensure tools are installed and use full paths in production:
 ```bash
