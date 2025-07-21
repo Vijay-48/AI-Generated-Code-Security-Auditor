@@ -11,8 +11,10 @@ class Settings(BaseSettings):
 
     # OpenRouter Configuration
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_BASE_URL: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1/chat/completions")
     OPENROUTER_REFERER: str = os.getenv("OPENROUTER_REFERER", "http://localhost:8000")
     OPENROUTER_TITLE: str = os.getenv("OPENROUTER_TITLE", "AI Code Security Auditor")
+    OPENROUTER_MODELS: str = os.getenv("OPENROUTER_MODELS", "agentica-org/deepcoder-14b-preview:free,moonshotai/kimi-dev-72b:free,qwen/qwen-2.5-coder-32b-instruct:free,meta-llama/llama-3.3-70b-instruct:free")
     
     # GitHub Configuration
     GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
