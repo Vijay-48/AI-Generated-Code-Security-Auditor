@@ -1,18 +1,43 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 from typing import List, Dict, Any, Optional
+from contextlib import asynccontextmanager
+
 from app.agents.security_agent import SecurityAgent
 from app.services.llm_client import ModelType, get_available_models
 from app.monitoring import MetricsMiddleware, metrics_endpoint, record_audit_metrics
+from app.services.cache_service import init_cache, shutdown_cache, cache_service
+from app.api.async_endpoints import async_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle app startup and shutdown events"""
+    # Startup
+    print("🚀 Starting AI Code Security Auditor...")
+    await init_cache()
+    print("✅ Application startup complete")
+    
+    yield
+    
+    # Shutdown
+    print("🔄 Shutting down AI Code Security Auditor...")
+    await shutdown_cache()
+    print("✅ Application shutdown complete")
+
 
 app = FastAPI(
     title="AI Code Security Auditor",
-    description="Automated security scanning and remediation for AI-generated code with multi-model LLM support",
-    version="1.0.0"
+    description="Automated security scanning and remediation for AI-generated code with multi-model LLM support and async processing",
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 # Add metrics middleware
 app.add_middleware(MetricsMiddleware)
+
+# Include async endpoints
+app.include_router(async_router)
 
 # Remove global agent instance - create fresh ones per request
 
@@ -82,11 +107,16 @@ class AuditResponse(BaseModel):
     patches: List[Patch]
     assessments: List[Assessment]
     model_info: Optional[Dict[str, Any]] = None  # Include model usage info
+    cache_info: Optional[Dict[str, Any]] = None  # Include cache information
 
 @app.post("/audit", response_model=AuditResponse)
 async def audit_code(request: AuditRequest):
     """
-    Audit code for security vulnerabilities with advanced multi-model LLM support
+    **LEGACY SYNC ENDPOINT** - For backward compatibility
+    
+    Audit code for security vulnerabilities with advanced multi-model LLM support.
+    
+    ⚠️  **Recommended**: Use `/async/audit` for better performance and progress tracking
     
     - **code**: The code to analyze
     - **language**: Programming language (python, javascript, java, go)
@@ -115,6 +145,13 @@ async def audit_code(request: AuditRequest):
         model_info = None
         if hasattr(agent, 'llm_service') and hasattr(agent.llm_service, 'get_model_recommendations'):
             model_info = agent.llm_service.get_model_recommendations()
+        
+        # Add cache information
+        cache_info = {
+            "cache_available": cache_service.connected,
+            "cache_status": "connected" if cache_service.connected else "disconnected",
+            "recommendation": "Use /async/audit for caching benefits"
+        }
             
         return AuditResponse(
             scan_results=state["scan_results"],
@@ -122,7 +159,8 @@ async def audit_code(request: AuditRequest):
             remediation_suggestions=state["remediation_suggestions"],
             patches=state["patches"],
             assessments=state["assessments"],
-            model_info=model_info
+            model_info=model_info,
+            cache_info=cache_info
         )
     except Exception as e:
         print(f"DEBUG: Exception occurred: {e}")
@@ -132,8 +170,14 @@ async def audit_code(request: AuditRequest):
 
 @app.get("/health")
 def health_check():
-    """Health check endpoint"""
-    return {"status": "ok", "version": "1.0.0"}
+    """Health check endpoint with cache status"""
+    cache_status = "connected" if cache_service.connected else "disconnected"
+    return {
+        "status": "ok", 
+        "version": "2.0.0",
+        "features": ["async_processing", "caching", "websockets"],
+        "cache_status": cache_status
+    }
 
 @app.get("/metrics")
 async def get_metrics():
@@ -179,8 +223,8 @@ def get_models():
 def root():
     """Root endpoint with API information"""
     return {
-        "message": "AI Code Security Auditor API",
-        "version": "1.0.0", 
+        "message": "AI Code Security Auditor API v2.0",
+        "version": "2.0.0", 
         "features": [
             "Multi-language security scanning (Python, JavaScript, Java, Go)",
             "AI-powered patch generation with DeepCoder",
@@ -189,12 +233,27 @@ def root():
             "Security explanations with Kimi",
             "RAG-enhanced remediation suggestions",
             "Secret detection and credential scanning",
-            "Production monitoring and metrics"
+            "Production monitoring and metrics",
+            "🚀 NEW: Async job processing with Redis caching",
+            "🚀 NEW: Real-time progress tracking via WebSocket",
+            "🚀 NEW: Smart caching for cost optimization"
         ],
         "endpoints": {
-            "POST /audit": "Analyze code for security vulnerabilities",
+            "POST /audit": "🔄 Legacy sync analysis (backward compatibility)",
+            "POST /async/audit": "🚀 NEW: Async analysis with job tracking",
+            "GET /async/jobs/{job_id}/status": "📊 Get job status and progress",
+            "GET /async/jobs/{job_id}/results": "📋 Get completed job results", 
+            "WebSocket /async/jobs/{job_id}/progress": "⚡ Real-time progress updates",
             "GET /models": "List available LLM models",
-            "GET /health": "Service health check",
-            "GET /metrics": "Prometheus metrics"
+            "GET /health": "Service health check with cache status",
+            "GET /metrics": "Prometheus metrics",
+            "GET /async/cache/stats": "Cache performance statistics"
+        },
+        "migration_guide": {
+            "from_sync_to_async": {
+                "old": "POST /audit",
+                "new": "POST /async/audit", 
+                "benefits": ["No timeouts", "Progress tracking", "Caching", "Better performance"]
+            }
         }
     }
