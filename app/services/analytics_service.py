@@ -698,5 +698,6 @@ class AnalyticsService:
         
         return buckets
 
+
 # Global analytics service instance
 analytics_service = AnalyticsService()
