@@ -112,10 +112,11 @@ cat .env
 
 # Should show:
 # OPENROUTER_API_KEY=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
+# REDIS_URL=redis://localhost:6379/0
 # (other configuration...)
 ```
 
-### Step 3: Run the Application
+### Step 3: Run the Application Stack
 ```bash
 # Start all services
 docker-compose up -d
@@ -124,12 +125,22 @@ docker-compose up -d
 docker-compose ps
 
 # Expected output:
-# NAME                   IMAGE                    COMMAND                  SERVICE    STATUS
-# ai-code-auditor-app-1     ai-code-auditor-app      "uvicorn app.main:ap…"   app        Up
-# ai-code-auditor-redis-1   redis:7-alpine           "redis-server --appe…"   redis      Up
-# ai-code-auditor-worker-1  ai-code-auditor-worker   "celery -A app.celery…"  worker     Up
-# ai-code-auditor-flower-1  ai-code-auditor-flower   "celery -A app.celery…"  flower     Up
+# NAME                   SERVICE    STATUS    PORTS
+# app-app-1             app        Up        0.0.0.0:8000->8000/tcp
+# app-redis-1           redis      Up        0.0.0.0:6379->6379/tcp
+# app-worker-1          worker     Up        
+# app-flower-1          flower     Up        0.0.0.0:5555->5555/tcp
 ```
+
+### Services Architecture
+The Docker setup runs these services:
+
+| Service | Purpose | Port | Description |
+|---------|---------|------|-------------|
+| **app** | FastAPI Server | 8000 | Main API with security scanning |
+| **redis** | Cache & Message Broker | 6379 | Caching and job queue |
+| **worker** | Background Jobs | - | Celery worker for async tasks |
+| **flower** | Monitoring | 5555 | Real-time task monitoring |
 
 ### Step 4: Verify Installation
 ```bash
