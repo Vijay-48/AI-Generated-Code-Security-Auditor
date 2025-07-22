@@ -1021,5 +1021,119 @@ def history(ctx, limit, since, until, min_score, max_score, repo, language, scan
         click.echo(f"❌ Error getting scan history: {str(e)}", err=True)
         sys.exit(1)
 
+@cli.command()
+@click.option('--test-colors', is_flag=True, help='Test color support and display color palette')
+@click.option('--test-charts', is_flag=True, help='Display sample charts and visualizations')
+@click.option('--color-scheme', default='default', type=click.Choice(['default', 'monochrome', 'dark', 'security']), help='Color scheme to test')
+@click.pass_context
+def visual_test(ctx, test_colors, test_charts, color_scheme):
+    """🚀 Test terminal visual capabilities and display sample charts"""
+    try:
+        import sys
+        sys.path.append('/app')
+        from cli_visuals.formatters import create_visual_formatter
+        from cli_visuals.terminal import terminal
+        
+        visual_formatter = create_visual_formatter(color_scheme, False)
+        
+        click.echo("🖥️  Visual Capabilities Test")
+        click.echo("=" * 60)
+        
+        # Show terminal capabilities
+        capabilities_info = visual_formatter.format_terminal_info()
+        click.echo(capabilities_info)
+        
+        if test_colors:
+            click.echo("\n🎨 Color Palette Test:")
+            click.echo("=" * 30)
+            
+            # Test different color schemes
+            schemes = ['default', 'security', 'dark', 'monochrome']
+            for scheme in schemes:
+                click.echo(f"\n{scheme.upper()} Color Scheme:")
+                test_formatter = create_visual_formatter(scheme, False)
+                
+                # Sample gradient
+                from cli_visuals.terminal import get_gradient_colors, ColorScheme
+                scheme_enum = getattr(ColorScheme, scheme.upper())
+                gradient = get_gradient_colors(scheme_enum)
+                
+                if scheme != 'monochrome':
+                    # Rich formatted colors
+                    from rich.console import Console
+                    console = Console()
+                    gradient_display = " ".join(gradient)
+                    console.print(f"   Gradient: {gradient_display}")
+                else:
+                    click.echo(f"   Gradient: {' '.join(gradient)}")
+        
+        if test_charts:
+            click.echo("\n📊 Sample Charts and Visualizations:")
+            click.echo("=" * 40)
+            
+            # Sample data for demonstrations
+            sample_severity = {'CRITICAL': 5, 'HIGH': 15, 'MEDIUM': 25, 'LOW': 8}
+            
+            # Mock trend data class
+            class MockTrend:
+                def __init__(self, date, total_vulnerabilities, critical=0, high=0):
+                    self.date = date
+                    self.total_vulnerabilities = total_vulnerabilities
+                    self.critical = critical
+                    self.high = high
+            
+            sample_trends = [
+                MockTrend("2024-01-01", 10, 2, 3),
+                MockTrend("2024-01-02", 8, 1, 2),
+                MockTrend("2024-01-03", 15, 3, 5),
+                MockTrend("2024-01-04", 12, 2, 4),
+                MockTrend("2024-01-05", 6, 1, 2),
+                MockTrend("2024-01-06", 20, 4, 8),
+                MockTrend("2024-01-07", 18, 3, 6)
+            ]
+            
+            # Display sparklines
+            sparkline_demo = visual_formatter.sparkline.generate_trend_sparkline(sample_trends)
+            click.echo(f"Sparkline Demo: {sparkline_demo}")
+            
+            # Display severity bars
+            click.echo("\nSeverity Distribution Bars:")
+            severity_bars = visual_formatter.bar_chart.generate_severity_bars(sample_severity, 30)
+            for bar in severity_bars:
+                click.echo(f"  {bar}")
+            
+            # Display pie chart
+            click.echo("\nSeverity Pie Chart:")
+            pie_chart = visual_formatter.pie_chart.generate_severity_pie(sample_severity)
+            for line in pie_chart:
+                click.echo(f"  {line}")
+            
+            # Mock heatmap data
+            class MockHeatmapEntry:
+                def __init__(self, path, rule_hits, files_count):
+                    self.path = path
+                    self.rule_hits = rule_hits
+                    self.files_count = files_count
+            
+            sample_heatmap = [
+                MockHeatmapEntry("/app/src", 25, 15),
+                MockHeatmapEntry("/app/tests", 8, 10),
+                MockHeatmapEntry("/app/lib", 12, 5),
+                MockHeatmapEntry("/app/config", 3, 2),
+            ]
+            
+            click.echo("\nDirectory Heatmap Sample:")
+            heatmap_lines = visual_formatter.heatmap.generate_directory_heatmap(sample_heatmap, 40)
+            for line in heatmap_lines[:10]:  # Show first 10 lines
+                click.echo(f"  {line}")
+            
+            click.echo("\n✨ Visual test complete! Use --visual flag with other commands to see enhanced outputs.")
+        
+    except Exception as e:
+        click.echo(f"❌ Visual test failed: {str(e)}", err=True)
+        import traceback
+        click.echo(traceback.format_exc())
+        sys.exit(1)
+
 if __name__ == '__main__':
     cli()
