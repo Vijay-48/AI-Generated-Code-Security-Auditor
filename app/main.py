@@ -17,12 +17,14 @@ async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting AI Code Security Auditor...")
     await init_cache()
+    await websocket_manager.initialize()
     print("✅ Application startup complete")
     
     yield
     
     # Shutdown
     print("🔄 Shutting down AI Code Security Auditor...")
+    await websocket_manager.shutdown()
     await shutdown_cache()
     print("✅ Application shutdown complete")
 
