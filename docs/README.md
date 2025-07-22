@@ -5,20 +5,25 @@
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Multi--Model-orange.svg)](https://openrouter.ai/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-v2.0.0-blue.svg)](https://pypi.org/project/ai-code-security-auditor/)
-[![Tests](https://img.shields.io/badge/Tests-96%25%20Pass-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-96%25%20Pass-brightgreen.svg)](../tests/)
 
 > **Production-ready AI-powered security scanner with multi-model LLM integration, advanced analytics, and comprehensive vulnerability detection for modern development workflows.**
 
-## 🚀 **What Makes This Special**
+## 📁 **Project Organization**
 
-The **AI Code Security Auditor v2.0** is not just another security tool—it's an intelligent platform that combines:
+This project has been professionally organized with a clean directory structure:
 
-- 🧠 **4 Specialized AI Models** via OpenRouter (DeepCoder, LLaMA 3.3, Qwen 2.5, Kimi Dev)
-- 🔍 **Multi-Tool Security Scanning** (Bandit, Semgrep, custom secret detection)
-- 📊 **Advanced Analytics & Reporting** with trend forecasting and performance insights
-- 🖥️ **Professional CLI Interface** with rich visualizations and multiple output formats
-- 🌐 **Production REST API** with WebSocket support and monitoring
-- ⚡ **Enterprise Features** including caching, async processing, and bulk repository scanning
+- 📚 **`docs/`** - All documentation files (you are here!)
+- 🧪 **`test_files/`** - Testing, debugging, and development files  
+- 🚀 **`scripts/`** - Deployment and utility scripts
+- 🗂️ **`temp_files/`** - Generated and temporary files
+- 🏢 **`app/`** - Core FastAPI application
+- 🖥️ **`auditor/`** - CLI interface and tools
+- ✅ **`tests/`** - Unit and integration tests
+
+📖 **For detailed directory structure**: See [`DIRECTORY_STRUCTURE.md`](DIRECTORY_STRUCTURE.md)  
+🚀 **For complete setup guide**: See [`LOCAL_SETUP_GUIDE.md`](LOCAL_SETUP_GUIDE.md)  
+📊 **For project overview**: See [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)
 
 ---
 
