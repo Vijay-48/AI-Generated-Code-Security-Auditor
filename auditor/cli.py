@@ -538,6 +538,11 @@ def trends(ctx, days, output, save, no_colors, width, visual, color_scheme):
         from app.services.analytics_service import analytics_service
         from app.utils.formatters import ExportFormatter, load_config
         
+        # NEW: Import visual components for enhanced display
+        if visual:
+            from cli_visuals.formatters import create_visual_formatter
+            visual_formatter = create_visual_formatter(color_scheme, no_colors)
+        
         # Load configuration
         config = load_config()
         
@@ -556,10 +561,10 @@ def trends(ctx, days, output, save, no_colors, width, visual, color_scheme):
             click.echo("❌ No trend data found")
             sys.exit(1)
         
-        # Format based on output type
-        formatter = ExportFormatter.get_formatter(output)
-        
-        if output == 'table':
+        # NEW: Use visual formatting if --visual flag is enabled
+        if visual and output == 'ascii':
+            content = visual_formatter.format_trends_visual(trend_data, width)
+        elif output == 'table':
             lines = []
             lines.append(f"📈 Vulnerability Trends (Last {days} days)")
             lines.append("=" * 50)
@@ -590,6 +595,7 @@ def trends(ctx, days, output, save, no_colors, width, visual, color_scheme):
             content = "\n".join(lines)
             
         else:
+            formatter = ExportFormatter.get_formatter(output)
             content = formatter.format_trends(trend_data)
         
         # Add summary for ascii and table formats
