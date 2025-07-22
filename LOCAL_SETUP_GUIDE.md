@@ -252,22 +252,99 @@ auditor models
 auditor scan . --output-format table
 ```
 
-### Step 5: Verify Installation
+## ✅ Verify Installation Success
+
+### Quick Verification Tests
+
+#### Test 1: Python Application Import
 ```bash
-# Test API server (if running)
-curl http://localhost:8000/health
+cd /app
+python -c "
+from app.main import app
+print('✅ FastAPI app imports successfully')
+print('✅ App title:', app.title)
+print('✅ App version:', app.version)
+"
+```
+**Expected Output:**
+```
+✅ FastAPI app imports successfully
+✅ App title: AI Code Security Auditor
+✅ App version: 2.0.0
+```
 
-# Test CLI tools
-python -m auditor.cli models
-
-# Test package installation
+#### Test 2: CLI Package Installation
+```bash
+# Test CLI commands
 auditor --help
 
-# Test security scanning
-echo 'import os; os.system("rm -rf /")' > test.py
-auditor analyze --code "$(cat test.py)" --language python
-rm test.py
+# Test model listing (requires API server)
+auditor --api-url http://localhost:8000 models
 ```
+**Expected Output:**
+```
+🤖 Available Models:
+==================================================
+  • deepcoder-14b-preview: agentica-org/deepcoder-14b-preview:free
+  • kimi-dev-72b: moonshotai/kimi-dev-72b:free
+  • qwen-2.5-coder-32b-instruct: qwen/qwen-2.5-coder-32b-instruct:free
+  • llama-3.3-70b-instruct: meta-llama/llama-3.3-70b-instruct:free
+```
+
+#### Test 3: API Server Health
+```bash
+# Start the API server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+
+# Wait for startup, then test
+sleep 5
+curl http://localhost:8000/health
+```
+**Expected Response:**
+```json
+{
+  "status": "ok",
+  "version": "2.0.0",
+  "features": ["async_processing", "caching", "websockets"],
+  "cache_status": "disconnected"
+}
+```
+
+#### Test 4: Full Security Scan Test
+```bash
+# Create a vulnerable test file
+cat > /tmp/vulnerable_test.py << 'EOF'
+import os
+AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
+user_input = input("Enter command: ")
+os.system(f"rm {user_input}")
+EOF
+
+# Scan with CLI
+auditor --api-url http://localhost:8000 analyze \
+  --code "$(cat /tmp/vulnerable_test.py)" \
+  --language python
+
+# Cleanup
+rm /tmp/vulnerable_test.py
+```
+**Expected Results:**
+- Should detect **CRITICAL** AWS access key
+- Should detect **HIGH** severity command injection
+- Should provide detailed vulnerability descriptions
+
+### Installation Success Checklist
+
+✅ **Python Dependencies**: All packages installed without errors  
+✅ **Package Installation**: `pip install -e .` completed successfully  
+✅ **CLI Commands**: `auditor --help` shows command list  
+✅ **API Server**: Health check returns status "ok"  
+✅ **OpenRouter Integration**: Models endpoint shows 4 AI models  
+✅ **Security Scanning**: CLI can detect vulnerabilities  
+✅ **Secret Detection**: Can identify AWS keys, passwords, API keys  
+✅ **Multi-Language Support**: Python and JavaScript scanning works
+
+If all tests pass, your installation is **production-ready**! 🎉
 
 ---
 
