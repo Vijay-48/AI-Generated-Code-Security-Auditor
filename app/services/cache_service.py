@@ -7,7 +7,7 @@ import hashlib
 import asyncio
 from typing import Any, Dict, Optional, List
 from datetime import datetime, timezone
-import aioredis
+import redis.asyncio as redis
 from app.config import settings
 
 class CacheService:
@@ -29,17 +29,15 @@ class CacheService:
         """Initialize Redis connection"""
         try:
             if settings.REDIS_PASSWORD:
-                self.redis_client = await aioredis.from_url(
-                    f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
-                    encoding="utf-8",
-                    decode_responses=True
-                )
+                connection_url = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
             else:
-                self.redis_client = await aioredis.from_url(
-                    f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
-                    encoding="utf-8",
-                    decode_responses=True
-                )
+                connection_url = f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
+            
+            self.redis_client = redis.from_url(
+                connection_url,
+                encoding="utf-8",
+                decode_responses=True
+            )
             
             # Test connection
             await self.redis_client.ping()
