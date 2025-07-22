@@ -357,6 +357,15 @@ print('✅ Database URL:', settings.DATABASE_URL)
 
 ## 🚀 Running the Application
 
+### Understanding the Services
+This is **NOT a traditional web application** with frontend/backend separation. Instead, it's:
+
+1. **FastAPI REST API** (`app.main:app`) - Core security scanning service
+2. **CLI Tools** (`auditor` command) - Professional command-line interface  
+3. **Background Workers** (Celery) - Async job processing
+4. **Caching Layer** (Redis) - Performance optimization
+5. **Monitoring** (Flower) - Worker and job monitoring
+
 ### Service Endpoints
 Once running, the following endpoints will be available:
 
@@ -364,10 +373,47 @@ Once running, the following endpoints will be available:
 |---------|-----|-------------|
 | **Main API** | http://localhost:8000 | Core security scanning API |
 | **API Docs** | http://localhost:8000/docs | Interactive API documentation |
-| **Health Check** | http://localhost:8000/health | Service status |
+| **OpenAPI Schema** | http://localhost:8000/openapi.json | API schema |
+| **Health Check** | http://localhost:8000/health | Service status and version |
 | **Metrics** | http://localhost:8000/metrics | Prometheus metrics |
-| **Flower Dashboard** | http://localhost:5555 | Celery task monitoring |
+| **Models** | http://localhost:8000/models | Available AI models |
+| **Analytics** | http://localhost:8000/api/analytics/overview | Phase 9 analytics dashboard |
+| **Flower Dashboard** | http://localhost:5555 | Celery task monitoring (if running) |
 | **Redis** | localhost:6379 | Cache and message broker |
+
+### Running Modes
+
+#### Mode 1: Full Production Stack (Docker)
+```bash
+# All services running in containers
+docker-compose up -d
+
+# Services: API + Redis + Workers + Monitoring
+curl http://localhost:8000/health
+curl http://localhost:5555  # Flower dashboard
+```
+
+#### Mode 2: Development Mode (Local Python)
+```bash
+# API server with hot-reload
+cd /app
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Optional: Run workers in separate terminals
+celery -A app.celery_app worker --loglevel=info
+celery -A app.celery_app flower --port=5555
+```
+
+#### Mode 3: CLI-Only Mode (No server)
+```bash
+# Install CLI tools
+pip install -e .
+
+# Use directly without running a server
+auditor models
+auditor scan . --output-format github
+auditor analyze --code "os.system(user_input)" --language python
+```
 
 ### Checking Service Status
 ```bash
