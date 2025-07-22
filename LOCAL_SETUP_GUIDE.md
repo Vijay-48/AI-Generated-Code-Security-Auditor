@@ -168,21 +168,25 @@ curl -X POST "http://localhost:8000/audit" \
 
 ### Step 1: Python Environment Setup
 ```bash
+# Ensure Python 3.11+ is installed
+python --version  # Should be 3.11 or higher
+
 # Create Python virtual environment
-python3.11 -m venv venv
+python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Upgrade pip
+# Upgrade pip and install build tools
 pip install --upgrade pip setuptools wheel
 
-# Install dependencies
+# Install all dependencies
 pip install -r requirements.txt
 
-# Install security tools
-pip install bandit semgrep
+# Verify security tools are installed
+bandit --version
+semgrep --version
 ```
 
-### Step 2: Install Redis (Required for Caching)
+### Step 2: Install Redis (Required for Full Features)
 ```bash
 # Ubuntu/Debian
 sudo apt-get update && sudo apt-get install redis-server
@@ -195,40 +199,74 @@ brew services start redis
 
 # Windows (using WSL recommended)
 # Or use Docker: docker run -d -p 6379:6379 redis:7-alpine
+
+# Verify Redis is running
+redis-cli ping  # Should return PONG
 ```
 
-### Step 3: Database Setup
+### Step 3: Directory Setup
 ```bash
-# Create data directories
+# Create required directories
 mkdir -p chroma_db
 mkdir -p data
+mkdir -p logs
 
 # Set permissions
-chmod 755 chroma_db data
+chmod 755 chroma_db data logs
+
+# Verify directory structure
+ls -la chroma_db data logs
 ```
 
-### Step 4: Run the Application
+### Step 4: Run the Application Components
+
+#### Option A: Full Stack (API + Workers)
 ```bash
-# Method A: Using uvicorn directly
+# Terminal 1: Run the main API server
+export PYTHONPATH="/app:$PYTHONPATH"
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-# Method B: Using Python module
-python -m app.main
-
-# Method C: Using the CLI entry point
-python -m auditor.cli models  # Test CLI functionality
-```
-
-### Step 5: Run Background Services (Optional but recommended)
-```bash
-# Terminal 1: Run Celery worker
+# Terminal 2: Run Celery worker (optional but recommended)
+export PYTHONPATH="/app:$PYTHONPATH"
 celery -A app.celery_app worker --loglevel=info --concurrency=2
 
-# Terminal 2: Run Flower monitoring (optional)
+# Terminal 3: Run Flower monitoring (optional)
+export PYTHONPATH="/app:$PYTHONPATH"
 celery -A app.celery_app flower --port=5555
+```
 
-# Terminal 3: Keep the main app running
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+#### Option B: API Server Only (Simpler)
+```bash
+# Just run the main API server
+cd /app
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### Option C: CLI Tools Only (No server needed)
+```bash
+# Install as editable package
+pip install -e .
+
+# Use CLI tools directly
+auditor models
+auditor scan . --output-format table
+```
+
+### Step 5: Verify Installation
+```bash
+# Test API server (if running)
+curl http://localhost:8000/health
+
+# Test CLI tools
+python -m auditor.cli models
+
+# Test package installation
+auditor --help
+
+# Test security scanning
+echo 'import os; os.system("rm -rf /")' > test.py
+auditor analyze --code "$(cat test.py)" --language python
+rm test.py
 ```
 
 ---
