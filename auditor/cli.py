@@ -640,6 +640,11 @@ def heatmap(ctx, scan_id, width, output, save, visual, color_scheme):
         from app.services.analytics_service import analytics_service
         from app.utils.formatters import ExportFormatter
         
+        # NEW: Import visual components for enhanced heatmap
+        if visual:
+            from cli_visuals.formatters import create_visual_formatter
+            visual_formatter = create_visual_formatter(color_scheme, False)
+        
         async def get_heatmap():
             await analytics_service.connect()
             heatmap_data = await analytics_service.get_heatmap_data(scan_id)
@@ -654,7 +659,10 @@ def heatmap(ctx, scan_id, width, output, save, visual, color_scheme):
         # Format based on output type
         formatter = ExportFormatter.get_formatter(output)
         
-        if output == 'ascii':
+        # NEW: Use enhanced visual heatmap if --visual flag is enabled
+        if visual and output == 'ascii':
+            content = visual_formatter.format_heatmap_visual(heatmap_data, width)
+        elif output == 'ascii':
             lines = []
             lines.append("🗺️  Security Heatmap - Rule Hits by Directory")
             lines.append("=" * (width + 20))
