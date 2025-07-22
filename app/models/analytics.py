@@ -268,3 +268,30 @@ class MetricsCalculator:
         security_score = max(0, 100 - (math.log10(normalized_score + 1) * 50))
         
         return round(security_score, 1)
+
+# Phase 9: Additional Models for Advanced Analytics
+
+class ExportRequest(BaseModel):
+    """Request model for data export"""
+    time_range: Optional[str] = "30d"
+    format: ExportFormat = ExportFormat.JSON
+    include_trends: bool = True
+    include_repositories: bool = True
+    include_performance: bool = False
+
+class ExportResponse(BaseModel):
+    """Response model for data export"""
+    export_id: str
+    status: str  # completed, processing, failed, not_implemented
+    download_url: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class AlertConfig(BaseModel):
+    """Configuration for automated alerts"""
+    name: str
+    threshold_type: str  # vulnerability_spike, score_drop, performance_degradation
+    threshold_value: float
+    time_window: str = "24h"
+    webhook_url: Optional[str] = None
+    email_recipients: Optional[List[str]] = []
+    enabled: bool = True
