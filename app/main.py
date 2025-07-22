@@ -8,6 +8,7 @@ from app.services.llm_client import ModelType, get_available_models
 from app.monitoring import MetricsMiddleware, metrics_endpoint, record_audit_metrics
 from app.services.cache_service import init_cache, shutdown_cache, cache_service
 from app.api.async_endpoints import async_router
+from app.api.analytics_endpoints import analytics_router, initialize_analytics_service
 from app.websocket_manager import websocket_manager
 
 
