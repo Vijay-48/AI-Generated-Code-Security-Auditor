@@ -473,6 +473,11 @@ def summary(ctx, scan_id, rule, severity, output, save, no_colors, visual, color
         from app.services.analytics_service import analytics_service
         from app.utils.formatters import ExportFormatter
         
+        # NEW: Import visual components for enhanced summary
+        if visual:
+            from cli_visuals.formatters import create_visual_formatter
+            visual_formatter = create_visual_formatter(color_scheme, no_colors)
+        
         # Load configuration
         from app.utils.formatters import load_config
         config = load_config()
@@ -503,7 +508,10 @@ def summary(ctx, scan_id, rule, severity, output, save, no_colors, visual, color
         # Format output
         formatter = ExportFormatter.get_formatter(output)
         
-        if output == 'table':
+        # NEW: Use enhanced visual summary if --visual flag is enabled
+        if visual and output == 'table':
+            content = visual_formatter.format_summary_visual(summary_data)
+        elif output == 'table':
             content = formatter.format_summary(summary_data, show_colors=config['output']['colors'])
         else:
             content = formatter.format_summary(summary_data)
