@@ -44,6 +44,9 @@ app.add_middleware(MetricsMiddleware)
 # Include async endpoints
 app.include_router(async_router)
 
+# Include analytics endpoints  
+app.include_router(analytics_router)
+
 # Remove global agent instance - create fresh ones per request
 
 class AuditRequest(BaseModel):
