@@ -526,8 +526,10 @@ def summary(ctx, scan_id, rule, severity, output, save, no_colors):
 @click.option('--save', help='Save output to file')
 @click.option('--no-colors', is_flag=True, help='Disable colored output')
 @click.option('--width', default=40, help='Chart width for ASCII output')
+@click.option('--visual', is_flag=True, help='🚀 Enable enhanced ASCII visualizations with sparklines and gradients')
+@click.option('--color-scheme', default='default', type=click.Choice(['default', 'monochrome', 'dark', 'security']), help='Color scheme for visuals')
 @click.pass_context
-def trends(ctx, days, output, save, no_colors, width):
+def trends(ctx, days, output, save, no_colors, width, visual, color_scheme):
     """Display vulnerability trends over time with export options"""
     try:
         import sys
