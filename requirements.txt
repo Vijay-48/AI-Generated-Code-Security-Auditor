@@ -24,10 +24,10 @@ gunicorn
 prometheus-client
 pathlib2
 # Async Processing & Caching
-redis
+redis>=4.5.0
 celery[redis]
 kombu
 websockets
-aioredis
 python-socketio[asyncio-client]
 eventlet
+flower
