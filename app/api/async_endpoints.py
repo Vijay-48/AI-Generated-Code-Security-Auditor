@@ -463,6 +463,3 @@ async def clear_cache(cache_type: Optional[str] = Query(None, description="Type 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
 
-# Import asyncio for WebSocket handling
-import asyncio
-import json
