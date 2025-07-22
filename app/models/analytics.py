@@ -223,3 +223,41 @@ class ScanHistoryEntry(BaseModel):
     top_issues: List[str] = Field(default_factory=list)  # Top 3 issue types
     scan_type: str = "single_file"
     duration: Optional[float] = None
+
+
+class MetricsCalculator:
+    """Utility class for calculating security metrics and scores"""
+    
+    def calculate_security_score(self, vulnerability_counts: Dict[str, int], total_files: int) -> float:
+        """
+        Calculate a security score based on vulnerability counts and file count
+        Score ranges from 0-100, where 100 is perfect security
+        """
+        if total_files == 0:
+            return 100.0
+        
+        # Weight different severity levels
+        weights = {
+            'CRITICAL': 10,
+            'HIGH': 5,
+            'MEDIUM': 2,
+            'LOW': 1,
+            'INFO': 0.5
+        }
+        
+        # Calculate weighted vulnerability score
+        weighted_score = 0
+        for severity, count in vulnerability_counts.items():
+            weight = weights.get(severity.upper(), 1)
+            weighted_score += count * weight
+        
+        # Normalize by file count and convert to 0-100 scale
+        if weighted_score == 0:
+            return 100.0
+        
+        # Use logarithmic scale to prevent extreme scores
+        import math
+        normalized_score = weighted_score / total_files
+        security_score = max(0, 100 - (math.log10(normalized_score + 1) * 50))
+        
+        return round(security_score, 1)
