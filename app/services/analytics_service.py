@@ -1,20 +1,26 @@
 """
-Analytics Service for Phase 7: Advanced Monitoring Dashboards
-Handles data aggregation, metrics calculation, and dashboard analytics
+Analytics Service for Phase 7: CLI Monitoring & Analytics
+Handles database operations, data aggregation, and metrics calculation with SQLite storage
 """
 import asyncio
 import json
+import sqlite3
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Optional, Any
+from pathlib import Path
 from collections import defaultdict
 import redis.asyncio as redis
+from sqlalchemy import create_engine, desc, func, and_
+from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
 from app.services.cache_service import cache_service
 from app.models.analytics import (
-    SecurityMetrics, VulnerabilityTrend, RepositoryStats, VulnerabilityDistribution,
-    ScanPerformanceMetrics, TimeSeries, DashboardOverview, SeverityLevel, ScanType,
-    TimeRange, MetricsCalculator
+    Base, ScanRecord, RuleHitRecord,
+    DashboardOverview, SecurityMetrics, VulnerabilityTrend, RepositoryStats,
+    VulnerabilityDistribution, ScanPerformanceMetrics, TimeRange, SeverityLevel,
+    ScanSummary, TrendDataPoint, HeatmapEntry, ScanHistoryEntry, ScanType,
+    TimeSeries, MetricsCalculator
 )
 
 
