@@ -2,6 +2,8 @@
 Async API endpoints for AI Code Security Auditor
 Provides async job processing with real-time progress tracking
 """
+import asyncio
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
