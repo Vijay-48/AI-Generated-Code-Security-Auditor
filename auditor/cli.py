@@ -460,8 +460,10 @@ def generate_sarif_output(results: List[Dict]) -> str:
 @click.option('--output', default='table', type=click.Choice(['table', 'json', 'yaml']), help='Output format')
 @click.option('--save', help='Save output to file')
 @click.option('--no-colors', is_flag=True, help='Disable colored output')
+@click.option('--visual', is_flag=True, help='🚀 Enable enhanced visuals with pie charts and severity bars')
+@click.option('--color-scheme', default='security', type=click.Choice(['default', 'monochrome', 'dark', 'security']), help='Color scheme for visuals')
 @click.pass_context 
-def summary(ctx, scan_id, rule, severity, output, save, no_colors):
+def summary(ctx, scan_id, rule, severity, output, save, no_colors, visual, color_scheme):
     """Show comprehensive summary of a scan with filtering options"""
     try:
         # Import required modules
