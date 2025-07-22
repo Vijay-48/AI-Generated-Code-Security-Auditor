@@ -19,37 +19,84 @@ from app.websocket_manager import websocket_manager
 # Create router for async endpoints
 async_router = APIRouter(prefix="/async", tags=["Async Operations"])
 
-# WebSocket connection manager
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: Dict[str, List[WebSocket]] = {}
-
-    async def connect(self, websocket: WebSocket, job_id: str):
-        await websocket.accept()
-        if job_id not in self.active_connections:
-            self.active_connections[job_id] = []
-        self.active_connections[job_id].append(websocket)
-
-    def disconnect(self, websocket: WebSocket, job_id: str):
-        if job_id in self.active_connections:
-            self.active_connections[job_id].remove(websocket)
-            if not self.active_connections[job_id]:
-                del self.active_connections[job_id]
-
-    async def send_progress_update(self, job_id: str, progress: dict):
-        if job_id in self.active_connections:
-            disconnected = []
-            for connection in self.active_connections[job_id]:
-                try:
-                    await connection.send_json(progress)
-                except:
-                    disconnected.append(connection)
+@async_router.websocket("/jobs/{job_id}/ws")
+async def websocket_job_progress_new(websocket: WebSocket, job_id: str):
+    """
+    WebSocket endpoint for real-time job progress updates
+    
+    Clients can connect to receive live progress updates as jobs execute
+    Features:
+    - Real-time progress streaming
+    - Automatic heartbeat to keep connections alive
+    - Error handling and graceful disconnection
+    - Multiple clients can connect to the same job
+    """
+    
+    client_info = {
+        "user_agent": websocket.headers.get("user-agent", "unknown"),
+        "origin": websocket.headers.get("origin", "unknown")
+    }
+    
+    await websocket_manager.connect(websocket, job_id, client_info)
+    
+    try:
+        # Send initial job status if available
+        progress = await cache_service.get_job_progress(job_id)
+        if progress:
+            await websocket.send_json({
+                "type": "initial_status",
+                "job_id": job_id,
+                **progress
+            })
+        else:
+            await websocket.send_json({
+                "type": "initial_status",
+                "job_id": job_id,
+                "status": "unknown",
+                "message": "Job status not found. Job may be queued or expired."
+            })
+        
+        # Keep connection alive and handle client messages
+        while True:
+            try:
+                # Wait for client message with timeout for heartbeat
+                data = await asyncio.wait_for(websocket.receive_json(), timeout=30.0)
+                
+                # Handle client requests
+                if data.get("type") == "ping":
+                    await websocket.send_json({
+                        "type": "pong",
+                        "job_id": job_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                
+                elif data.get("type") == "get_status":
+                    # Send current job status
+                    progress = await cache_service.get_job_progress(job_id)
+                    if progress:
+                        await websocket.send_json({
+                            "type": "status_update",
+                            "job_id": job_id,
+                            **progress
+                        })
+                
+            except asyncio.TimeoutError:
+                # Send heartbeat if no client activity
+                await websocket_manager.send_heartbeat(job_id)
             
-            # Remove disconnected clients
-            for conn in disconnected:
-                self.disconnect(conn, job_id)
+    except WebSocketDisconnect:
+        websocket_manager.disconnect(websocket, job_id)
+    except Exception as e:
+        print(f"⚠️ WebSocket error for job {job_id}: {e}")
+        await websocket.send_json({
+            "type": "error",
+            "job_id": job_id,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        websocket_manager.disconnect(websocket, job_id)
 
-manager = ConnectionManager()
+# Remove the old ConnectionManager class since we're using websocket_manager now
 
 # Request models
 class AsyncAuditRequest(BaseModel):
