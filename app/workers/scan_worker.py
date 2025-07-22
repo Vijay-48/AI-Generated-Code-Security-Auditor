@@ -124,6 +124,15 @@ async def _async_process_security_scan(
             'started_at': start_time.isoformat()
         })
         
+        # Publish WebSocket update
+        await _publish_progress_update(job_id, {
+            'status': 'processing',
+            'stage': 'initializing', 
+            'progress': 0,
+            'message': 'Starting security analysis...',
+            'started_at': start_time.isoformat()
+        })
+        
         # Check cache first
         cache_hit = False
         if cache_enabled:
