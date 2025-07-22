@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
 from pydantic import BaseModel
+from sqlalchemy import func, and_, desc
 
 from app.models.analytics import (
     DashboardOverview, SecurityMetrics, VulnerabilityTrend, RepositoryStats,
