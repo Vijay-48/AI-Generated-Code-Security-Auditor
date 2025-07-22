@@ -628,8 +628,10 @@ def trends(ctx, days, output, save, no_colors, width, visual, color_scheme):
 @click.option('--width', default=50, help='Heatmap width in characters')
 @click.option('--output', default='ascii', type=click.Choice(['ascii', 'csv', 'json']), help='Output format')
 @click.option('--save', help='Save output to file')
+@click.option('--visual', is_flag=True, help='🚀 Enable enhanced gradient heatmap with 256-color support')
+@click.option('--color-scheme', default='default', type=click.Choice(['default', 'monochrome', 'dark', 'security']), help='Color scheme for heatmap')
 @click.pass_context
-def heatmap(ctx, scan_id, width, output, save):
+def heatmap(ctx, scan_id, width, output, save, visual, color_scheme):
     """Show heatmap of rule hits per directory with export options"""
     try:
         import sys
