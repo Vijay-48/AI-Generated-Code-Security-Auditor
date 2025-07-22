@@ -10,11 +10,11 @@ celery_app = Celery(
     "security_auditor",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=['app.workers.scan_worker']
+    include=['app.workers.scan_worker', 'app.workers.repo_scan_worker']
 )
 
 # Import task modules to ensure they're registered
-from app.workers import scan_worker
+from app.workers import scan_worker, repo_scan_worker
 
 # Celery configuration
 celery_app.conf.update(
