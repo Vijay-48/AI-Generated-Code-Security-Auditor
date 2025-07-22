@@ -494,6 +494,22 @@ async def get_cache_statistics():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get cache stats: {str(e)}")
 
+@async_router.get("/websocket/stats")
+async def get_websocket_stats():
+    """
+    Get WebSocket connection statistics
+    
+    Shows number of active connections, jobs being monitored, etc.
+    """
+    try:
+        stats = websocket_manager.get_connection_stats()
+        return {
+            "websocket_stats": stats,
+            "redis_status": "connected" if websocket_manager.redis_publisher else "disconnected"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get WebSocket stats: {str(e)}")
+
 @async_router.delete("/cache/clear")
 async def clear_cache(cache_type: Optional[str] = Query(None, description="Type of cache to clear (scan, llm, patch, job)")):
     """
