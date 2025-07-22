@@ -645,67 +645,144 @@ def heatmap(ctx, scan_id, width):
 
 @cli.command() 
 @click.option('--limit', default=20, help='Number of scans to show')
-@click.option('--format', 'history_format', default='table', type=click.Choice(['table', 'detailed']), help='Output format')
+@click.option('--since', help='Show scans since date (YYYY-MM-DD)')
+@click.option('--until', help='Show scans until date (YYYY-MM-DD)')
+@click.option('--min-score', type=float, help='Minimum security score filter')
+@click.option('--max-score', type=float, help='Maximum security score filter')
+@click.option('--repo', help='Filter by repository URL (partial match)')
+@click.option('--language', type=click.Choice(['python', 'javascript', 'java', 'go']), help='Filter by language')
+@click.option('--scan-type', type=click.Choice(['single_file', 'repository', 'bulk']), help='Filter by scan type')
+@click.option('--output', default='table', type=click.Choice(['table', 'detailed', 'csv', 'json', 'sarif']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.option('--no-colors', is_flag=True, help='Disable colored output')
+@click.option('--progress', is_flag=True, help='Show progress bar for large datasets')
 @click.pass_context
-def history(ctx, limit, history_format):
-    """Show scan history with key metrics"""
+def history(ctx, limit, since, until, min_score, max_score, repo, language, scan_type, output, save, no_colors, progress):
+    """Show scan history with advanced filtering and export options"""
     try:
         import sys
         import asyncio
+        from datetime import datetime
         sys.path.append('/app')
         from app.services.analytics_service import analytics_service
+        from app.utils.formatters import ExportFormatter, load_config
+        
+        # Load configuration
+        config = load_config()
+        
+        # Override config with command line options
+        if no_colors:
+            config['output']['colors'] = False
+        if not progress:
+            config['output']['progress_bars'] = False
+        
+        # Parse date filters
+        filters = {}
+        if since:
+            try:
+                filters['since'] = datetime.strptime(since, '%Y-%m-%d')
+            except ValueError:
+                click.echo("❌ Invalid since date format. Use YYYY-MM-DD", err=True)
+                sys.exit(1)
+        
+        if until:
+            try:
+                filters['until'] = datetime.strptime(until, '%Y-%m-%d')
+            except ValueError:
+                click.echo("❌ Invalid until date format. Use YYYY-MM-DD", err=True)
+                sys.exit(1)
+        
+        # Add other filters
+        if min_score is not None:
+            filters['min_score'] = min_score
+        if max_score is not None:
+            filters['max_score'] = max_score
+        if repo:
+            filters['repo'] = repo
+        if language:
+            filters['language'] = language
+        if scan_type:
+            filters['scan_type'] = scan_type
         
         async def get_history():
             await analytics_service.connect()
-            history_data = await analytics_service.get_scan_history(limit)
+            
+            if config['output']['progress_bars'] and limit > 50:
+                try:
+                    from tqdm import tqdm
+                    with tqdm(total=1, desc="Fetching scan history") as pbar:
+                        history_data = await analytics_service.get_scan_history(limit, **filters)
+                        pbar.update(1)
+                    return history_data
+                except ImportError:
+                    pass
+            
+            history_data = await analytics_service.get_scan_history(limit, **filters)
             return history_data
         
         history_data = asyncio.run(get_history())
         
         if not history_data:
-            click.echo("❌ No scan history found")
+            click.echo("❌ No scan history found matching the criteria")
             sys.exit(1)
         
-        click.echo(f"📋 Scan History (Last {len(history_data)} scans)")
-        click.echo("=" * 80)
+        # Format output
+        formatter = ExportFormatter.get_formatter(output)
         
-        if history_format == 'table':
-            # Compact table format
-            click.echo(f"{'Date':<12} {'Score':<6} {'Issues':<7} {'Type':<12} {'Top Issues':<30}")
-            click.echo("-" * 80)
+        if output == 'table':
+            content = formatter.format_scan_history(history_data, show_colors=config['output']['colors'])
+        elif output == 'detailed':
+            # Detailed format with full information
+            lines = []
+            header = f"📋 Detailed Scan History (Last {len(history_data)} scans)"
+            lines.append(header)
+            lines.append("=" * max(80, len(header)))
             
-            for entry in history_data:
-                date_str = entry.timestamp.strftime('%Y-%m-%d')
-                score_str = f"{entry.security_score:.1f}"
-                issues_str = str(entry.total_issues)
-                type_str = entry.scan_type
-                top_issues_str = ", ".join(entry.top_issues[:3])[:30]  # Truncate for display
-                
-                click.echo(f"{date_str:<12} {score_str:<6} {issues_str:<7} {type_str:<12} {top_issues_str:<30}")
-                
-        else:
-            # Detailed format
             for i, entry in enumerate(history_data, 1):
-                click.echo(f"\n{i}. Scan ID: {entry.scan_id}")
-                click.echo(f"   Date: {entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+                lines.append(f"\n{i}. Scan ID: {entry.scan_id}")
+                lines.append(f"   Date: {entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
                 if entry.repository:
                     repo_name = entry.repository.split('/')[-1] if '/' in entry.repository else entry.repository
-                    click.echo(f"   Repository: {repo_name}")
-                click.echo(f"   Security Score: {entry.security_score:.1f}/100")
-                click.echo(f"   Issues: {entry.total_issues}")
-                click.echo(f"   Type: {entry.scan_type}")
+                    lines.append(f"   Repository: {repo_name}")
+                lines.append(f"   Security Score: {entry.security_score:.1f}/100")
+                lines.append(f"   Issues: {entry.total_issues}")
+                lines.append(f"   Type: {entry.scan_type}")
                 if entry.duration:
-                    click.echo(f"   Duration: {entry.duration:.2f}s")
+                    lines.append(f"   Duration: {entry.duration:.2f}s")
                 if entry.top_issues:
-                    click.echo(f"   Top Issues: {', '.join(entry.top_issues[:3])}")
+                    lines.append(f"   Top Issues: {', '.join(entry.top_issues[:3])}")
+            
+            # Summary statistics
+            total_issues = sum(h.total_issues for h in history_data)
+            avg_score = sum(h.security_score for h in history_data) / len(history_data)
+            
+            lines.append(f"\n📊 Summary")
+            lines.append(f"Total Issues Found: {total_issues}")
+            lines.append(f"Average Security Score: {avg_score:.1f}")
+            
+            content = "\n".join(lines)
+        else:
+            content = formatter.format_scan_history(history_data)
         
-        # Summary statistics
-        total_issues = sum(h.total_issues for h in history_data)
-        avg_score = sum(h.security_score for h in history_data) / len(history_data) if history_data else 0
+        # Output or save
+        if save:
+            from app.utils.formatters import save_to_file
+            if save_to_file(content, save, output):
+                click.echo(f"✅ History saved to {save}")
+            else:
+                sys.exit(1)
+        else:
+            click.echo(content)
         
-        click.echo(f"\n📊 Summary")
-        click.echo(f"Total Issues Found: {total_issues}")
-        click.echo(f"Average Security Score: {avg_score:.1f}")
+        # Show summary unless output is non-table format
+        if output == 'table' or output == 'detailed':
+            total_issues = sum(h.total_issues for h in history_data)
+            avg_score = sum(h.security_score for h in history_data) / len(history_data) if history_data else 0
+            
+            if output == 'table':
+                click.echo(f"\n📊 Summary")
+                click.echo(f"Total Issues Found: {total_issues}")
+                click.echo(f"Average Security Score: {avg_score:.1f}")
         
     except Exception as e:
         click.echo(f"❌ Error getting scan history: {str(e)}", err=True)
