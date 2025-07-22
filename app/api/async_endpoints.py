@@ -325,6 +325,98 @@ async def submit_llm_analysis_job(request: LLMAnalysisRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to submit LLM job: {str(e)}")
 
+@async_router.post("/repo-scan", response_model=JobResponse)
+async def submit_bulk_repository_scan_job(request: BulkRepositoryRequest):
+    """
+    🚀 **NEW in Phase 6**: Submit bulk repository scan job for async processing
+    
+    **Bulk Repository Scanning Features:**
+    - Git repository cloning and analysis
+    - Batch processing with real-time progress updates  
+    - File-level vulnerability detection and caching
+    - Aggregated repository security reports
+    - Support for custom include/exclude patterns
+    
+    **Parameters:**
+    - **repository_url**: Git repository URL or local path
+    - **branch**: Git branch to scan (default: main)
+    - **commit**: Specific commit hash (optional)
+    - **include_patterns**: File patterns to include (e.g., ["*.py", "*.js"])
+    - **exclude_patterns**: File patterns to exclude (e.g., ["*/tests/*"])
+    - **max_files**: Maximum files to scan (1-2000, default: 500)
+    - **batch_size**: Files per batch (1-100, default: 10) 
+    - **use_advanced_analysis**: Enable multi-model AI analysis
+    - **cache_enabled**: Enable file-level result caching
+    - **priority**: Job priority (normal, high, urgent)
+    
+    **Returns:**
+    - Job ID for progress tracking via WebSocket
+    - Estimated duration based on repository size
+    - URLs for status checking and result retrieval
+    
+    **Example:**
+    ```json
+    {
+        "repository_url": "https://github.com/user/repo.git",
+        "branch": "main",
+        "max_files": 100,
+        "use_advanced_analysis": true
+    }
+    ```
+    """
+    try:
+        # Generate unique job ID
+        job_id = str(uuid.uuid4())
+        
+        # Determine queue based on priority
+        queue_mapping = {
+            'urgent': 'urgent_scans',
+            'high': 'high_priority_scans', 
+            'normal': 'security_scans'
+        }
+        queue = queue_mapping.get(request.priority, 'security_scans')
+        
+        # Submit bulk repository scan job to Celery
+        task = process_bulk_repository_scan.apply_async(
+            args=[
+                job_id,
+                request.repository_url,
+                request.branch,
+                request.commit,
+                request.include_patterns,
+                request.exclude_patterns,
+                request.max_files,
+                request.batch_size,
+                request.use_advanced_analysis,
+                request.cache_enabled
+            ],
+            queue=queue,
+            task_id=job_id
+        )
+        
+        # Estimate duration based on configuration
+        base_time_per_file = 2 if request.use_advanced_analysis else 1  # seconds
+        estimated_total_seconds = (request.max_files or 500) * base_time_per_file
+        
+        if estimated_total_seconds < 60:
+            estimated_duration = f"{estimated_total_seconds}s"
+        elif estimated_total_seconds < 3600:
+            estimated_duration = f"{estimated_total_seconds // 60}-{(estimated_total_seconds // 60) + 2} minutes"
+        else:
+            estimated_duration = f"{estimated_total_seconds // 3600}-{(estimated_total_seconds // 3600) + 1} hours"
+        
+        return JobResponse(
+            job_id=job_id,
+            status="queued",
+            message=f"Bulk repository scan queued successfully for {request.repository_url}",
+            estimated_duration=estimated_duration,
+            progress_url=f"/async/jobs/{job_id}/status",
+            websocket_url=f"/async/jobs/{job_id}/ws"
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to submit repository scan job: {str(e)}")
+
 @async_router.get("/jobs/{job_id}/status", response_model=JobStatusResponse) 
 async def get_job_status_endpoint(job_id: str):
     """
