@@ -21,6 +21,14 @@ from app.config import settings
 # Global cache for worker initialization
 _worker_initialized = False
 
+async def _publish_progress_update(job_id: str, progress_data: Dict[str, Any]):
+    """Helper function to publish progress updates via WebSocket"""
+    try:
+        await websocket_manager.publish_job_progress(job_id, progress_data)
+    except Exception as e:
+        # Don't fail the job if WebSocket publishing fails
+        print(f"⚠️ Failed to publish WebSocket update for job {job_id}: {e}")
+
 @worker_init.connect
 def init_worker(**kwargs):
     """Initialize worker with cache connections"""
