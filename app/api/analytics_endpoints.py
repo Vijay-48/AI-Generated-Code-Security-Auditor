@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from app.models.analytics import (
     DashboardOverview, SecurityMetrics, VulnerabilityTrend, RepositoryStats,
     VulnerabilityDistribution, ScanPerformanceMetrics, TimeRange, SeverityLevel,
-    ExportRequest, ExportResponse, AlertConfig
+    ExportRequest, ExportResponse, AlertConfig, ScanRecord, RuleHitRecord, ExportFormat
 )
 from app.services.analytics_service import analytics_service
 from app.websocket_manager import websocket_manager
