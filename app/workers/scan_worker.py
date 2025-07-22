@@ -47,7 +47,7 @@ async def _publish_progress_update(job_id: str, progress_data: Dict[str, Any]):
 
 @worker_init.connect
 def init_worker(**kwargs):
-    """Initialize worker with cache connections and WebSocket manager"""
+    """Initialize worker with cache connections"""
     global _worker_initialized
     print("🚀 Initializing Celery worker...")
     
@@ -58,11 +58,8 @@ def init_worker(**kwargs):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     
-    # Connect to cache
+    # Connect to cache only (no WebSocket manager in worker)
     loop.run_until_complete(cache_service.connect())
-    
-    # Initialize WebSocket manager for progress publishing
-    loop.run_until_complete(websocket_manager.initialize())
     
     _worker_initialized = True
     print("✅ Worker initialized successfully")
