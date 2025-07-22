@@ -184,136 +184,116 @@ class AnalyticsService:
             raise
 
     async def get_dashboard_overview(self, time_range: TimeRange) -> DashboardOverview:
-        """Get complete dashboard overview data"""
-        
+        """Get complete dashboard overview"""
         try:
-            # Check cache first
-            cache_key = f"{self.cache_prefix}overview:{time_range.value}"
-            cached_data = await self.redis_client.get(cache_key)
+            # Get all the component data
+            metrics = await self.get_security_metrics(time_range)
+            trends = await self.get_vulnerability_trends(time_range)
+            repositories = await self.get_repository_stats(limit=10)
+            performance = await self.get_performance_metrics()
             
-            if cached_data:
-                data = json.loads(cached_data)
-                # Convert datetime strings back to datetime objects
-                return self._deserialize_dashboard_overview(data)
-            
-            # Calculate fresh metrics
-            overview = await self._calculate_dashboard_overview(time_range)
-            
-            # Cache for 5 minutes
-            await self.redis_client.setex(
-                cache_key,
-                300,
-                json.dumps(overview.model_dump(), default=str)
+            return DashboardOverview(
+                metrics=metrics,
+                trends=trends,
+                top_repositories=repositories,
+                performance=performance,
+                time_range=time_range
             )
-            
-            return overview
             
         except Exception as e:
             print(f"❌ Error getting dashboard overview: {e}")
-            return self._get_empty_dashboard_overview(time_range)
-    
-    async def get_security_metrics(
-        self, 
-        time_range: TimeRange = TimeRange.LAST_DAY
-    ) -> SecurityMetrics:
+            # Return empty dashboard instead of failing
+            return DashboardOverview(
+                metrics=SecurityMetrics(),
+                time_range=time_range
+            )
+
+    async def get_security_metrics(self, time_range: TimeRange) -> SecurityMetrics:
         """Get aggregated security metrics"""
-        
         try:
+            session = self.get_db_session()
+            
+            # Calculate time window
             end_time = datetime.now(timezone.utc)
             start_time = self._get_start_time(end_time, time_range)
             
-            # Get all job keys in time range
-            job_keys = await self.redis_client.keys("job:*")
+            # Query scans in time range
+            scans = session.query(ScanRecord).filter(
+                and_(
+                    ScanRecord.timestamp >= start_time,
+                    ScanRecord.timestamp <= end_time
+                )
+            ).all()
             
-            total_scans = 0
-            total_files = 0
-            total_repos = 0
-            vulnerability_counts = defaultdict(int)
-            scan_times = []
-            cache_hits = 0
-            recent_scans = 0
-            recent_vulns = 0
+            # Calculate metrics
+            total_scans = len(scans)
+            total_files = sum(scan.files_scanned or 1 for scan in scans)
+            unique_repos = len(set(scan.repo_url for scan in scans if scan.repo_url))
             
-            # Analyze each scan
-            for job_key in job_keys:
-                job_data = await self.redis_client.get(job_key)
-                if not job_data:
-                    continue
-                    
-                try:
-                    job = json.loads(job_data)
-                    
-                    # Parse job timestamp
-                    job_time = datetime.fromisoformat(
-                        job.get('started_at', '').replace('Z', '+00:00')
-                    ) if job.get('started_at') else None
-                    
-                    if not job_time or job_time < start_time:
-                        continue
-                    
-                    # Count scans
-                    total_scans += 1
-                    
-                    # Repository vs single file scans
-                    if 'repository_url' in job.get('message', ''):
-                        total_repos += 1
-                        total_files += job.get('total_files', 0)
-                    else:
-                        total_files += 1
-                    
-                    # Scan performance
-                    if job.get('execution_time'):
-                        scan_times.append(job['execution_time'])
-                    
-                    if job.get('cache_hit'):
-                        cache_hits += 1
-                    
-                    # Recent activity (last 24 hours)
-                    if job_time > end_time - timedelta(hours=24):
-                        recent_scans += 1
-                        recent_vulns += job.get('total_vulnerabilities', 0)
-                    
-                    # Count vulnerabilities by severity
-                    total_vulns = job.get('total_vulnerabilities', 0)
-                    if total_vulns > 0:
-                        # Estimate severity distribution (would be better with actual data)
-                        vulnerability_counts['CRITICAL'] += max(1, total_vulns // 20)
-                        vulnerability_counts['HIGH'] += max(1, total_vulns // 10) 
-                        vulnerability_counts['MEDIUM'] += max(1, total_vulns // 5)
-                        vulnerability_counts['LOW'] += total_vulns // 2
-                        
-                except (json.JSONDecodeError, ValueError) as e:
-                    continue
+            # Vulnerability distribution
+            vuln_dist = VulnerabilityDistribution()
+            total_scan_duration = 0
+            valid_durations = 0
             
-            # Calculate derived metrics
-            avg_scan_time = sum(scan_times) / len(scan_times) if scan_times else 0.0
-            cache_hit_rate = (cache_hits / total_scans * 100) if total_scans > 0 else 0.0
+            for scan in scans:
+                vuln_dist.critical += scan.critical_count or 0
+                vuln_dist.high += scan.high_count or 0
+                vuln_dist.medium += scan.medium_count or 0
+                vuln_dist.low += scan.low_count or 0
+                
+                if scan.scan_duration:
+                    total_scan_duration += scan.scan_duration
+                    valid_durations += 1
             
-            total_vulnerabilities = sum(vulnerability_counts.values())
-            security_score = self.metrics_calculator.calculate_security_score(
-                vulnerability_counts, total_files
-            )
+            vuln_dist.calculate_total()
+            
+            # Calculate overall security score (weighted average)
+            if scans:
+                avg_security_score = sum(scan.security_score or 0 for scan in scans) / len(scans)
+                avg_scan_duration = total_scan_duration / valid_durations if valid_durations > 0 else 0
+            else:
+                avg_security_score = 100.0
+                avg_scan_duration = 0.0
+            
+            # Get top vulnerability types
+            top_vuln_types = session.query(
+                RuleHitRecord.rule_name,
+                RuleHitRecord.severity,
+                func.sum(RuleHitRecord.hit_count).label('total_hits')
+            ).filter(
+                RuleHitRecord.scan_id.in_([scan.id for scan in scans])
+            ).group_by(
+                RuleHitRecord.rule_name, RuleHitRecord.severity
+            ).order_by(
+                desc('total_hits')
+            ).limit(5).all()
+            
+            top_vulnerability_types = [
+                {
+                    "rule_name": rule_name,
+                    "severity": severity,
+                    "count": int(total_hits)
+                }
+                for rule_name, severity, total_hits in top_vuln_types
+            ]
+            
+            session.close()
             
             return SecurityMetrics(
                 total_scans=total_scans,
-                total_files_scanned=total_files,
-                total_repositories_scanned=total_repos,
-                total_vulnerabilities=total_vulnerabilities,
-                critical_count=vulnerability_counts.get('CRITICAL', 0),
-                high_count=vulnerability_counts.get('HIGH', 0),
-                medium_count=vulnerability_counts.get('MEDIUM', 0),
-                low_count=vulnerability_counts.get('LOW', 0),
-                info_count=vulnerability_counts.get('INFO', 0),
-                avg_scan_time=round(avg_scan_time, 2),
-                cache_hit_rate=round(cache_hit_rate, 1),
-                scans_last_24h=recent_scans,
-                new_vulnerabilities_last_24h=recent_vulns,
-                security_score=security_score,
-                improvement_trend=0.0  # Would need historical comparison
+                total_files=total_files,
+                total_repositories=unique_repos,
+                vulnerability_distribution=vuln_dist,
+                security_score=round(avg_security_score, 1),
+                avg_scan_duration=round(avg_scan_duration, 2),
+                cache_hit_rate=0.0,  # TODO: implement cache metrics
+                scan_success_rate=100.0,  # TODO: track failures
+                top_vulnerability_types=top_vulnerability_types,
+                recent_activity={}  # TODO: implement recent activity
             )
             
         except Exception as e:
-            print(f"❌ Error calculating security metrics: {e}")
+            print(f"❌ Error getting security metrics: {e}")
             return SecurityMetrics()
     
     async def get_vulnerability_trends(
