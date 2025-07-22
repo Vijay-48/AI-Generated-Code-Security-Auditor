@@ -617,12 +617,38 @@ class AnalyticsService:
             print(f"❌ Error getting heatmap data: {e}")
             return []
     
-    async def get_scan_history(self, limit: int = 20) -> List[ScanHistoryEntry]:
-        """Get scan history for CLI"""
+    async def get_scan_history(self, limit: int = 20, **filters) -> List[ScanHistoryEntry]:
+        """Get scan history for CLI with advanced filtering"""
         try:
             session = self.get_db_session()
             
-            scans = session.query(ScanRecord).order_by(desc(ScanRecord.timestamp)).limit(limit).all()
+            # Base query
+            query = session.query(ScanRecord)
+            
+            # Apply filters
+            if filters.get('since'):
+                query = query.filter(ScanRecord.timestamp >= filters['since'])
+            
+            if filters.get('until'):
+                query = query.filter(ScanRecord.timestamp <= filters['until'])
+                
+            if filters.get('min_score') is not None:
+                query = query.filter(ScanRecord.security_score >= filters['min_score'])
+                
+            if filters.get('max_score') is not None:
+                query = query.filter(ScanRecord.security_score <= filters['max_score'])
+                
+            if filters.get('repo'):
+                query = query.filter(ScanRecord.repo_url.contains(filters['repo']))
+                
+            if filters.get('language'):
+                query = query.filter(ScanRecord.language == filters['language'])
+                
+            if filters.get('scan_type'):
+                query = query.filter(ScanRecord.scan_type == filters['scan_type'])
+            
+            # Order by timestamp descending and apply limit
+            scans = query.order_by(desc(ScanRecord.timestamp)).limit(limit).all()
             
             history = []
             for scan in scans:
@@ -655,6 +681,172 @@ class AnalyticsService:
             
         except Exception as e:
             print(f"❌ Error getting scan history: {e}")
+            return []
+    
+    async def get_scan_summary_filtered(self, scan_id: Optional[str] = None, **filters) -> Optional[ScanSummary]:
+        """Get filtered scan summary with rule and severity filtering"""
+        try:
+            session = self.get_db_session()
+            
+            if scan_id:
+                scan = session.query(ScanRecord).filter(ScanRecord.id == scan_id).first()
+            else:
+                scan = session.query(ScanRecord).order_by(desc(ScanRecord.timestamp)).first()
+            
+            if not scan:
+                session.close()
+                return None
+            
+            # Base query for rule hits
+            rule_query = session.query(
+                RuleHitRecord.rule_name,
+                RuleHitRecord.severity,
+                func.sum(RuleHitRecord.hit_count).label('total_hits')
+            ).filter(
+                RuleHitRecord.scan_id == scan.id
+            )
+            
+            # Apply filters
+            if filters.get('rule'):
+                rule_query = rule_query.filter(RuleHitRecord.rule_name.contains(filters['rule']))
+                
+            if filters.get('severity'):
+                rule_query = rule_query.filter(RuleHitRecord.severity == filters['severity'])
+            
+            top_rules = rule_query.group_by(
+                RuleHitRecord.rule_name, RuleHitRecord.severity
+            ).order_by(
+                desc('total_hits')
+            ).limit(10).all()
+            
+            top_rules_list = [
+                {
+                    "rule_name": rule_name,
+                    "severity": severity,
+                    "hits": int(total_hits)
+                }
+                for rule_name, severity, total_hits in top_rules
+            ]
+            
+            # Recalculate counts if filtering applied
+            if filters.get('severity'):
+                # Get filtered counts
+                filtered_counts = {
+                    'critical': 0,
+                    'high': 0,
+                    'medium': 0,
+                    'low': 0
+                }
+                if filters['severity'] in filtered_counts:
+                    if filters['severity'] == 'critical':
+                        filtered_counts['critical'] = scan.critical_count or 0
+                    elif filters['severity'] == 'high':
+                        filtered_counts['high'] = scan.high_count or 0
+                    elif filters['severity'] == 'medium':
+                        filtered_counts['medium'] = scan.medium_count or 0
+                    elif filters['severity'] == 'low':
+                        filtered_counts['low'] = scan.low_count or 0
+                
+                total_filtered = sum(filtered_counts.values())
+            else:
+                filtered_counts = {
+                    'critical': scan.critical_count or 0,
+                    'high': scan.high_count or 0,
+                    'medium': scan.medium_count or 0,
+                    'low': scan.low_count or 0
+                }
+                total_filtered = scan.total_issues or 0
+            
+            session.close()
+            
+            return ScanSummary(
+                scan_id=scan.id,
+                timestamp=scan.timestamp,
+                repository=scan.repo_url,
+                total_issues=total_filtered,
+                critical_count=filtered_counts['critical'],
+                high_count=filtered_counts['high'],
+                medium_count=filtered_counts['medium'],
+                low_count=filtered_counts['low'],
+                security_score=scan.security_score or 0.0,
+                scan_duration=scan.scan_duration,
+                files_scanned=scan.files_scanned or 0,
+                top_rules=top_rules_list,
+                languages=[scan.language] if scan.language else []
+            )
+            
+        except Exception as e:
+            print(f"❌ Error getting filtered scan summary: {e}")
+            return None
+
+    async def get_repository_stats_filtered(self, limit: int = 20, **filters) -> List[RepositoryStats]:
+        """Get repository statistics with filtering"""
+        try:
+            session = self.get_db_session()
+            
+            # Base query
+            query = session.query(
+                ScanRecord.repo_url,
+                ScanRecord.repository_name,
+                ScanRecord.branch,
+                func.count(ScanRecord.id).label('total_scans'),
+                func.sum(ScanRecord.files_scanned).label('total_files'),
+                func.avg(ScanRecord.security_score).label('avg_security_score'),
+                func.sum(ScanRecord.critical_count).label('total_critical'),
+                func.sum(ScanRecord.high_count).label('total_high'),
+                func.sum(ScanRecord.medium_count).label('total_medium'),
+                func.sum(ScanRecord.low_count).label('total_low'),
+                func.max(ScanRecord.timestamp).label('last_scan'),
+                func.avg(ScanRecord.scan_duration).label('avg_duration')
+            ).filter(
+                ScanRecord.repo_url.isnot(None)
+            )
+            
+            # Apply filters
+            if filters.get('min_score') is not None:
+                query = query.having(func.avg(ScanRecord.security_score) >= filters['min_score'])
+                
+            if filters.get('language'):
+                query = query.filter(ScanRecord.language == filters['language'])
+                
+            if filters.get('since'):
+                query = query.filter(ScanRecord.timestamp >= filters['since'])
+            
+            repo_stats = query.group_by(
+                ScanRecord.repo_url, ScanRecord.repository_name, ScanRecord.branch
+            ).order_by(
+                desc('avg_security_score')
+            ).limit(limit).all()
+            
+            repositories = []
+            for stat in repo_stats:
+                vuln_dist = VulnerabilityDistribution(
+                    critical=int(stat.total_critical or 0),
+                    high=int(stat.total_high or 0),
+                    medium=int(stat.total_medium or 0),
+                    low=int(stat.total_low or 0)
+                )
+                vuln_dist.calculate_total()
+                
+                repositories.append(RepositoryStats(
+                    repository_url=stat.repo_url,
+                    repository_name=stat.repository_name or stat.repo_url.split('/')[-1],
+                    branch=stat.branch or "main",
+                    security_score=round(float(stat.avg_security_score or 0), 1),
+                    total_vulnerabilities=vuln_dist.total,
+                    vulnerability_distribution=vuln_dist,
+                    total_scans=int(stat.total_scans),
+                    total_files=int(stat.total_files or 0),
+                    last_scan_date=stat.last_scan,
+                    languages=[],  # TODO: extract from metadata
+                    avg_scan_duration=round(float(stat.avg_duration or 0), 2)
+                ))
+            
+            session.close()
+            return repositories
+            
+        except Exception as e:
+            print(f"❌ Error getting filtered repository stats: {e}")
             return []
     
     # Helper methods
