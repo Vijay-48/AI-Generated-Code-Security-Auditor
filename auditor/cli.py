@@ -1022,117 +1022,311 @@ def history(ctx, limit, since, until, min_score, max_score, repo, language, scan
         sys.exit(1)
 
 @cli.command()
-@click.option('--test-colors', is_flag=True, help='Test color support and display color palette')
-@click.option('--test-charts', is_flag=True, help='Display sample charts and visualizations')
-@click.option('--color-scheme', default='default', type=click.Choice(['default', 'monochrome', 'dark', 'security']), help='Color scheme to test')
+@click.option('--period', default=30, help='Number of days to analyze')
+@click.option('--granularity', default='daily', type=click.Choice(['hourly', 'daily', 'weekly']), help='Time granularity')
+@click.option('--include-forecast', is_flag=True, help='Include trend forecasting')
+@click.option('--output', default='table', type=click.Choice(['table', 'json', 'csv']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.option('--visual', is_flag=True, help='🚀 Enable enhanced visualizations with sparklines')
 @click.pass_context
-def visual_test(ctx, test_colors, test_charts, color_scheme):
-    """🚀 Test terminal visual capabilities and display sample charts"""
+def trends_detailed(ctx, period, granularity, include_forecast, output, save, visual):
+    """🔥 PHASE 9: Advanced vulnerability trends analysis with forecasting"""
     try:
-        import sys
-        sys.path.append('/app')
-        from cli_visuals.formatters import create_visual_formatter
-        from cli_visuals.terminal import terminal
+        import asyncio
+        import json
         
-        visual_formatter = create_visual_formatter(color_scheme, False)
+        api_url = ctx.obj['api_url']
         
-        click.echo("🖥️  Visual Capabilities Test")
-        click.echo("=" * 60)
+        # Make API request
+        params = {
+            'period': period,
+            'granularity': granularity,
+            'include_forecasting': include_forecast
+        }
         
-        # Show terminal capabilities
-        capabilities_info = visual_formatter.format_terminal_info()
-        click.echo(capabilities_info)
+        response = requests.get(f"{api_url}/api/analytics/trends/detailed", params=params, timeout=30)
+        response.raise_for_status()
         
-        if test_colors:
-            click.echo("\n🎨 Color Palette Test:")
-            click.echo("=" * 30)
+        data = response.json()
+        
+        if output == 'json':
+            content = json.dumps(data, indent=2)
+        elif output == 'csv':
+            # Convert to CSV format
+            lines = ['time_period,total_scans,total_issues,critical,high,medium,low,avg_security_score,growth_rate']
+            for trend in data['trends']:
+                lines.append(f"{trend['time_period']},{trend['total_scans']},{trend['total_issues']},"
+                           f"{trend['severity_breakdown']['critical']},{trend['severity_breakdown']['high']},"
+                           f"{trend['severity_breakdown']['medium']},{trend['severity_breakdown']['low']},"
+                           f"{trend['avg_security_score']},{trend['growth_rate_percent']}")
+            content = '\n'.join(lines)
+        else:
+            # Table format with enhanced visuals
+            lines = []
+            lines.append(f"📈 Advanced Trend Analysis ({data['period_days']} days, {data['granularity']} granularity)")
+            lines.append("=" * 80)
+            lines.append(f"Data Points: {data['data_points']}")
+            lines.append("")
             
-            # Test different color schemes
-            schemes = ['default', 'security', 'dark', 'monochrome']
-            for scheme in schemes:
-                click.echo(f"\n{scheme.upper()} Color Scheme:")
-                test_formatter = create_visual_formatter(scheme, False)
+            # Table header
+            lines.append(f"{'Period':<15} {'Scans':<7} {'Issues':<7} {'Critical':<8} {'High':<6} {'Score':<6} {'Growth%':<8}")
+            lines.append("-" * 80)
+            
+            for trend in data['trends']:
+                period_short = trend['time_period'][:10] if len(trend['time_period']) > 10 else trend['time_period']
+                growth_indicator = "📈" if trend['growth_rate_percent'] > 10 else "📉" if trend['growth_rate_percent'] < -10 else "➡️"
                 
-                # Sample gradient
-                from cli_visuals.terminal import get_gradient_colors, ColorScheme
-                scheme_enum = getattr(ColorScheme, scheme.upper())
-                gradient = get_gradient_colors(scheme_enum)
-                
-                if scheme != 'monochrome':
-                    # Rich formatted colors
-                    from rich.console import Console
-                    console = Console()
-                    gradient_display = " ".join(gradient)
-                    console.print(f"   Gradient: {gradient_display}")
-                else:
-                    click.echo(f"   Gradient: {' '.join(gradient)}")
+                lines.append(f"{period_short:<15} {trend['total_scans']:<7} {trend['total_issues']:<7} "
+                           f"{trend['severity_breakdown']['critical']:<8} {trend['severity_breakdown']['high']:<6} "
+                           f"{trend['avg_security_score']:<6.1f} {growth_indicator}{trend['growth_rate_percent']:<7.1f}")
+            
+            # Add forecasting if available
+            if 'forecasting' in data:
+                forecast = data['forecasting']
+                lines.append("")
+                lines.append("🔮 Trend Forecasting")
+                lines.append("-" * 30)
+                lines.append(f"Average Growth Rate: {forecast['average_growth_rate']:.1f}%")
+                lines.append(f"Trend Direction: {forecast['trend_direction']}")
+                lines.append(f"Confidence: {forecast['confidence']}")
+            
+            # Enhanced visual mode
+            if visual:
+                try:
+                    # Generate sparkline for issues trend
+                    issue_counts = [t['total_issues'] for t in data['trends']]
+                    if issue_counts:
+                        # Simple ASCII sparkline
+                        max_val = max(issue_counts) if max(issue_counts) > 0 else 1
+                        normalized = [int((val / max_val) * 8) for val in issue_counts]
+                        sparkline_chars = " ▁▂▃▄▅▆▇█"
+                        sparkline = "".join(sparkline_chars[min(8, val)] for val in normalized)
+                        
+                        lines.append("")
+                        lines.append("✨ Issues Trend Sparkline:")
+                        lines.append(f"   {sparkline}")
+                        lines.append(f"   {min(issue_counts)}-{max(issue_counts)} issues")
+                except Exception as e:
+                    lines.append(f"⚠️ Visual enhancement failed: {e}")
+            
+            content = "\n".join(lines)
         
-        if test_charts:
-            click.echo("\n📊 Sample Charts and Visualizations:")
-            click.echo("=" * 40)
-            
-            # Sample data for demonstrations
-            sample_severity = {'CRITICAL': 5, 'HIGH': 15, 'MEDIUM': 25, 'LOW': 8}
-            
-            # Mock trend data class
-            class MockTrend:
-                def __init__(self, date, total_vulnerabilities, critical=0, high=0):
-                    self.date = date
-                    self.total_vulnerabilities = total_vulnerabilities
-                    self.critical = critical
-                    self.high = high
-            
-            sample_trends = [
-                MockTrend("2024-01-01", 10, 2, 3),
-                MockTrend("2024-01-02", 8, 1, 2),
-                MockTrend("2024-01-03", 15, 3, 5),
-                MockTrend("2024-01-04", 12, 2, 4),
-                MockTrend("2024-01-05", 6, 1, 2),
-                MockTrend("2024-01-06", 20, 4, 8),
-                MockTrend("2024-01-07", 18, 3, 6)
-            ]
-            
-            # Display sparklines
-            sparkline_demo = visual_formatter.sparkline.generate_trend_sparkline(sample_trends)
-            click.echo(f"Sparkline Demo: {sparkline_demo}")
-            
-            # Display severity bars
-            click.echo("\nSeverity Distribution Bars:")
-            severity_bars = visual_formatter.bar_chart.generate_severity_bars(sample_severity, 30)
-            for bar in severity_bars:
-                click.echo(f"  {bar}")
-            
-            # Display pie chart
-            click.echo("\nSeverity Pie Chart:")
-            pie_chart = visual_formatter.pie_chart.generate_severity_pie(sample_severity)
-            for line in pie_chart:
-                click.echo(f"  {line}")
-            
-            # Mock heatmap data
-            class MockHeatmapEntry:
-                def __init__(self, path, rule_hits, files_count):
-                    self.path = path
-                    self.rule_hits = rule_hits
-                    self.files_count = files_count
-            
-            sample_heatmap = [
-                MockHeatmapEntry("/app/src", 25, 15),
-                MockHeatmapEntry("/app/tests", 8, 10),
-                MockHeatmapEntry("/app/lib", 12, 5),
-                MockHeatmapEntry("/app/config", 3, 2),
-            ]
-            
-            click.echo("\nDirectory Heatmap Sample:")
-            heatmap_lines = visual_formatter.heatmap.generate_directory_heatmap(sample_heatmap, 40)
-            for line in heatmap_lines[:10]:  # Show first 10 lines
-                click.echo(f"  {line}")
-            
-            click.echo("\n✨ Visual test complete! Use --visual flag with other commands to see enhanced outputs.")
+        # Output or save
+        if save:
+            with open(save, 'w') as f:
+                f.write(content)
+            click.echo(f"✅ Trends analysis saved to {save}")
+        else:
+            click.echo(content)
         
     except Exception as e:
-        click.echo(f"❌ Visual test failed: {str(e)}", err=True)
-        import traceback
-        click.echo(traceback.format_exc())
+        click.echo(f"❌ Failed to get trends analysis: {str(e)}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.option('--limit', default=10, help='Number of top rules to show')
+@click.option('--time-range', default='30d', help='Time range for analysis')
+@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low']), help='Filter by severity')
+@click.option('--tool', type=click.Choice(['bandit', 'semgrep']), help='Filter by security tool')
+@click.option('--output', default='table', type=click.Choice(['table', 'json', 'csv']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.pass_context
+def top_rules(ctx, limit, time_range, severity, tool, output, save):
+    """🔝 PHASE 9: Most frequently triggered vulnerability rules analysis"""
+    try:
+        import json
+        
+        api_url = ctx.obj['api_url']
+        
+        # Build query parameters
+        params = {
+            'limit': limit,
+            'time_range': time_range
+        }
+        
+        if severity:
+            params['severity_filter'] = severity
+        if tool:
+            params['tool_filter'] = tool
+        
+        response = requests.get(f"{api_url}/api/analytics/top-rules", params=params, timeout=20)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if output == 'json':
+            content = json.dumps(data, indent=2)
+        elif output == 'csv':
+            # Convert to CSV
+            lines = ['rule_name,severity,tool,total_hits,affected_scans,affected_files,percentage,avg_hits_per_scan']
+            for rule in data['top_rules']:
+                lines.append(f"{rule['rule_name']},{rule['severity']},{rule['tool']},"
+                           f"{rule['total_hits']},{rule['affected_scans']},{rule['affected_files']},"
+                           f"{rule['percentage_of_total']:.1f},{rule['avg_hits_per_scan']:.1f}")
+            content = '\n'.join(lines)
+        else:
+            # Table format  
+            lines = []
+            lines.append(f"🔝 Top Vulnerability Rules Analysis ({data['time_range']})")
+            lines.append("=" * 90)
+            
+            # Show filters
+            filters = data.get('filters', {})
+            active_filters = []
+            if filters.get('severity'):
+                active_filters.append(f"severity={filters['severity']}")
+            if filters.get('tool'):
+                active_filters.append(f"tool={filters['tool']}")
+            
+            if active_filters:
+                lines.append(f"Filters: {', '.join(active_filters)}")
+                lines.append("")
+            
+            # Summary
+            summary = data.get('summary', {})
+            lines.append(f"📊 Summary:")
+            lines.append(f"   Total Rules: {data['total_unique_rules']}")
+            lines.append(f"   Total Hits: {summary.get('total_hits_analyzed', 0)}")
+            if summary.get('most_common_severity'):
+                lines.append(f"   Most Common Severity: {summary['most_common_severity'].upper()}")
+            if summary.get('most_active_tool'):
+                lines.append(f"   Most Active Tool: {summary['most_active_tool']}")
+            lines.append("")
+            
+            # Table
+            lines.append(f"{'Rank':<5} {'Rule':<25} {'Severity':<9} {'Tool':<8} {'Hits':<6} {'Files':<6} {'%':<6} {'Avg':<5}")
+            lines.append("-" * 90)
+            
+            for i, rule in enumerate(data['top_rules'], 1):
+                rule_short = rule['rule_name'][:23] if len(rule['rule_name']) > 23 else rule['rule_name']
+                severity_emoji = {'critical': '⚫', 'high': '🔴', 'medium': '🟡', 'low': '🟢'}.get(rule['severity'], '🔍')
+                
+                lines.append(f"{i:<5} {rule_short:<25} {severity_emoji}{rule['severity']:<8} {rule['tool']:<8} "
+                           f"{rule['total_hits']:<6} {rule['affected_files']:<6} "
+                           f"{rule['percentage_of_total']:<6.1f} {rule['avg_hits_per_scan']:<5.1f}")
+            
+            content = "\n".join(lines)
+        
+        # Output or save
+        if save:
+            with open(save, 'w') as f:
+                f.write(content)
+            click.echo(f"✅ Top rules analysis saved to {save}")
+        else:
+            click.echo(content)
+        
+    except Exception as e:
+        click.echo(f"❌ Failed to get top rules analysis: {str(e)}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.option('--include-cache', is_flag=True, default=True, help='Include cache performance metrics')
+@click.option('--include-models', is_flag=True, default=True, help='Include LLM model performance')
+@click.option('--breakdown-language', is_flag=True, help='Break down by programming language')
+@click.option('--output', default='table', type=click.Choice(['table', 'json', 'csv']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.pass_context
+def performance(ctx, include_cache, include_models, breakdown_language, output, save):
+    """⚡ PHASE 9: Detailed performance analysis and optimization insights"""
+    try:
+        import json
+        
+        api_url = ctx.obj['api_url']
+        
+        # Build query parameters
+        params = {
+            'include_caching': include_cache,
+            'include_model_stats': include_models,
+            'breakdown_by_language': breakdown_language
+        }
+        
+        response = requests.get(f"{api_url}/api/analytics/performance/detailed", params=params, timeout=20)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if output == 'json':
+            content = json.dumps(data, indent=2)
+        elif output == 'csv':
+            # Convert overall metrics to CSV
+            lines = ['metric,value']
+            overall = data['overall_metrics']
+            for key, value in overall.items():
+                lines.append(f"{key},{value}")
+            content = '\n'.join(lines)
+        else:
+            # Enhanced table format
+            lines = []
+            lines.append("⚡ Performance Analysis Dashboard")
+            lines.append("=" * 60)
+            
+            # Overall metrics
+            overall = data['overall_metrics']
+            lines.append("📊 Overall Performance Metrics")
+            lines.append("-" * 35)
+            lines.append(f"Total Scans: {overall['total_scans']:,}")
+            lines.append(f"Average Duration: {overall['avg_scan_duration']:.2f}s")
+            lines.append(f"Min Duration: {overall['min_scan_duration']:.2f}s")
+            lines.append(f"Max Duration: {overall['max_scan_duration']:.2f}s")
+            lines.append(f"Avg Files/Scan: {overall['avg_files_per_scan']:.1f}")
+            lines.append(f"Avg Security Score: {overall['avg_security_score']:.1f}/100")
+            lines.append("")
+            
+            # Performance by scan type
+            if 'by_scan_type' in data:
+                lines.append("🔍 Performance by Scan Type")
+                lines.append("-" * 35)
+                lines.append(f"{'Type':<15} {'Count':<8} {'Avg Duration':<12} {'Avg Files':<10}")
+                lines.append("-" * 45)
+                for perf in data['by_scan_type']:
+                    lines.append(f"{perf['scan_type']:<15} {perf['total_scans']:<8} "
+                               f"{perf['avg_duration']:<12.2f} {perf['avg_files']:<10.1f}")
+                lines.append("")
+            
+            # Model performance
+            if 'by_model' in data and data['by_model']:
+                lines.append("🤖 LLM Model Performance")
+                lines.append("-" * 35)
+                lines.append(f"{'Model':<25} {'Usage':<8} {'Avg Duration':<12}")
+                lines.append("-" * 45)
+                for perf in data['by_model']:
+                    model_short = perf['model'].split('/')[-1][:23] if '/' in perf['model'] else perf['model'][:23]
+                    lines.append(f"{model_short:<25} {perf['usage_count']:<8} {perf['avg_duration']:<12.2f}")
+                lines.append("")
+            
+            # Language breakdown
+            if 'by_language' in data and data['by_language']:
+                lines.append("💻 Performance by Language")
+                lines.append("-" * 35)
+                lines.append(f"{'Language':<12} {'Scans':<8} {'Duration':<10} {'Avg Issues':<11}")
+                lines.append("-" * 41)
+                for perf in data['by_language']:
+                    lines.append(f"{perf['language']:<12} {perf['total_scans']:<8} "
+                               f"{perf['avg_duration']:<10.2f} {perf['avg_issues_found']:<11.1f}")
+                lines.append("")
+            
+            # Cache metrics
+            if 'cache_metrics' in data:
+                cache = data['cache_metrics']
+                lines.append("🚀 Cache Performance")
+                lines.append("-" * 25)
+                lines.append(f"Cache Available: {'✅' if cache['cache_available'] else '❌'}")
+                lines.append(f"Hit Rate: {cache['estimated_cache_hit_rate']:.1f}%")
+                if cache.get('note'):
+                    lines.append(f"Note: {cache['note']}")
+            
+            content = "\n".join(lines)
+        
+        # Output or save
+        if save:
+            with open(save, 'w') as f:
+                f.write(content)
+            click.echo(f"✅ Performance analysis saved to {save}")
+        else:
+            click.echo(content)
+        
+    except Exception as e:
+        click.echo(f"❌ Failed to get performance analysis: {str(e)}", err=True)
         sys.exit(1)
 
 if __name__ == '__main__':
