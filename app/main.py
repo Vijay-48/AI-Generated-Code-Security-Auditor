@@ -239,24 +239,56 @@ def root():
             "Production monitoring and metrics",
             "🚀 NEW: Async job processing with Redis caching",
             "🚀 NEW: Real-time progress tracking via WebSocket",
-            "🚀 NEW: Smart caching for cost optimization"
+            "🚀 NEW: Smart caching for cost optimization",
+            "🚀 PHASE 6: Bulk repository scanning with Git integration"
         ],
         "endpoints": {
             "POST /audit": "🔄 Legacy sync analysis (backward compatibility)",
-            "POST /async/audit": "🚀 NEW: Async analysis with job tracking",
+            "POST /async/audit": "🚀 Async single-file analysis with job tracking",
+            "POST /async/repo-scan": "🆕 PHASE 6: Bulk repository scanning",
             "GET /async/jobs/{job_id}/status": "📊 Get job status and progress",
             "GET /async/jobs/{job_id}/results": "📋 Get completed job results", 
-            "WebSocket /async/jobs/{job_id}/progress": "⚡ Real-time progress updates",
+            "WebSocket /async/jobs/{job_id}/ws": "⚡ Real-time progress updates",
             "GET /models": "List available LLM models",
             "GET /health": "Service health check with cache status",
             "GET /metrics": "Prometheus metrics",
             "GET /async/cache/stats": "Cache performance statistics"
+        },
+        "phase_6_features": {
+            "bulk_repository_scanning": {
+                "description": "Enterprise-grade Git repository analysis",
+                "features": [
+                    "Git repository cloning and file discovery",
+                    "Batch processing with configurable batch sizes",
+                    "Real-time per-file progress tracking",
+                    "File-level caching based on content hash", 
+                    "Aggregated vulnerability reports",
+                    "Support for custom include/exclude patterns",
+                    "Repository metadata extraction",
+                    "Multi-language detection and analysis"
+                ],
+                "endpoint": "POST /async/repo-scan",
+                "example_request": {
+                    "repository_url": "https://github.com/user/repo.git",
+                    "branch": "main",
+                    "max_files": 100,
+                    "batch_size": 10,
+                    "use_advanced_analysis": True,
+                    "include_patterns": ["*.py", "*.js", "*.java"],
+                    "exclude_patterns": ["*/tests/*", "*/node_modules/*"]
+                }
+            }
         },
         "migration_guide": {
             "from_sync_to_async": {
                 "old": "POST /audit",
                 "new": "POST /async/audit", 
                 "benefits": ["No timeouts", "Progress tracking", "Caching", "Better performance"]
+            },
+            "single_file_to_bulk": {
+                "old": "POST /async/audit",
+                "new": "POST /async/repo-scan",
+                "benefits": ["Entire repository analysis", "Batch processing", "Aggregated reports", "Git integration"]
             }
         }
     }
