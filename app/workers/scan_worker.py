@@ -326,6 +326,15 @@ async def _async_process_security_scan(
             'failed_at': error_time.isoformat(),
             'execution_time': execution_time
         })
+        await _publish_progress_update(job_id, {
+            'status': 'failed',
+            'stage': 'error',
+            'progress': 0,
+            'message': f'Analysis failed: {str(e)}',
+            'error': str(e),
+            'failed_at': error_time.isoformat(),
+            'execution_time': execution_time
+        })
         
         # Re-raise for Celery error handling
         raise Exception(f"Security scan failed: {str(e)}")
