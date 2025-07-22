@@ -161,6 +161,56 @@ class LLMAnalysisRequest(BaseModel):
             raise ValueError(f'Operation type must be one of: {valid_types}')
         return v
 
+class BulkRepositoryRequest(BaseModel):
+    repository_url: str
+    branch: Optional[str] = "main"
+    commit: Optional[str] = None
+    include_patterns: Optional[List[str]] = None
+    exclude_patterns: Optional[List[str]] = None
+    max_files: Optional[int] = 500
+    batch_size: Optional[int] = 10
+    use_advanced_analysis: Optional[bool] = False
+    cache_enabled: Optional[bool] = True
+    priority: Optional[str] = "normal"
+    
+    @field_validator('repository_url')
+    @classmethod
+    def repository_url_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Repository URL cannot be empty')
+        return v.strip()
+    
+    @field_validator('branch')
+    @classmethod
+    def branch_must_be_valid(cls, v):
+        if v and not v.strip():
+            raise ValueError('Branch name cannot be empty')
+        return v or "main"
+    
+    @field_validator('max_files')
+    @classmethod
+    def max_files_must_be_reasonable(cls, v):
+        if v is not None and (v < 1 or v > 2000):
+            raise ValueError('max_files must be between 1 and 2000')
+        return v or 500
+    
+    @field_validator('batch_size')
+    @classmethod
+    def batch_size_must_be_reasonable(cls, v):
+        if v is not None and (v < 1 or v > 100):
+            raise ValueError('batch_size must be between 1 and 100')
+        return v or 10
+    
+    @field_validator('priority')
+    @classmethod
+    def priority_must_be_valid(cls, v):
+        if v is None:
+            return "normal"
+        valid_priorities = ['normal', 'high', 'urgent']
+        if v not in valid_priorities:
+            raise ValueError(f'Priority must be one of: {valid_priorities}')
+        return v
+
 # Response models
 class JobResponse(BaseModel):
     job_id: str
