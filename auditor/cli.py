@@ -522,15 +522,26 @@ def summary(ctx, scan_id, rule, severity, output, save, no_colors):
 
 @cli.command()
 @click.option('--days', default=30, help='Number of days to show trends for')
-@click.option('--format', 'trend_format', default='ascii', type=click.Choice(['ascii', 'table']), help='Output format')
+@click.option('--output', default='ascii', type=click.Choice(['ascii', 'table', 'csv', 'json']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.option('--no-colors', is_flag=True, help='Disable colored output')
+@click.option('--width', default=40, help='Chart width for ASCII output')
 @click.pass_context
-def trends(ctx, days, trend_format):
-    """Display vulnerability trends over time"""
+def trends(ctx, days, output, save, no_colors, width):
+    """Display vulnerability trends over time with export options"""
     try:
         import sys
         import asyncio
         sys.path.append('/app')
         from app.services.analytics_service import analytics_service
+        from app.utils.formatters import ExportFormatter, load_config
+        
+        # Load configuration
+        config = load_config()
+        
+        # Override config with command line options
+        if no_colors:
+            config['output']['colors'] = False
         
         async def get_trends():
             await analytics_service.connect()
@@ -543,39 +554,62 @@ def trends(ctx, days, trend_format):
             click.echo("❌ No trend data found")
             sys.exit(1)
         
-        click.echo(f"📈 Vulnerability Trends (Last {days} days)")
-        click.echo("=" * 50)
+        # Format based on output type
+        formatter = ExportFormatter.get_formatter(output)
         
-        if trend_format == 'table':
-            # Table format
-            click.echo(f"{'Date':<12} {'Scans':<8} {'Vulns':<8} {'Critical':<10} {'High':<8} {'Medium':<8} {'Low':<8}")
-            click.echo("-" * 70)
-            for trend in trend_data[-10:]:  # Show last 10 days
-                click.echo(f"{trend.date:<12} {trend.total_scans:<8} {trend.total_vulnerabilities:<8} "
-                          f"{trend.critical:<10} {trend.high:<8} {trend.medium:<8} {trend.low:<8}")
-        else:
-            # ASCII chart format
-            max_vulns = max(trend.total_vulnerabilities for trend in trend_data) if trend_data else 1
-            chart_width = 40
+        if output == 'table':
+            lines = []
+            lines.append(f"📈 Vulnerability Trends (Last {days} days)")
+            lines.append("=" * 50)
+            lines.append(f"{'Date':<12} {'Scans':<8} {'Vulns':<8} {'Critical':<10} {'High':<8} {'Medium':<8} {'Low':<8}")
+            lines.append("-" * 70)
+            for trend in trend_data[-14:]:  # Show last 14 days
+                lines.append(f"{trend.date:<12} {trend.total_scans:<8} {trend.total_vulnerabilities:<8} "
+                           f"{trend.critical:<10} {trend.high:<8} {trend.medium:<8} {trend.low:<8}")
+            content = "\n".join(lines)
             
-            click.echo("Vulnerability Count Over Time:")
-            click.echo(f"Max: {max_vulns} vulnerabilities")
-            click.echo("")
+        elif output == 'ascii':
+            lines = []
+            lines.append(f"📈 Vulnerability Trends (Last {days} days)")
+            lines.append("=" * 50)
+            
+            # ASCII chart
+            max_vulns = max(trend.total_vulnerabilities for trend in trend_data) if trend_data else 1
+            
+            lines.append("Vulnerability Count Over Time:")
+            lines.append(f"Max: {max_vulns} vulnerabilities")
+            lines.append("")
             
             for trend in trend_data[-14:]:  # Show last 14 days
-                bar_length = int((trend.total_vulnerabilities / max_vulns) * chart_width) if max_vulns > 0 else 0
-                bar = "█" * bar_length + "░" * (chart_width - bar_length)
-                click.echo(f"{trend.date} |{bar}| {trend.total_vulnerabilities}")
+                bar_length = int((trend.total_vulnerabilities / max_vulns) * width) if max_vulns > 0 else 0
+                bar = "█" * bar_length + "░" * (width - bar_length)
+                lines.append(f"{trend.date} |{bar}| {trend.total_vulnerabilities}")
+            
+            content = "\n".join(lines)
+            
+        else:
+            content = formatter.format_trends(trend_data)
         
-        # Summary stats
-        total_scans = sum(t.total_scans for t in trend_data)
-        total_vulns = sum(t.total_vulnerabilities for t in trend_data)
-        avg_per_day = total_vulns / len(trend_data) if trend_data else 0
+        # Add summary for ascii and table formats
+        if output in ['ascii', 'table']:
+            total_scans = sum(t.total_scans for t in trend_data)
+            total_vulns = sum(t.total_vulnerabilities for t in trend_data)
+            avg_per_day = total_vulns / len(trend_data) if trend_data else 0
+            
+            content += f"\n\n📊 Summary"
+            content += f"\nTotal Scans: {total_scans}"
+            content += f"\nTotal Vulnerabilities: {total_vulns}"
+            content += f"\nAverage per day: {avg_per_day:.1f}"
         
-        click.echo(f"\n📊 Summary")
-        click.echo(f"Total Scans: {total_scans}")
-        click.echo(f"Total Vulnerabilities: {total_vulns}")
-        click.echo(f"Average per day: {avg_per_day:.1f}")
+        # Output or save
+        if save:
+            from app.utils.formatters import save_to_file
+            if save_to_file(content, save, output):
+                click.echo(f"✅ Trends saved to {save}")
+            else:
+                sys.exit(1)
+        else:
+            click.echo(content)
         
     except Exception as e:
         click.echo(f"❌ Error getting trends: {str(e)}", err=True)
