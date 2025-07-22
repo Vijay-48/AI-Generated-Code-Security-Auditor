@@ -618,14 +618,17 @@ def trends(ctx, days, output, save, no_colors, width):
 @cli.command()
 @click.option('--scan-id', help='Specific scan ID (optional, uses latest if not provided)')
 @click.option('--width', default=50, help='Heatmap width in characters')
+@click.option('--output', default='ascii', type=click.Choice(['ascii', 'csv', 'json']), help='Output format')
+@click.option('--save', help='Save output to file')
 @click.pass_context
-def heatmap(ctx, scan_id, width):
-    """Show ASCII heatmap of rule hits per directory"""
+def heatmap(ctx, scan_id, width, output, save):
+    """Show heatmap of rule hits per directory with export options"""
     try:
         import sys
         import asyncio
         sys.path.append('/app')
         from app.services.analytics_service import analytics_service
+        from app.utils.formatters import ExportFormatter
         
         async def get_heatmap():
             await analytics_service.connect()
@@ -638,43 +641,211 @@ def heatmap(ctx, scan_id, width):
             click.echo("❌ No heatmap data found")
             sys.exit(1)
         
-        click.echo("🗺️  Security Heatmap - Rule Hits by Directory")
-        click.echo("=" * (width + 20))
+        # Format based on output type
+        formatter = ExportFormatter.get_formatter(output)
         
-        max_hits = max(entry.rule_hits for entry in heatmap_data) if heatmap_data else 1
+        if output == 'ascii':
+            lines = []
+            lines.append("🗺️  Security Heatmap - Rule Hits by Directory")
+            lines.append("=" * (width + 20))
+            
+            max_hits = max(entry.rule_hits for entry in heatmap_data) if heatmap_data else 1
+            
+            # Color mapping for heat intensity
+            def get_heat_char(hits, max_hits):
+                if max_hits == 0:
+                    return "░"
+                intensity = hits / max_hits
+                if intensity >= 0.8:
+                    return "█"  # Very hot
+                elif intensity >= 0.6:
+                    return "▓"  # Hot
+                elif intensity >= 0.4:
+                    return "▒"  # Medium
+                elif intensity >= 0.2:
+                    return "░"  # Cool
+                else:
+                    return "·"  # Cold
+            
+            lines.append(f"Legend: █ Very High  ▓ High  ▒ Medium  ░ Low  · Minimal")
+            lines.append(f"Max hits: {max_hits}")
+            lines.append("")
+            
+            for entry in heatmap_data[:15]:  # Show top 15 directories
+                heat_char = get_heat_char(entry.rule_hits, max_hits)
+                bar_length = int((entry.rule_hits / max_hits) * (width - 20)) if max_hits > 0 else 0
+                bar = heat_char * bar_length + "·" * ((width - 20) - bar_length)
+                
+                # Truncate path for display
+                path_display = entry.path if len(entry.path) <= 25 else "..." + entry.path[-22:]
+                
+                lines.append(f"{path_display:<25} |{bar}| {entry.rule_hits:>4} hits ({entry.files_count} files)")
+            
+            content = "\n".join(lines)
+        else:
+            content = formatter.format_heatmap(heatmap_data)
         
-        # Color mapping for heat intensity
-        def get_heat_char(hits, max_hits):
-            if max_hits == 0:
-                return "░"
-            intensity = hits / max_hits
-            if intensity >= 0.8:
-                return "█"  # Very hot
-            elif intensity >= 0.6:
-                return "▓"  # Hot
-            elif intensity >= 0.4:
-                return "▒"  # Medium
-            elif intensity >= 0.2:
-                return "░"  # Cool
+        # Output or save
+        if save:
+            from app.utils.formatters import save_to_file
+            if save_to_file(content, save, output):
+                click.echo(f"✅ Heatmap saved to {save}")
             else:
-                return "·"  # Cold
-        
-        click.echo(f"Legend: █ Very High  ▓ High  ▒ Medium  ░ Low  · Minimal")
-        click.echo(f"Max hits: {max_hits}")
-        click.echo("")
-        
-        for entry in heatmap_data[:15]:  # Show top 15 directories
-            heat_char = get_heat_char(entry.rule_hits, max_hits)
-            bar_length = int((entry.rule_hits / max_hits) * (width - 20)) if max_hits > 0 else 0
-            bar = heat_char * bar_length + "·" * ((width - 20) - bar_length)
-            
-            # Truncate path for display
-            path_display = entry.path if len(entry.path) <= 25 else "..." + entry.path[-22:]
-            
-            click.echo(f"{path_display:<25} |{bar}| {entry.rule_hits:>4} hits ({entry.files_count} files)")
+                sys.exit(1)
+        else:
+            click.echo(content)
         
     except Exception as e:
         click.echo(f"❌ Error getting heatmap: {str(e)}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.option('--limit', default=20, help='Number of repositories to show')
+@click.option('--min-score', type=float, help='Minimum security score filter')
+@click.option('--language', type=click.Choice(['python', 'javascript', 'java', 'go']), help='Filter by language')
+@click.option('--since', help='Show repositories scanned since date (YYYY-MM-DD)')
+@click.option('--output', default='table', type=click.Choice(['table', 'csv', 'json']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.option('--no-colors', is_flag=True, help='Disable colored output')
+@click.pass_context
+def repos(ctx, limit, min_score, language, since, output, save, no_colors):
+    """Show repository statistics with filtering and export options"""
+    try:
+        import sys
+        import asyncio
+        from datetime import datetime
+        sys.path.append('/app')
+        from app.services.analytics_service import analytics_service
+        from app.utils.formatters import ExportFormatter, load_config
+        
+        # Load configuration
+        config = load_config()
+        
+        # Override config with command line options
+        if no_colors:
+            config['output']['colors'] = False
+        
+        # Parse filters
+        filters = {}
+        if min_score is not None:
+            filters['min_score'] = min_score
+        if language:
+            filters['language'] = language
+        if since:
+            try:
+                filters['since'] = datetime.strptime(since, '%Y-%m-%d')
+            except ValueError:
+                click.echo("❌ Invalid since date format. Use YYYY-MM-DD", err=True)
+                sys.exit(1)
+        
+        async def get_repos():
+            await analytics_service.connect()
+            repos_data = await analytics_service.get_repository_stats_filtered(limit, **filters)
+            return repos_data
+        
+        repos_data = asyncio.run(get_repos())
+        
+        if not repos_data:
+            click.echo("❌ No repository data found matching the criteria")
+            sys.exit(1)
+        
+        # Format based on output type
+        formatter = ExportFormatter.get_formatter(output)
+        
+        if output == 'table':
+            lines = []
+            lines.append(f"📁 Repository Security Statistics ({len(repos_data)} repositories)")
+            lines.append("=" * 80)
+            lines.append(f"{'Repository':<30} {'Score':<8} {'Vulns':<8} {'Scans':<8} {'Files':<8} {'Last Scan':<12}")
+            lines.append("-" * 80)
+            
+            for repo in repos_data:
+                repo_name = repo.repository_name[:28] if len(repo.repository_name) > 28 else repo.repository_name
+                score_display = f"{repo.security_score:.1f}" if not config['output']['colors'] else \
+                    formatter.colorize_score(repo.security_score)
+                last_scan = repo.last_scan_date.strftime('%Y-%m-%d') if repo.last_scan_date else 'N/A'
+                
+                lines.append(f"{repo_name:<30} {score_display:<8} {repo.total_vulnerabilities:<8} "
+                           f"{repo.total_scans:<8} {repo.total_files:<8} {last_scan:<12}")
+            
+            content = "\n".join(lines)
+            
+            # Add summary
+            avg_score = sum(r.security_score for r in repos_data) / len(repos_data) if repos_data else 0
+            total_vulns = sum(r.total_vulnerabilities for r in repos_data)
+            content += f"\n\n📊 Summary"
+            content += f"\nAverage Security Score: {avg_score:.1f}"
+            content += f"\nTotal Vulnerabilities: {total_vulns}"
+        else:
+            content = formatter.format_repositories(repos_data)
+        
+        # Output or save
+        if save:
+            from app.utils.formatters import save_to_file
+            if save_to_file(content, save, output):
+                click.echo(f"✅ Repository statistics saved to {save}")
+            else:
+                sys.exit(1)
+        else:
+            click.echo(content)
+        
+    except Exception as e:
+        click.echo(f"❌ Error getting repository statistics: {str(e)}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.option('--format', default='yaml', type=click.Choice(['yaml', 'json']), help='Configuration format')
+@click.option('--reset', is_flag=True, help='Reset configuration to defaults')
+@click.pass_context
+def config(ctx, format, reset):
+    """Manage CLI configuration settings"""
+    try:
+        import sys
+        sys.path.append('/app')
+        from app.utils.formatters import load_config, save_config, get_config_dir
+        
+        config_dir = get_config_dir()
+        
+        if reset:
+            # Reset to defaults
+            default_config = {
+                'output': {
+                    'format': 'table',
+                    'colors': True,
+                    'progress_bars': True
+                },
+                'limits': {
+                    'history': 20,
+                    'trends_days': 30,
+                    'heatmap_width': 50
+                },
+                'filters': {
+                    'min_score': None,
+                    'severity': None
+                }
+            }
+            
+            if save_config(default_config):
+                click.echo("✅ Configuration reset to defaults")
+            else:
+                click.echo("❌ Failed to reset configuration")
+                sys.exit(1)
+        else:
+            # Show current configuration
+            config_data = load_config()
+            
+            if format == 'json':
+                import json
+                click.echo(json.dumps(config_data, indent=2))
+            else:
+                import yaml
+                click.echo(yaml.dump(config_data, default_flow_style=False, sort_keys=False))
+            
+            click.echo(f"\nConfiguration file location: {config_dir}/config.yml")
+            click.echo("Edit this file to customize default settings.")
+        
+    except Exception as e:
+        click.echo(f"❌ Error managing configuration: {str(e)}", err=True)
         sys.exit(1)
 
 @cli.command() 
