@@ -22,6 +22,7 @@ celery_app.conf.update(
     task_routes={
         'app.workers.scan_worker.process_security_scan': {'queue': 'security_scans'},
         'app.workers.scan_worker.process_llm_analysis': {'queue': 'llm_analysis'},
+        'app.workers.repo_scan_worker.process_bulk_repository_scan': {'queue': 'security_scans'},
     },
     
     # Task execution
