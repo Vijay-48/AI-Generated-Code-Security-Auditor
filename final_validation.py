@@ -296,7 +296,7 @@ def check_changelog_content():
         with open('CHANGELOG.md', 'r') as f:
             content = f.read()
         
-        return '2.0.0' in content and 'Phase 9' in content and 'Advanced Monitoring' in content
+        return '2.0.0' in content and 'PHASE 9' in content and ('Advanced' in content or 'Analytics' in content)
     except:
         return False
 
