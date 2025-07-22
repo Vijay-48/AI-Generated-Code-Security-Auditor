@@ -44,23 +44,47 @@ This is a **FastAPI-based Python application** (not a full-stack web app) with:
 
 ---
 
-## 🚀 Quick Start (5 minutes)
+## 🚀 Quick Start (3 methods)
 
+### Option A: Docker (Recommended - 2 minutes)
 ```bash
-# 1. Clone the repository (if not already done)
-git clone <repository-url>
-cd ai-code-security-auditor
-
-# 2. Run with Docker (simplest method)
+# 1. Start all services with Docker
 docker-compose up -d
 
-# 3. Wait 30 seconds, then test
+# 2. Wait 30 seconds, then test
 curl http://localhost:8000/health
 
-# 4. Access the application
+# 3. Access services
 echo "🌐 API Documentation: http://localhost:8000/docs"
-echo "📊 Monitoring Dashboard: http://localhost:5555"
-echo "✅ Setup complete!"
+echo "📊 Worker Monitoring: http://localhost:5555"
+echo "✅ Docker setup complete!"
+```
+
+### Option B: Local Python (Advanced users)
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Start Redis (required)
+redis-server --daemonize yes
+
+# 3. Run the API server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 4. Test CLI tools
+python -m auditor.cli models
+```
+
+### Option C: CLI Only (Fastest for scanning)
+```bash
+# 1. Install as package
+pip install -e .
+
+# 2. Test installation
+auditor models
+
+# 3. Scan your code
+auditor scan . --output-format github --save report.md
 ```
 
 ---
