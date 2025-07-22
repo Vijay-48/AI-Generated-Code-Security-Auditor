@@ -295,305 +295,408 @@ class AnalyticsService:
         except Exception as e:
             print(f"❌ Error getting security metrics: {e}")
             return SecurityMetrics()
-    
-    async def get_vulnerability_trends(
-        self, 
-        time_range: TimeRange = TimeRange.LAST_WEEK
-    ) -> List[VulnerabilityTrend]:
+    async def get_vulnerability_trends(self, time_range: TimeRange) -> List[VulnerabilityTrend]:
         """Get vulnerability trends over time"""
-        
         try:
+            session = self.get_db_session()
+            
             end_time = datetime.now(timezone.utc)
             start_time = self._get_start_time(end_time, time_range)
             
-            # Get job data in time range
-            job_keys = await self.redis_client.keys("job:*")
+            # Query scans in time range
+            scans = session.query(ScanRecord).filter(
+                and_(
+                    ScanRecord.timestamp >= start_time,
+                    ScanRecord.timestamp <= end_time
+                )
+            ).order_by(ScanRecord.timestamp).all()
+            
+            # Group by time buckets and severity
             trends = []
+            severity_levels = ["low", "medium", "high", "critical"]
             
-            for job_key in job_keys:
-                job_data = await self.redis_client.get(job_key)
-                if not job_data:
-                    continue
-                    
-                try:
-                    job = json.loads(job_data)
-                    
-                    job_time = datetime.fromisoformat(
-                        job.get('started_at', '').replace('Z', '+00:00')
-                    ) if job.get('started_at') else None
-                    
-                    if not job_time or job_time < start_time:
-                        continue
-                    
-                    # Determine scan type
-                    scan_type = ScanType.REPOSITORY if 'repository_url' in job.get('message', '') else ScanType.SINGLE_FILE
-                    
-                    # Add vulnerability trend points
-                    total_vulns = job.get('total_vulnerabilities', 0)
-                    if total_vulns > 0:
-                        # Simulate severity distribution
-                        trends.append(VulnerabilityTrend(
-                            timestamp=job_time,
-                            severity=SeverityLevel.HIGH,
-                            count=max(1, total_vulns // 3),
-                            scan_type=scan_type,
-                            repository=job.get('repository_url')
-                        ))
-                        
-                        trends.append(VulnerabilityTrend(
-                            timestamp=job_time,
-                            severity=SeverityLevel.MEDIUM,
-                            count=max(1, total_vulns // 2),
-                            scan_type=scan_type,
-                            repository=job.get('repository_url')
-                        ))
-                        
-                except (json.JSONDecodeError, ValueError):
-                    continue
+            # Create time buckets
+            time_buckets = self._create_time_buckets(start_time, end_time, time_range)
             
-            return sorted(trends, key=lambda x: x.timestamp)
+            for bucket_start, bucket_end in time_buckets:
+                bucket_scans = [
+                    scan for scan in scans 
+                    if bucket_start <= scan.timestamp < bucket_end
+                ]
+                
+                for severity in severity_levels:
+                    count = 0
+                    repo = None
+                    
+                    for scan in bucket_scans:
+                        if severity == "critical":
+                            count += scan.critical_count or 0
+                        elif severity == "high":
+                            count += scan.high_count or 0
+                        elif severity == "medium":
+                            count += scan.medium_count or 0
+                        elif severity == "low":
+                            count += scan.low_count or 0
+                        
+                        if not repo and scan.repo_url:
+                            repo = scan.repo_url
+                    
+                    if count > 0 or len(bucket_scans) > 0:  # Include zero points for continuity
+                        trends.append(VulnerabilityTrend(
+                            timestamp=bucket_start,
+                            count=count,
+                            severity=SeverityLevel(severity),
+                            repository=repo
+                        ))
+            
+            session.close()
+            return trends
             
         except Exception as e:
             print(f"❌ Error getting vulnerability trends: {e}")
             return []
     
-    async def get_repository_stats(
-        self, 
-        limit: int = 20
-    ) -> List[RepositoryStats]:
-        """Get statistics for top repositories"""
-        
+    async def get_repository_stats(self, limit: int = 20) -> List[RepositoryStats]:
+        """Get repository statistics"""
         try:
-            # Group jobs by repository
-            repo_data = defaultdict(lambda: {
-                'scans': 0,
-                'total_files': 0,
-                'vulnerabilities': 0,
-                'last_scan': None,
-                'scan_times': [],
-                'cache_hits': 0
-            })
+            session = self.get_db_session()
             
-            job_keys = await self.redis_client.keys("job:*")
+            # Get repositories with their latest stats
+            repo_stats = session.query(
+                ScanRecord.repo_url,
+                ScanRecord.repository_name,
+                ScanRecord.branch,
+                func.count(ScanRecord.id).label('total_scans'),
+                func.sum(ScanRecord.files_scanned).label('total_files'),
+                func.avg(ScanRecord.security_score).label('avg_security_score'),
+                func.sum(ScanRecord.critical_count).label('total_critical'),
+                func.sum(ScanRecord.high_count).label('total_high'),
+                func.sum(ScanRecord.medium_count).label('total_medium'),
+                func.sum(ScanRecord.low_count).label('total_low'),
+                func.max(ScanRecord.timestamp).label('last_scan'),
+                func.avg(ScanRecord.scan_duration).label('avg_duration')
+            ).filter(
+                ScanRecord.repo_url.isnot(None)
+            ).group_by(
+                ScanRecord.repo_url, ScanRecord.repository_name, ScanRecord.branch
+            ).order_by(
+                desc('avg_security_score')
+            ).limit(limit).all()
             
-            for job_key in job_keys:
-                job_data = await self.redis_client.get(job_key)
-                if not job_data:
-                    continue
-                    
-                try:
-                    job = json.loads(job_data)
-                    
-                    # Extract repository info
-                    message = job.get('message', '')
-                    if 'repository_url' not in message:
-                        continue  # Skip single file scans
-                    
-                    # Parse repository URL from message
-                    repo_url = message.split(' ')[-1] if message else 'unknown'
-                    repo_name = repo_url.split('/')[-1] if '/' in repo_url else repo_url
-                    
-                    job_time = datetime.fromisoformat(
-                        job.get('started_at', '').replace('Z', '+00:00')
-                    ) if job.get('started_at') else datetime.now(timezone.utc)
-                    
-                    # Aggregate repository data
-                    data = repo_data[repo_url]
-                    data['scans'] += 1
-                    data['total_files'] += job.get('total_files', 0)
-                    data['vulnerabilities'] += job.get('total_vulnerabilities', 0)
-                    
-                    if not data['last_scan'] or job_time > data['last_scan']:
-                        data['last_scan'] = job_time
-                        data['repo_name'] = repo_name
-                    
-                    if job.get('execution_time'):
-                        data['scan_times'].append(job['execution_time'])
-                    
-                    if job.get('cache_hit'):
-                        data['cache_hits'] += 1
-                        
-                except (json.JSONDecodeError, ValueError):
-                    continue
-            
-            # Convert to RepositoryStats objects
-            repo_stats = []
-            for repo_url, data in repo_data.items():
-                # Calculate security score
-                total_files = max(1, data['total_files'])
-                security_score = self.metrics_calculator.calculate_security_score(
-                    {'HIGH': data['vulnerabilities'] // 3, 'MEDIUM': data['vulnerabilities'] // 2},
-                    total_files
+            repositories = []
+            for stat in repo_stats:
+                vuln_dist = VulnerabilityDistribution(
+                    critical=int(stat.total_critical or 0),
+                    high=int(stat.total_high or 0),
+                    medium=int(stat.total_medium or 0),
+                    low=int(stat.total_low or 0)
                 )
+                vuln_dist.calculate_total()
                 
-                # Calculate cache hit rate
-                cache_hit_rate = (data['cache_hits'] / data['scans'] * 100) if data['scans'] > 0 else 0.0
-                
-                # Average scan time
-                avg_scan_time = sum(data['scan_times']) / len(data['scan_times']) if data['scan_times'] else None
-                
-                repo_stats.append(RepositoryStats(
-                    repository_url=repo_url,
-                    repository_name=data.get('repo_name', repo_url.split('/')[-1]),
-                    total_scans=data['scans'],
-                    last_scan=data['last_scan'],
-                    total_files=data['total_files'],
-                    scanned_files=data['total_files'],  # Assume all files were scanned
-                    clean_files=max(0, data['total_files'] - data['vulnerabilities']),
-                    total_vulnerabilities=data['vulnerabilities'],
-                    high_vulnerabilities=data['vulnerabilities'] // 3,
-                    medium_vulnerabilities=data['vulnerabilities'] // 2,
-                    low_vulnerabilities=data['vulnerabilities'] // 4,
-                    security_score=security_score,
-                    recent_scan_duration=avg_scan_time,
-                    cache_hit_rate=round(cache_hit_rate, 1)
+                repositories.append(RepositoryStats(
+                    repository_url=stat.repo_url,
+                    repository_name=stat.repository_name or stat.repo_url.split('/')[-1],
+                    branch=stat.branch or "main",
+                    security_score=round(float(stat.avg_security_score or 0), 1),
+                    total_vulnerabilities=vuln_dist.total,
+                    vulnerability_distribution=vuln_dist,
+                    total_scans=int(stat.total_scans),
+                    total_files=int(stat.total_files or 0),
+                    last_scan_date=stat.last_scan,
+                    languages=[],  # TODO: extract from metadata
+                    avg_scan_duration=round(float(stat.avg_duration or 0), 2)
                 ))
             
-            # Sort by security score (ascending) and total vulnerabilities (descending)
-            repo_stats.sort(key=lambda x: (x.security_score, -x.total_vulnerabilities))
-            
-            return repo_stats[:limit]
+            session.close()
+            return repositories
             
         except Exception as e:
             print(f"❌ Error getting repository stats: {e}")
             return []
     
     async def get_performance_metrics(self) -> List[ScanPerformanceMetrics]:
-        """Get scan performance metrics by type"""
-        
+        """Get scan performance metrics"""
         try:
-            # Aggregate performance data
-            single_file_scans = []
-            repo_scans = []
+            session = self.get_db_session()
             
-            job_keys = await self.redis_client.keys("job:*")
+            # Group by scan type
+            performance_stats = session.query(
+                ScanRecord.scan_type,
+                func.count(ScanRecord.id).label('total_scans'),
+                func.avg(ScanRecord.scan_duration).label('avg_duration'),
+                func.min(ScanRecord.scan_duration).label('min_duration'),
+                func.max(ScanRecord.scan_duration).label('max_duration')
+            ).filter(
+                ScanRecord.scan_duration.isnot(None)
+            ).group_by(
+                ScanRecord.scan_type
+            ).all()
             
-            for job_key in job_keys:
-                job_data = await self.redis_client.get(job_key)
-                if not job_data:
-                    continue
-                    
-                try:
-                    job = json.loads(job_data)
-                    
-                    execution_time = job.get('execution_time', 0)
-                    if execution_time <= 0:
-                        continue
-                    
-                    if 'repository_url' in job.get('message', ''):
-                        repo_scans.append({
-                            'duration': execution_time,
-                            'files': job.get('total_files', 0),
-                            'success': job.get('status') == 'completed',
-                            'cache_hit': job.get('cache_hit', False)
-                        })
-                    else:
-                        single_file_scans.append({
-                            'duration': execution_time,
-                            'files': 1,
-                            'success': job.get('status') == 'completed',
-                            'cache_hit': job.get('cache_hit', False)
-                        })
-                        
-                except (json.JSONDecodeError, ValueError):
-                    continue
-            
-            performance_metrics = []
-            
-            # Single file scan metrics
-            if single_file_scans:
-                durations = [s['duration'] for s in single_file_scans]
-                successes = sum(1 for s in single_file_scans if s['success'])
-                cache_hits = sum(1 for s in single_file_scans if s['cache_hit'])
-                
-                performance_metrics.append(ScanPerformanceMetrics(
-                    scan_type=ScanType.SINGLE_FILE,
-                    avg_duration=sum(durations) / len(durations),
-                    min_duration=min(durations),
-                    max_duration=max(durations),
-                    total_scans=len(single_file_scans),
-                    avg_files_per_scan=1.0,
-                    cache_hit_rate=round(cache_hits / len(single_file_scans) * 100, 1),
-                    success_rate=round(successes / len(single_file_scans) * 100, 1),
-                    failure_rate=round((len(single_file_scans) - successes) / len(single_file_scans) * 100, 1)
+            performance = []
+            for stat in performance_stats:
+                performance.append(ScanPerformanceMetrics(
+                    scan_type=stat.scan_type,
+                    avg_duration=round(float(stat.avg_duration or 0), 2),
+                    min_duration=round(float(stat.min_duration or 0), 2),
+                    max_duration=round(float(stat.max_duration or 0), 2),
+                    success_rate=100.0,  # TODO: track failures
+                    total_scans=int(stat.total_scans),
+                    cache_hit_rate=0.0  # TODO: implement
                 ))
             
-            # Repository scan metrics
-            if repo_scans:
-                durations = [s['duration'] for s in repo_scans]
-                files = [s['files'] for s in repo_scans]
-                successes = sum(1 for s in repo_scans if s['success'])
-                cache_hits = sum(1 for s in repo_scans if s['cache_hit'])
-                
-                performance_metrics.append(ScanPerformanceMetrics(
-                    scan_type=ScanType.REPOSITORY,
-                    avg_duration=sum(durations) / len(durations),
-                    min_duration=min(durations),
-                    max_duration=max(durations),
-                    total_scans=len(repo_scans),
-                    avg_files_per_scan=sum(files) / len(files) if files else 0,
-                    cache_hit_rate=round(cache_hits / len(repo_scans) * 100, 1),
-                    success_rate=round(successes / len(repo_scans) * 100, 1),
-                    failure_rate=round((len(repo_scans) - successes) / len(repo_scans) * 100, 1)
-                ))
-            
-            return performance_metrics
+            session.close()
+            return performance
             
         except Exception as e:
             print(f"❌ Error getting performance metrics: {e}")
             return []
     
-    async def _calculate_dashboard_overview(self, time_range: TimeRange) -> DashboardOverview:
-        """Calculate complete dashboard overview"""
-        
-        # Get all components concurrently
-        metrics_task = self.get_security_metrics(time_range)
-        trends_task = self.get_vulnerability_trends(time_range)
-        repos_task = self.get_repository_stats(limit=10)
-        performance_task = self.get_performance_metrics()
-        
-        metrics, trends, repos, performance = await asyncio.gather(
-            metrics_task, trends_task, repos_task, performance_task
-        )
-        
-        return DashboardOverview(
-            metrics=metrics,
-            vulnerability_trends=trends,
-            top_repositories=repos,
-            performance_metrics=performance,
-            time_range=time_range,
-            total_data_points=len(trends) + len(repos)
-        )
+    # CLI-specific methods for new commands
+    
+    async def get_scan_summary(self, scan_id: Optional[str] = None) -> Optional[ScanSummary]:
+        """Get summary for specific scan or latest scan"""
+        try:
+            session = self.get_db_session()
+            
+            if scan_id:
+                scan = session.query(ScanRecord).filter(ScanRecord.id == scan_id).first()
+            else:
+                scan = session.query(ScanRecord).order_by(desc(ScanRecord.timestamp)).first()
+            
+            if not scan:
+                session.close()
+                return None
+            
+            # Get top rule hits for this scan
+            top_rules = session.query(
+                RuleHitRecord.rule_name,
+                RuleHitRecord.severity,
+                func.sum(RuleHitRecord.hit_count).label('total_hits')
+            ).filter(
+                RuleHitRecord.scan_id == scan.id
+            ).group_by(
+                RuleHitRecord.rule_name, RuleHitRecord.severity
+            ).order_by(
+                desc('total_hits')
+            ).limit(5).all()
+            
+            top_rules_list = [
+                {
+                    "rule_name": rule_name,
+                    "severity": severity,
+                    "hits": int(total_hits)
+                }
+                for rule_name, severity, total_hits in top_rules
+            ]
+            
+            session.close()
+            
+            return ScanSummary(
+                scan_id=scan.id,
+                timestamp=scan.timestamp,
+                repository=scan.repo_url,
+                total_issues=scan.total_issues or 0,
+                critical_count=scan.critical_count or 0,
+                high_count=scan.high_count or 0,
+                medium_count=scan.medium_count or 0,
+                low_count=scan.low_count or 0,
+                security_score=scan.security_score or 0.0,
+                scan_duration=scan.scan_duration,
+                files_scanned=scan.files_scanned or 0,
+                top_rules=top_rules_list,
+                languages=[scan.language] if scan.language else []
+            )
+            
+        except Exception as e:
+            print(f"❌ Error getting scan summary: {e}")
+            return None
+    
+    async def get_trend_data(self, days: int = 30) -> List[TrendDataPoint]:
+        """Get trend data for CLI visualization"""
+        try:
+            session = self.get_db_session()
+            
+            end_time = datetime.now(timezone.utc)
+            start_time = end_time - timedelta(days=days)
+            
+            # Group by day
+            daily_stats = session.query(
+                func.date(ScanRecord.timestamp).label('scan_date'),
+                func.count(ScanRecord.id).label('total_scans'),
+                func.sum(ScanRecord.total_issues).label('total_vulnerabilities'),
+                func.sum(ScanRecord.critical_count).label('critical'),
+                func.sum(ScanRecord.high_count).label('high'),
+                func.sum(ScanRecord.medium_count).label('medium'),
+                func.sum(ScanRecord.low_count).label('low')
+            ).filter(
+                and_(
+                    ScanRecord.timestamp >= start_time,
+                    ScanRecord.timestamp <= end_time
+                )
+            ).group_by(
+                func.date(ScanRecord.timestamp)
+            ).order_by('scan_date').all()
+            
+            trends = []
+            for stat in daily_stats:
+                trends.append(TrendDataPoint(
+                    date=str(stat.scan_date),
+                    total_scans=int(stat.total_scans or 0),
+                    total_vulnerabilities=int(stat.total_vulnerabilities or 0),
+                    critical=int(stat.critical or 0),
+                    high=int(stat.high or 0),
+                    medium=int(stat.medium or 0),
+                    low=int(stat.low or 0)
+                ))
+            
+            session.close()
+            return trends
+            
+        except Exception as e:
+            print(f"❌ Error getting trend data: {e}")
+            return []
+    
+    async def get_heatmap_data(self, scan_id: Optional[str] = None) -> List[HeatmapEntry]:
+        """Get heatmap data for directory visualization"""
+        try:
+            session = self.get_db_session()
+            
+            # Get latest scan if no ID provided
+            if not scan_id:
+                latest_scan = session.query(ScanRecord).order_by(desc(ScanRecord.timestamp)).first()
+                if not latest_scan:
+                    return []
+                scan_id = latest_scan.id
+            
+            # Get rule hits grouped by file path
+            rule_hits = session.query(
+                RuleHitRecord.file_path,
+                func.sum(RuleHitRecord.hit_count).label('total_hits'),
+                func.count(RuleHitRecord.id).label('rule_count')
+            ).filter(
+                and_(
+                    RuleHitRecord.scan_id == scan_id,
+                    RuleHitRecord.file_path.isnot(None)
+                )
+            ).group_by(
+                RuleHitRecord.file_path
+            ).all()
+            
+            # Convert to directory-level heatmap
+            dir_stats = {}
+            for hit in rule_hits:
+                file_path = hit.file_path
+                if file_path:
+                    # Extract directory
+                    dir_path = str(Path(file_path).parent)
+                    if dir_path not in dir_stats:
+                        dir_stats[dir_path] = {
+                            "hits": 0,
+                            "files": set(),
+                            "severity_score": 0
+                        }
+                    dir_stats[dir_path]["hits"] += int(hit.total_hits)
+                    dir_stats[dir_path]["files"].add(file_path)
+            
+            heatmap = []
+            for dir_path, stats in dir_stats.items():
+                heatmap.append(HeatmapEntry(
+                    path=dir_path,
+                    rule_hits=stats["hits"],
+                    severity_score=float(stats["hits"]),  # Simple scoring for now
+                    files_count=len(stats["files"])
+                ))
+            
+            # Sort by rule hits descending
+            heatmap.sort(key=lambda x: x.rule_hits, reverse=True)
+            
+            session.close()
+            return heatmap
+            
+        except Exception as e:
+            print(f"❌ Error getting heatmap data: {e}")
+            return []
+    
+    async def get_scan_history(self, limit: int = 20) -> List[ScanHistoryEntry]:
+        """Get scan history for CLI"""
+        try:
+            session = self.get_db_session()
+            
+            scans = session.query(ScanRecord).order_by(desc(ScanRecord.timestamp)).limit(limit).all()
+            
+            history = []
+            for scan in scans:
+                # Get top 3 issue types
+                top_issues = session.query(
+                    RuleHitRecord.rule_name
+                ).filter(
+                    RuleHitRecord.scan_id == scan.id
+                ).group_by(
+                    RuleHitRecord.rule_name
+                ).order_by(
+                    desc(func.sum(RuleHitRecord.hit_count))
+                ).limit(3).all()
+                
+                top_issues_list = [issue.rule_name for issue in top_issues]
+                
+                history.append(ScanHistoryEntry(
+                    scan_id=scan.id,
+                    timestamp=scan.timestamp,
+                    repository=scan.repo_url,
+                    total_issues=scan.total_issues or 0,
+                    security_score=scan.security_score or 0.0,
+                    top_issues=top_issues_list,
+                    scan_type=scan.scan_type or "single_file",
+                    duration=scan.scan_duration
+                ))
+            
+            session.close()
+            return history
+            
+        except Exception as e:
+            print(f"❌ Error getting scan history: {e}")
+            return []
+    
+    # Helper methods
     
     def _get_start_time(self, end_time: datetime, time_range: TimeRange) -> datetime:
-        """Get start time for the given time range"""
-        range_mapping = {
-            TimeRange.LAST_HOUR: timedelta(hours=1),
-            TimeRange.LAST_DAY: timedelta(days=1),
-            TimeRange.LAST_WEEK: timedelta(weeks=1),
-            TimeRange.LAST_MONTH: timedelta(days=30),
-            TimeRange.LAST_QUARTER: timedelta(days=90),
-            TimeRange.LAST_YEAR: timedelta(days=365)
-        }
-        
-        delta = range_mapping.get(time_range, timedelta(days=1))
-        return end_time - delta
+        """Calculate start time based on time range"""
+        if time_range == TimeRange.LAST_HOUR:
+            return end_time - timedelta(hours=1)
+        elif time_range == TimeRange.LAST_DAY:
+            return end_time - timedelta(days=1)
+        elif time_range == TimeRange.LAST_WEEK:
+            return end_time - timedelta(days=7)
+        elif time_range == TimeRange.LAST_MONTH:
+            return end_time - timedelta(days=30)
+        elif time_range == TimeRange.LAST_QUARTER:
+            return end_time - timedelta(days=90)
+        elif time_range == TimeRange.LAST_YEAR:
+            return end_time - timedelta(days=365)
+        else:
+            return end_time - timedelta(days=1)  # Default to last day
     
-    def _get_empty_dashboard_overview(self, time_range: TimeRange) -> DashboardOverview:
-        """Get empty dashboard overview for error cases"""
-        return DashboardOverview(
-            metrics=SecurityMetrics(),
-            time_range=time_range,
-            total_data_points=0
-        )
-    
-    def _deserialize_dashboard_overview(self, data: Dict) -> DashboardOverview:
-        """Deserialize dashboard overview from cached JSON data"""
-        # Convert datetime strings back to datetime objects
-        if data.get('generated_at'):
-            data['generated_at'] = datetime.fromisoformat(data['generated_at'].replace('Z', '+00:00'))
+    def _create_time_buckets(self, start_time: datetime, end_time: datetime, time_range: TimeRange):
+        """Create time buckets for trend analysis"""
+        buckets = []
         
-        return DashboardOverview(**data)
+        # Determine bucket size
+        if time_range in [TimeRange.LAST_HOUR]:
+            delta = timedelta(minutes=5)  # 5-minute buckets
+        elif time_range in [TimeRange.LAST_DAY]:
+            delta = timedelta(hours=1)    # Hourly buckets
+        elif time_range in [TimeRange.LAST_WEEK]:
+            delta = timedelta(hours=6)    # 6-hour buckets
+        else:
+            delta = timedelta(days=1)     # Daily buckets
+        
+        current_time = start_time
+        while current_time < end_time:
+            bucket_end = min(current_time + delta, end_time)
+            buckets.append((current_time, bucket_end))
+            current_time = bucket_end
+        
+        return buckets
 
 # Global analytics service instance
 analytics_service = AnalyticsService()
