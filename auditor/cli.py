@@ -1329,5 +1329,77 @@ def performance(ctx, include_cache, include_models, breakdown_language, output, 
         click.echo(f"❌ Failed to get performance analysis: {str(e)}", err=True)
         sys.exit(1)
 
+@cli.command()
+@click.option('--report-type', default='security_summary', 
+              type=click.Choice(['security_summary', 'vulnerability_trends', 'performance_analysis', 'top_rules_analysis']),
+              help='Type of report to generate')
+@click.option('--time-range', default='7d', help='Time range for report (1h, 24h, 7d, 30d)')
+@click.option('--format', 'report_format', default='markdown', 
+              type=click.Choice(['markdown', 'json', 'csv', 'text']),
+              help='Output format')
+@click.option('--save', help='Save report to file')
+@click.option('--email', help='Email address to send report (future feature)')
+@click.pass_context
+def generate_report(ctx, report_type, time_range, report_format, save, email):
+    """🔥 PHASE 9: Generate comprehensive security analytics reports"""
+    try:
+        import asyncio
+        import sys
+        sys.path.append('/app')
+        
+        from app.utils.report_generator import report_generator
+        from app.models.analytics import TimeRange
+        
+        # Map time range string to enum
+        time_range_map = {
+            '1h': TimeRange.LAST_HOUR,
+            '24h': TimeRange.LAST_DAY,
+            '7d': TimeRange.LAST_WEEK,
+            '30d': TimeRange.LAST_MONTH,
+            '90d': TimeRange.LAST_QUARTER,
+            '365d': TimeRange.LAST_YEAR
+        }
+        
+        time_range_enum = time_range_map.get(time_range, TimeRange.LAST_WEEK)
+        
+        async def generate():
+            return await report_generator.generate_scheduled_report(
+                report_type=report_type,
+                time_range=time_range_enum,
+                format_type=report_format,
+                save_path=save
+            )
+        
+        # Generate the report
+        click.echo(f"🚀 Generating {report_type.replace('_', ' ').title()} report...")
+        click.echo(f"📅 Time Range: {time_range}")
+        click.echo(f"📄 Format: {report_format}")
+        
+        content = asyncio.run(generate())
+        
+        if save:
+            click.echo(f"✅ Report saved to {save}")
+            
+            # Show preview of saved report
+            preview_lines = content.split('\n')[:10]
+            click.echo("\n📋 Preview:")
+            click.echo("-" * 50)
+            for line in preview_lines:
+                click.echo(line)
+            if len(content.split('\n')) > 10:
+                click.echo("... (truncated)")
+        else:
+            click.echo(content)
+        
+        # Future email feature
+        if email:
+            click.echo(f"📧 Email feature to {email} - Coming in Phase 9B!")
+        
+        click.echo(f"\n✨ Report generation completed successfully!")
+        
+    except Exception as e:
+        click.echo(f"❌ Failed to generate report: {str(e)}", err=True)
+        sys.exit(1)
+
 if __name__ == '__main__':
     cli()
