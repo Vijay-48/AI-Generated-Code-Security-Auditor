@@ -1401,5 +1401,9 @@ def generate_report(ctx, report_type, time_range, report_format, save, email):
         click.echo(f"❌ Failed to generate report: {str(e)}", err=True)
         sys.exit(1)
 
-if __name__ == '__main__':
+def main():
+    """Main entry point for the CLI"""
     cli()
+
+if __name__ == '__main__':
+    main()
