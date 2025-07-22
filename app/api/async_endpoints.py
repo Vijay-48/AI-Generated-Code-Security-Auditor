@@ -363,7 +363,7 @@ async def websocket_job_progress(websocket: WebSocket, job_id: str):
     
     Clients can connect to receive live progress updates as jobs execute
     """
-    await manager.connect(websocket, job_id)
+    await websocket_manager.connect(websocket, job_id, {})
     try:
         while True:
             # Get current progress
@@ -389,14 +389,14 @@ async def websocket_job_progress(websocket: WebSocket, job_id: str):
             await asyncio.sleep(2)
             
     except WebSocketDisconnect:
-        manager.disconnect(websocket, job_id)
+        websocket_manager.disconnect(websocket, job_id)
     except Exception as e:
         await websocket.send_json({
             "type": "error",
             "job_id": job_id,
             "error": str(e)
         })
-        manager.disconnect(websocket, job_id)
+        websocket_manager.disconnect(websocket, job_id)
 
 @async_router.get("/jobs")
 async def list_jobs(
