@@ -1,10 +1,16 @@
-# 🚀 AI Code Security Auditor v2.0.0 - Complete Local Setup Guide
+# 🛡️ AI Code Security Auditor v2.0.0 - Complete Local Setup Guide
 
 > **Production-Ready AI-powered security scanner with multi-model LLM integration, advanced analytics, and comprehensive vulnerability detection.**
 
-This guide provides **step-by-step instructions** to set up and run the AI Code Security Auditor locally on your machine.
+## 🏗️ Project Architecture
 
----
+This is a **FastAPI-based Python application** (not a full-stack web app) with:
+- **Core API Server**: FastAPI application with OpenRouter AI integration
+- **CLI Tools**: Professional command-line interface with rich visuals
+- **Background Workers**: Celery workers for async processing
+- **Caching Layer**: Redis for performance optimization
+- **Analytics Engine**: Comprehensive security analytics and reporting
+- **Multi-Model AI**: 4 specialized LLM models for different security tasks
 
 ## 📋 Table of Contents
 
