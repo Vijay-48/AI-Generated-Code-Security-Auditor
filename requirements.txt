@@ -33,3 +33,7 @@ eventlet
 flower
 # Git Integration for Bulk Repository Scanning
 GitPython>=3.1.0
+# CLI Enhancements for Phase 7B
+tqdm>=4.65.0
+colorama>=0.4.6
+pyyaml>=6.0
