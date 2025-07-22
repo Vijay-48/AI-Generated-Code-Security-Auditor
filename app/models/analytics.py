@@ -30,6 +30,12 @@ class SeverityLevel(str, Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+class ScanType(str, Enum):
+    """Scan type enumeration"""
+    SINGLE_FILE = "single_file"
+    REPOSITORY = "repository"
+    BULK = "bulk"
+
 class ExportFormat(str, Enum):
     """Export format options"""
     CSV = "csv"
