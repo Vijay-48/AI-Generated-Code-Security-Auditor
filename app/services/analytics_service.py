@@ -25,38 +25,165 @@ from app.models.analytics import (
 
 
 class AnalyticsService:
-    """
-    Service for aggregating security scan data into dashboard analytics
+    """Service for analytics data management and aggregation with SQLite storage"""
     
-    Features:
-    - Real-time metrics calculation
-    - Historical trend analysis  
-    - Repository-level statistics
-    - Performance monitoring
-    - Vulnerability pattern detection
-    """
-    
-    def __init__(self):
+    def __init__(self, database_url: str = "sqlite:///./analytics.db"):
+        self.database_url = database_url
+        self.engine = None
+        self.SessionLocal = None
         self.redis_client = None
         self.metrics_calculator = MetricsCalculator()
-        self.cache_prefix = "analytics:"
         
     async def connect(self):
-        """Initialize Redis connection for analytics data"""
+        """Initialize database connection and create tables"""
         try:
-            if not cache_service.connected:
-                await cache_service.connect()
+            # Create SQLAlchemy engine and session
+            self.engine = create_engine(
+                self.database_url,
+                connect_args={"check_same_thread": False} if "sqlite" in self.database_url else {}
+            )
             
-            self.redis_client = cache_service.redis_client
-            print("✅ Analytics service connected to Redis")
+            # Create all tables
+            Base.metadata.create_all(bind=self.engine)
+            self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            
+            # Connect to Redis for caching (optional)
+            try:
+                if not cache_service.connected:
+                    await cache_service.connect()
+                self.redis_client = cache_service.redis_client
+                print("✅ Analytics service connected to Redis cache")
+            except Exception as e:
+                print(f"⚠️ Analytics service: Redis unavailable, using database only: {e}")
+                self.redis_client = None
+            
+            print("✅ Analytics service initialized successfully")
             
         except Exception as e:
-            print(f"❌ Analytics service connection failed: {e}")
-            
-    async def get_dashboard_overview(
+            print(f"❌ Failed to initialize analytics service: {e}")
+            raise
+    
+    def get_db_session(self):
+        """Get database session"""
+        return self.SessionLocal()
+    
+    # Core data storage methods
+    
+    async def store_scan_result(
         self, 
-        time_range: TimeRange = TimeRange.LAST_DAY
-    ) -> DashboardOverview:
+        scan_id: str,
+        scan_results: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Store scan results in the database
+        Called after each completed scan
+        """
+        try:
+            session = self.get_db_session()
+            
+            # Extract data from scan results
+            vulnerabilities = scan_results.get("vulnerabilities", [])
+            repo_url = metadata.get("repository_url") if metadata else None
+            repository_name = metadata.get("repository_name") if metadata else None
+            branch = metadata.get("branch") if metadata else None
+            scan_duration = metadata.get("execution_time") if metadata else None
+            language = metadata.get("language") if metadata else None
+            model_used = metadata.get("model") if metadata else None
+            scan_type = metadata.get("scan_type", "single_file") if metadata else "single_file"
+            files_scanned = metadata.get("files_scanned", 1) if metadata else 1
+            
+            # Count vulnerabilities by severity
+            severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+            for vuln in vulnerabilities:
+                severity = vuln.get("severity", "low").lower()
+                if severity in severity_counts:
+                    severity_counts[severity] += 1
+            
+            total_issues = len(vulnerabilities)
+            
+            # Calculate security score (simple algorithm: 100 - weighted severity score)
+            security_score = max(0, 100 - (
+                severity_counts["critical"] * 25 +
+                severity_counts["high"] * 10 +
+                severity_counts["medium"] * 5 +
+                severity_counts["low"] * 1
+            ))
+            
+            # Create scan record
+            scan_record = ScanRecord(
+                id=scan_id,
+                repo_url=repo_url,
+                repository_name=repository_name,
+                branch=branch,
+                timestamp=datetime.now(timezone.utc),
+                total_issues=total_issues,
+                critical_count=severity_counts["critical"],
+                high_count=severity_counts["high"],
+                medium_count=severity_counts["medium"], 
+                low_count=severity_counts["low"],
+                files_scanned=files_scanned,
+                scan_duration=scan_duration,
+                security_score=security_score,
+                language=language,
+                model_used=model_used,
+                scan_type=scan_type,
+                scan_metadata=json.dumps(metadata) if metadata else None
+            )
+            
+            session.add(scan_record)
+            
+            # Store rule hits
+            rule_hit_counts = {}
+            for vuln in vulnerabilities:
+                rule_name = vuln.get("id", "unknown")
+                rule_id = vuln.get("title", rule_name)
+                severity = vuln.get("severity", "low").lower()
+                tool = vuln.get("tool", "unknown")
+                file_path = metadata.get("file_path") if metadata else None
+                line_number = vuln.get("line_number")
+                
+                # Count hits per rule
+                rule_key = f"{rule_name}:{severity}:{tool}"
+                if rule_key not in rule_hit_counts:
+                    rule_hit_counts[rule_key] = {
+                        "rule_name": rule_name,
+                        "rule_id": rule_id,
+                        "severity": severity,
+                        "tool": tool,
+                        "count": 0,
+                        "file_path": file_path,
+                        "line_number": line_number
+                    }
+                rule_hit_counts[rule_key]["count"] += 1
+            
+            # Store rule hit records
+            for rule_data in rule_hit_counts.values():
+                rule_hit = RuleHitRecord(
+                    scan_id=scan_id,
+                    rule_name=rule_data["rule_name"],
+                    rule_id=rule_data["rule_id"], 
+                    hit_count=rule_data["count"],
+                    severity=rule_data["severity"],
+                    tool=rule_data["tool"],
+                    file_path=rule_data["file_path"],
+                    line_number=rule_data["line_number"]
+                )
+                session.add(rule_hit)
+            
+            session.commit()
+            session.close()
+            
+            return scan_id
+            
+        except Exception as e:
+            print(f"❌ Error storing scan result: {e}")
+            if session:
+                session.rollback()
+                session.close()
+            raise
+
+    async def get_dashboard_overview(self, time_range: TimeRange) -> DashboardOverview:
         """Get complete dashboard overview data"""
         
         try:
