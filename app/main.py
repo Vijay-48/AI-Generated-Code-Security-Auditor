@@ -258,7 +258,12 @@ def root():
             "GET /models": "List available LLM models",
             "GET /health": "Service health check with cache status",
             "GET /metrics": "Prometheus metrics",
-            "GET /async/cache/stats": "Cache performance statistics"
+            "GET /async/cache/stats": "Cache performance statistics",
+            "GET /api/analytics/overview": "📊 PHASE 7: Complete dashboard analytics",
+            "GET /api/analytics/metrics": "📊 Security metrics and KPIs", 
+            "GET /api/analytics/trends": "📊 Vulnerability trends over time",
+            "GET /api/analytics/repositories": "📊 Repository security rankings",
+            "WebSocket /api/analytics/ws": "📊 Real-time analytics dashboard"
         },
         "phase_6_features": {
             "bulk_repository_scanning": {
