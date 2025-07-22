@@ -22,12 +22,28 @@ from app.config import settings
 _worker_initialized = False
 
 async def _publish_progress_update(job_id: str, progress_data: Dict[str, Any]):
-    """Helper function to publish progress updates via WebSocket"""
+    """Helper function to publish progress updates via Redis directly"""
     try:
-        await websocket_manager.publish_job_progress(job_id, progress_data)
+        import redis.asyncio as redis
+        from app.config import settings
+        
+        # Create a simple Redis publisher (don't reuse websocket_manager)
+        redis_url = f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
+        redis_publisher = redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
+        
+        channel = f"job_progress:{job_id}"
+        message = json.dumps({
+            "job_id": job_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **progress_data
+        })
+        
+        await redis_publisher.publish(channel, message)
+        await redis_publisher.close()
+        
     except Exception as e:
-        # Don't fail the job if WebSocket publishing fails
-        print(f"⚠️ Failed to publish WebSocket update for job {job_id}: {e}")
+        # Don't fail the job if publishing fails
+        print(f"⚠️ Failed to publish progress update for job {job_id}: {e}")
 
 @worker_init.connect
 def init_worker(**kwargs):
