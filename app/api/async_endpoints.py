@@ -277,10 +277,11 @@ async def get_job_status_endpoint(job_id: str):
                     message=f'Job state: {result.state}'
                 )
         
-        return JobStatusResponse(
-            job_id=job_id,
-            **progress
-        )
+        # Create response from progress data, avoiding duplicate job_id
+        response_data = {k: v for k, v in progress.items() if k != 'job_id'}
+        response_data['job_id'] = job_id
+        
+        return JobStatusResponse(**response_data)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get job status: {str(e)}")
