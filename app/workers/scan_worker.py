@@ -252,6 +252,12 @@ async def _async_process_security_scan(
             'progress': 90,
             'message': 'Finalizing results...'
         })
+        await _publish_progress_update(job_id, {
+            'status': 'processing',
+            'stage': 'finalizing',
+            'progress': 90,
+            'message': 'Finalizing results...'
+        })
         
         # Cache results if enabled
         if cache_enabled:
