@@ -14,6 +14,7 @@ from celery.signals import worker_init, worker_shutdown
 from app.celery_app import celery_app
 from app.agents.security_agent import SecurityAgent
 from app.services.cache_service import cache_service
+from app.websocket_manager import websocket_manager
 from app.config import settings
 
 
