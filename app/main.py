@@ -149,6 +149,32 @@ async def audit_code(request: AuditRequest):
         model = request.model or "agentica-org/deepcoder-14b-preview:free"
         record_audit_metrics(request.language, model, vulnerabilities)
         
+        # **NEW: Store scan results in analytics database**
+        try:
+            from app.services.analytics_service import analytics_service
+            import uuid
+            
+            scan_id = str(uuid.uuid4())
+            metadata = {
+                'language': request.language,
+                'model': model,
+                'scan_type': 'single_file',
+                'files_scanned': 1,
+                'file_path': request.filename or 'unknown'
+            }
+            
+            # Ensure analytics service is connected
+            if not analytics_service.engine:
+                await analytics_service.connect()
+            
+            # Store the scan result
+            await analytics_service.store_scan_result(scan_id, state, metadata)
+            print(f"✅ Stored audit scan in analytics: {scan_id}")
+            
+        except Exception as e:
+            print(f"⚠️ Failed to store audit in analytics: {e}")
+            # Don't fail the request if analytics storage fails
+        
         # Add model information to response
         model_info = None
         if hasattr(agent, 'llm_service') and hasattr(agent.llm_service, 'get_model_recommendations'):
