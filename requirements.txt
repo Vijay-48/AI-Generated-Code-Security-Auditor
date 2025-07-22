@@ -31,3 +31,5 @@ websockets
 python-socketio[asyncio-client]
 eventlet
 flower
+# Git Integration for Bulk Repository Scanning
+GitPython>=3.1.0
