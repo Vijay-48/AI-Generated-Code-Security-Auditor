@@ -23,3 +23,11 @@ click
 gunicorn
 prometheus-client
 pathlib2
+# Async Processing & Caching
+redis
+celery[redis]
+kombu
+websockets
+aioredis
+python-socketio[asyncio-client]
+eventlet
