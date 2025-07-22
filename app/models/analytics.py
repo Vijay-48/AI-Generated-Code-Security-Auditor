@@ -225,6 +225,13 @@ class ScanHistoryEntry(BaseModel):
     duration: Optional[float] = None
 
 
+class TimeSeries(BaseModel):
+    """Time series data point for analytics"""
+    timestamp: datetime
+    value: float
+    label: Optional[str] = None
+
+
 class MetricsCalculator:
     """Utility class for calculating security metrics and scores"""
     
