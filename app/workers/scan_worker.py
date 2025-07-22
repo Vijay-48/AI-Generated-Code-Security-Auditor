@@ -59,6 +59,7 @@ def shutdown_worker(**kwargs):
     try:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(cache_service.disconnect())
+        loop.run_until_complete(websocket_manager.shutdown())
     except Exception as e:
         print(f"⚠️ Error during worker shutdown: {e}")
     print("✅ Worker shutdown complete")
