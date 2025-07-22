@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, WebSocket,
 from pydantic import BaseModel, field_validator
 
 from app.workers.scan_worker import process_security_scan, get_job_status, process_llm_analysis
+from app.workers.repo_scan_worker import process_bulk_repository_scan
 from app.services.cache_service import cache_service
 from app.services.llm_client import get_available_models
 from app.websocket_manager import websocket_manager
