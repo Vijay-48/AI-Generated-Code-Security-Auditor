@@ -13,6 +13,9 @@ celery_app = Celery(
     include=['app.workers.scan_worker']
 )
 
+# Import task modules to ensure they're registered
+from app.workers import scan_worker
+
 # Celery configuration
 celery_app.conf.update(
     # Task routing
