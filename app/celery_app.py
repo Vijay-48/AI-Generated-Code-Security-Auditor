@@ -67,6 +67,10 @@ celery_app.conf.task_annotations = {
         'rate_limit': '30/m',  # Max 30 LLM calls per minute (due to API limits)
         'time_limit': 120,     # 2 minute timeout for LLM calls
     },
+    'app.workers.repo_scan_worker.process_bulk_repository_scan': {
+        'rate_limit': '5/m',   # Max 5 repository scans per minute
+        'time_limit': 1800,    # 30 minute timeout for large repositories
+    },
 }
 
 if __name__ == '__main__':
