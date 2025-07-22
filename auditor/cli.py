@@ -455,53 +455,66 @@ def generate_sarif_output(results: List[Dict]) -> str:
 
 @cli.command()
 @click.option('--scan-id', help='Specific scan ID (optional, uses latest if not provided)')
+@click.option('--rule', help='Filter by specific rule name (partial match)')
+@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low']), help='Filter by severity level')
+@click.option('--output', default='table', type=click.Choice(['table', 'json', 'yaml']), help='Output format')
+@click.option('--save', help='Save output to file')
+@click.option('--no-colors', is_flag=True, help='Disable colored output')
 @click.pass_context 
-def summary(ctx, scan_id):
-    """Show comprehensive summary of a scan"""
+def summary(ctx, scan_id, rule, severity, output, save, no_colors):
+    """Show comprehensive summary of a scan with filtering options"""
     try:
-        # Import analytics service here to avoid circular imports
+        # Import required modules
         import sys
         import asyncio
         sys.path.append('/app')
         from app.services.analytics_service import analytics_service
+        from app.utils.formatters import ExportFormatter
+        
+        # Load configuration
+        from app.utils.formatters import load_config
+        config = load_config()
+        
+        # Override config with command line options
+        if no_colors:
+            config['output']['colors'] = False
         
         async def get_summary():
             await analytics_service.connect()
-            summary_data = await analytics_service.get_scan_summary(scan_id)
+            
+            # Build filters
+            filters = {}
+            if rule:
+                filters['rule'] = rule
+            if severity:
+                filters['severity'] = severity
+            
+            summary_data = await analytics_service.get_scan_summary_filtered(scan_id, **filters)
             return summary_data
         
         summary_data = asyncio.run(get_summary())
         
         if not summary_data:
-            click.echo("❌ No scan data found")
+            click.echo("❌ No scan data found matching the criteria")
             sys.exit(1)
         
-        # Display summary
-        click.echo("🔍 Scan Summary")
-        click.echo("=" * 50)
-        click.echo(f"Scan ID: {summary_data.scan_id}")
-        click.echo(f"Timestamp: {summary_data.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
-        if summary_data.repository:
-            click.echo(f"Repository: {summary_data.repository}")
-        click.echo(f"Files Scanned: {summary_data.files_scanned}")
-        if summary_data.scan_duration:
-            click.echo(f"Duration: {summary_data.scan_duration:.2f}s")
+        # Format output
+        formatter = ExportFormatter.get_formatter(output)
         
-        click.echo(f"\n📊 Security Overview")
-        click.echo(f"Overall Score: {summary_data.security_score:.1f}/100")
-        click.echo(f"Total Issues: {summary_data.total_issues}")
-        click.echo(f"  🔴 Critical: {summary_data.critical_count}")
-        click.echo(f"  🟠 High: {summary_data.high_count}")  
-        click.echo(f"  🟡 Medium: {summary_data.medium_count}")
-        click.echo(f"  🟢 Low: {summary_data.low_count}")
+        if output == 'table':
+            content = formatter.format_summary(summary_data, show_colors=config['output']['colors'])
+        else:
+            content = formatter.format_summary(summary_data)
         
-        if summary_data.languages:
-            click.echo(f"Languages: {', '.join(summary_data.languages)}")
-        
-        if summary_data.top_rules:
-            click.echo(f"\n🎯 Top Security Issues")
-            for i, rule in enumerate(summary_data.top_rules[:3], 1):
-                click.echo(f"  {i}. {rule['rule_name']} ({rule['severity']}) - {rule['hits']} hits")
+        # Output or save
+        if save:
+            from app.utils.formatters import save_to_file
+            if save_to_file(content, save, output):
+                click.echo(f"✅ Summary saved to {save}")
+            else:
+                sys.exit(1)
+        else:
+            click.echo(content)
         
     except Exception as e:
         click.echo(f"❌ Error getting scan summary: {str(e)}", err=True)
