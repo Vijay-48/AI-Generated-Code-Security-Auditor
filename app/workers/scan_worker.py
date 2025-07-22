@@ -183,12 +183,24 @@ async def _async_process_security_scan(
             'progress': 10,
             'message': 'Running security scanners...'
         })
+        await _publish_progress_update(job_id, {
+            'status': 'processing',
+            'stage': 'scanning',
+            'progress': 10,
+            'message': 'Running security scanners...'
+        })
         
         # Create fresh security agent
         agent = SecurityAgent()
         
         # Progress: Vulnerability Analysis
         await cache_service.set_job_progress(job_id, {
+            'status': 'processing',
+            'stage': 'vulnerability_analysis',
+            'progress': 25,
+            'message': 'Analyzing vulnerabilities...'
+        })
+        await _publish_progress_update(job_id, {
             'status': 'processing',
             'stage': 'vulnerability_analysis',
             'progress': 25,
@@ -202,10 +214,22 @@ async def _async_process_security_scan(
             'progress': 40,
             'message': 'Retrieving remediation patterns...'
         })
+        await _publish_progress_update(job_id, {
+            'status': 'processing', 
+            'stage': 'remediation_retrieval',
+            'progress': 40,
+            'message': 'Retrieving remediation patterns...'
+        })
         
         # Progress: AI Analysis
         if use_advanced_analysis or preferred_model:
             await cache_service.set_job_progress(job_id, {
+                'status': 'processing',
+                'stage': 'ai_analysis', 
+                'progress': 60,
+                'message': 'Running AI analysis and patch generation...'
+            })
+            await _publish_progress_update(job_id, {
                 'status': 'processing',
                 'stage': 'ai_analysis', 
                 'progress': 60,
