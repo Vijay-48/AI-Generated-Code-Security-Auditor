@@ -153,6 +153,17 @@ async def _async_process_security_scan(
                     'cache_hit': True,
                     'execution_time': 0.1
                 })
+                
+                # WebSocket update for cache hit
+                await _publish_progress_update(job_id, {
+                    'status': 'completed',
+                    'stage': 'cache_hit',
+                    'progress': 100,
+                    'message': 'Results retrieved from cache',
+                    'completed_at': datetime.now(timezone.utc).isoformat(),
+                    'cache_hit': True,
+                    'execution_time': 0.1
+                })
                 return {
                     'job_id': job_id,
                     'status': 'completed',
