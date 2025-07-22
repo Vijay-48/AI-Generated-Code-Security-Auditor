@@ -59,7 +59,7 @@ class ScanRecord(Base):
     language = Column(String, nullable=True)
     model_used = Column(String, nullable=True)
     scan_type = Column(String, default="single_file")  # single_file, repository, bulk
-    metadata = Column(Text, nullable=True)  # JSON metadata
+    scan_metadata = Column(Text, nullable=True)  # JSON metadata
     
     # Relationship to rule hits
     rule_hits = relationship("RuleHitRecord", back_populates="scan")
