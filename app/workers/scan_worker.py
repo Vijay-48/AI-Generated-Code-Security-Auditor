@@ -284,6 +284,17 @@ async def _async_process_security_scan(
             'vulnerabilities_found': len(results.get('vulnerabilities', [])),
             'patches_generated': len(results.get('patches', [])),
         })
+        await _publish_progress_update(job_id, {
+            'status': 'completed',
+            'stage': 'completed',
+            'progress': 100,
+            'message': f'Analysis completed in {execution_time:.1f}s',
+            'completed_at': end_time.isoformat(),
+            'cache_hit': False,
+            'execution_time': execution_time,
+            'vulnerabilities_found': len(results.get('vulnerabilities', [])),
+            'patches_generated': len(results.get('patches', [])),
+        })
         
         return {
             'job_id': job_id,
