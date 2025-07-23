@@ -14,7 +14,7 @@ from typing import List, Dict, Any
 import fnmatch
 
 # Configuration
-DEFAULT_API_URL = "http://localhost:8001"
+DEFAULT_API_URL = "http://localhost:8000"
 SUPPORTED_EXTENSIONS = {
     '.py': 'python',
     '.js': 'javascript', 
