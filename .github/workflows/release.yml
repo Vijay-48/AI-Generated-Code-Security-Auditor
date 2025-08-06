@@ -1,0 +1,144 @@
+# Automated GitHub Release with PyPI deployment
+
+name: Release and Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v2.0.0, v2.1.0
+
+permissions:
+  contents: write  # Required for creating releases
+  id-token: write  # Required for trusted PyPI publishing
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+        
+    - name: Build package
+      run: python -m build
+      
+    - name: Check package
+      run: twine check dist/*
+      
+    - name: Extract version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: AI Code Security Auditor v${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## AI Code Security Auditor v${{ steps.get_version.outputs.VERSION }}
+          
+          ### 🚀 Installation
+          ```bash
+          pip install ai-code-security-auditor==${{ steps.get_version.outputs.VERSION }}
+          ```
+          
+          ### 📦 Direct Download
+          Download the wheel file below and install with:
+          ```bash
+          pip install ai_code_security_auditor-${{ steps.get_version.outputs.VERSION }}-py3-none-any.whl
+          ```
+          
+          ### ✨ Features
+          - Multi-model AI security scanning (4 specialized LLM models)
+          - Professional CLI interface (15+ commands)
+          - FastAPI REST API with comprehensive endpoints
+          - Advanced analytics and reporting
+          - Multi-language support (Python, JavaScript, Java, Go)
+          
+          ### 🛠️ CLI Commands
+          ```bash
+          auditor --help           # Show all available commands
+          auditor scan . --help    # Scan current directory
+          auditor models           # List available AI models
+          auditor trends --help    # View vulnerability trends
+          ```
+          
+          ### 📖 Documentation
+          - [Setup Guide](docs/02-LOCAL_SETUP_GUIDE.md)
+          - [Testing Guide](docs/03-LOCAL_TESTING_GUIDE.md)
+          - [API Documentation](docs/01-PROJECT_OVERVIEW.md)
+          
+          ### 🔧 Requirements
+          - Python 3.11+
+          - OpenRouter API key (get free at https://openrouter.ai)
+          - Optional: Redis for caching (performance boost)
+          
+        draft: false
+        prerelease: false
+        
+    - name: Upload Wheel to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/ai_code_security_auditor-${{ steps.get_version.outputs.VERSION }}-py3-none-any.whl
+        asset_name: ai_code_security_auditor-${{ steps.get_version.outputs.VERSION }}-py3-none-any.whl
+        asset_content_type: application/zip
+        
+    - name: Upload Source Distribution to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/ai_code_security_auditor-${{ steps.get_version.outputs.VERSION }}.tar.gz
+        asset_name: ai_code_security_auditor-${{ steps.get_version.outputs.VERSION }}.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        # Uses OIDC trusted publishing (no API key needed if configured)
+        # Alternative: use API token in secrets.PYPI_API_TOKEN
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  test-installation:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+        
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Wait for PyPI propagation
+      run: sleep 60  # Wait for package to propagate on PyPI
+      
+    - name: Test installation from PyPI
+      run: |
+        pip install ai-code-security-auditor
+        auditor --help
+        
+    - name: Test CLI commands
+      run: |
+        auditor models --help
+        auditor scan --help
+        auditor trends --help
