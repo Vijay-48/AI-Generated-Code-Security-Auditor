@@ -12,26 +12,24 @@
 
 ## 🚀 **Quick Start**
 
-### **30-Second Setup (Docker)**
+### **Installation**
 ```bash
-# Clone and start the application
-git clone <repository-url>
-cd ai-code-security-auditor
-docker-compose up -d
+# Install from PyPI (when published)
+pip install ai-code-security-auditor
 
-# Test the installation
-curl http://localhost:8000/health
+# Or install from wheel file
+pip install ai_code_security_auditor-2.0.0-py3-none-any.whl
 ```
 
 ### **CLI Usage**
 ```bash
-# Install CLI tools
-pip install -e .
+# List available models
+auditor models
 
 # Scan your code
 auditor scan . --output-format github --save security-report.md
 
-# Analyze specific code
+# Analyze specific code snippet
 auditor analyze --code "import os; os.system(user_input)" --language python
 ```
 
@@ -46,19 +44,136 @@ open http://localhost:8000/docs
 
 ---
 
-## 📚 **Complete Documentation**
+## 📚 **Implementation Instructions**
 
-**🎯 New to this project?** Start with our comprehensive documentation index:
+### **Prerequisites**
+- **Python 3.11+** - Required for modern language features
+- **pip** - For package installation
+- **Git** - For repository scanning features (optional)
+- **Redis** - For caching and async processing (optional)
 
-### **📖 [Documentation Index](docs/00-DOCUMENTATION_INDEX.md)**
+### **Basic Setup**
 
-The documentation index provides organized access to all guides and references:
+1. **Install the Package**
+   ```bash
+   pip install ai-code-security-auditor
+   ```
 
-- **🚀 Getting Started** - Project overview, setup, and testing guides
-- **📖 Core Documentation** - Complete usage guides and CLI reference  
-- **📊 Development & Testing** - Testing protocols and development guides
-- **🔧 Advanced Features** - Implementation details and CI/CD integration
-- **🛡️ Security Reports** - Security analysis and vulnerability reports
+2. **Set API Key**
+   ```bash
+   export OPENROUTER_API_KEY="your-api-key-here"
+   ```
+   Get your free API key at: https://openrouter.ai/
+
+3. **Verify Installation**
+   ```bash
+   auditor --help
+   auditor models
+   ```
+
+### **Advanced Setup**
+
+#### **1. CLI Configuration**
+Create a configuration file at `~/.config/auditor/config.yaml`:
+
+```yaml
+# AI Code Security Auditor Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  
+scanning:
+  default_model: "agentica-org/deepcoder-14b-preview:free"
+  timeout: 300
+  max_file_size: "10MB"
+  
+analytics:
+  retention_days: 365
+  cache_ttl: 3600
+  
+output:
+  default_format: "table"
+  colors: true
+  progress_bars: true
+  
+filters:
+  default_excludes:
+    - "*/node_modules/*"
+    - "*/.git/*" 
+    - "*/venv/*"
+    - "*/test*/*"
+    - "*/build/*"
+    - "*/dist/*"
+
+models:
+  preferred:
+    code_patches: "agentica-org/deepcoder-14b-preview:free"
+    quality_assessment: "meta-llama/llama-3.3-70b-instruct:free"
+    fast_classification: "qwen/qwen-2.5-coder-32b-instruct:free"
+    security_explanations: "moonshotai/kimi-dev-72b:free"
+```
+
+#### **2. API Server Setup**
+For running the FastAPI server:
+
+```python
+# server.py
+import uvicorn
+from app.main import app
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        reload=True  # Remove for production
+    )
+```
+
+Run with:
+```bash
+python server.py
+```
+
+#### **3. Redis Setup (Optional)**
+For enhanced performance with caching:
+
+```bash
+# Install Redis
+sudo apt-get install redis-server
+
+# Or using Docker
+docker run -d -p 6379:6379 redis:alpine
+
+# Configure environment
+export REDIS_URL="redis://localhost:6379/0"
+```
+
+#### **4. Environment Variables**
+Create a `.env` file for your project:
+
+```env
+# Required
+OPENROUTER_API_KEY=your_api_key_here
+
+# Optional
+OPENROUTER_REFERER=https://your-domain.com
+OPENROUTER_TITLE=AI Code Security Auditor
+
+# Redis (optional)
+REDIS_URL=redis://localhost:6379/0
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+
+# Celery (for async processing)
+CELERY_BROKER_URL=redis://localhost:6379/1
+CELERY_RESULT_BACKEND=redis://localhost:6379/2
+
+# GitHub (for repository scanning)
+GITHUB_TOKEN=your_github_token
+```
 
 ---
 
@@ -76,7 +191,7 @@ The documentation index provides organized access to all guides and references:
 - **Multi-Language Support**: Python, JavaScript, Java, Go
 - **Custom Rules**: Extensible pattern matching and rule creation
 
-### **📊 Advanced Analytics (Phase 9)**
+### **📊 Advanced Analytics**
 - **Trend Forecasting**: Predictive analysis with growth rate calculations
 - **Rule Intelligence**: Most effective security patterns analysis
 - **Performance Optimization**: Bottleneck identification and caching insights
@@ -102,13 +217,13 @@ AI Code Security Auditor v2.0.0
 │   ├── 15+ professional commands
 │   ├── Rich terminal interface
 │   └── Multiple output formats
-├── 🔄 Background Workers (Celery)
+├── 🔄 Background Workers (Celery - Optional)
 │   ├── Async job processing
 │   └── Bulk repository scanning
-├── 💾 Caching Layer (Redis)
+├── 💾 Caching Layer (Redis - Optional)
 │   ├── Performance optimization
 │   └── Result caching
-└── 📊 Analytics Engine (Phase 9)
+└── 📊 Analytics Engine
     ├── Trend forecasting
     ├── Performance insights
     └── Executive reporting
@@ -116,54 +231,176 @@ AI Code Security Auditor v2.0.0
 
 ---
 
-## 📋 **Quick Reference**
+## 📋 **Usage Examples**
 
-### **Installation Methods**
-- **Docker**: `docker-compose up -d` (Recommended)
-- **Local Python**: `pip install -r requirements.txt && pip install -e .`
-- **CLI Only**: `pip install -e . && auditor models`
+### **CLI Examples**
 
-### **Key Endpoints**
-- **API Documentation**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-- **AI Models**: http://localhost:8000/models
-- **Analytics Dashboard**: http://localhost:8000/api/analytics/overview
-- **Worker Monitoring**: http://localhost:5555 (Flower)
-
-### **Essential Commands**
+#### **Basic Scanning**
 ```bash
-# List available AI models
-auditor models
-
 # Scan current directory
-auditor scan . --advanced
+auditor scan .
 
-# Generate GitHub Actions report
-auditor scan . --output-format github --save report.md
+# Scan specific file
+auditor scan /path/to/file.py
 
-# Advanced analytics
-auditor trends-detailed --period 30 --include-forecast
-auditor performance --include-models --breakdown-language
+# Scan with advanced analysis
+auditor scan . --advanced --output-format json
 ```
+
+#### **Code Analysis**
+```bash
+# Analyze code snippet
+auditor analyze --code "exec(user_input)" --language python
+
+# Analyze with specific model
+auditor analyze --code "SELECT * FROM users WHERE id = $1" --language python --model "meta-llama/llama-3.3-70b-instruct:free"
+```
+
+#### **Reporting**
+```bash
+# Generate GitHub Actions report
+auditor scan . --output-format github --save security-report.md
+
+# Generate comprehensive analytics report
+auditor generate-report --period 30 --include-forecast --format markdown
+```
+
+#### **Advanced Analytics**
+```bash
+# View vulnerability trends
+auditor trends --period 90 --include-forecast
+
+# Performance analysis
+auditor performance --include-models --breakdown-language
+
+# Top security rules
+auditor top-rules --limit 20 --min-hits 5
+```
+
+### **API Examples**
+
+#### **Single File Analysis**
+```bash
+curl -X POST "http://localhost:8000/audit" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "import os\nos.system(user_input)",
+    "language": "python",
+    "use_advanced_analysis": true
+  }'
+```
+
+#### **Async Analysis with Progress Tracking**
+```bash
+# Submit async job
+JOB_ID=$(curl -s -X POST "http://localhost:8000/async/audit" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "exec(user_data)",
+    "language": "python"
+  }' | jq -r '.job_id')
+
+# Check status
+curl "http://localhost:8000/async/jobs/$JOB_ID/status"
+
+# Get results
+curl "http://localhost:8000/async/jobs/$JOB_ID/results"
+```
+
+#### **Repository Scanning**
+```bash
+curl -X POST "http://localhost:8000/async/repo-scan" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repository_url": "https://github.com/user/repo.git",
+    "branch": "main",
+    "max_files": 100,
+    "use_advanced_analysis": true
+  }'
+```
+
+### **Python Integration**
+
+#### **Basic Usage**
+```python
+from app.agents.security_agent import SecurityAgent
+
+# Create agent instance
+agent = SecurityAgent()
+
+# Analyze code
+result = await agent.run(
+    code="import os; os.system(user_input)",
+    language="python",
+    use_advanced_analysis=True
+)
+
+print(f"Found {len(result['vulnerabilities'])} vulnerabilities")
+for vuln in result['vulnerabilities']:
+    print(f"- {vuln['title']} (Severity: {vuln['severity']})")
+```
+
+#### **FastAPI Integration**
+```python
+from fastapi import FastAPI
+from app.main import app as security_app
+
+# Mount security auditor
+app = FastAPI()
+app.mount("/security", security_app)
+
+# Or use as dependency
+from app.agents.security_agent import SecurityAgent
+
+@app.post("/custom-scan")
+async def custom_scan(code: str, language: str):
+    agent = SecurityAgent()
+    result = await agent.run(code=code, language=language)
+    return {"vulnerabilities": result["vulnerabilities"]}
+```
+
+---
+
+## 📊 **Key Endpoints**
+
+### **Core API Endpoints**
+- **POST /audit** - Single-file security analysis
+- **POST /async/audit** - Async single-file analysis with job tracking
+- **POST /async/repo-scan** - Bulk repository scanning
+- **GET /async/jobs/{job_id}/status** - Job status and progress
+- **GET /async/jobs/{job_id}/results** - Completed job results
+- **WebSocket /async/jobs/{job_id}/ws** - Real-time progress updates
+
+### **Analytics Endpoints**
+- **GET /api/analytics/overview** - Complete dashboard analytics
+- **GET /api/analytics/metrics** - Security metrics and KPIs
+- **GET /api/analytics/trends** - Vulnerability trends over time
+- **GET /api/analytics/repositories** - Repository security rankings
+
+### **Utility Endpoints**
+- **GET /models** - Available LLM models and recommendations
+- **GET /health** - Service health check
+- **GET /metrics** - Prometheus metrics (if enabled)
 
 ---
 
 ## 🎯 **Use Cases**
 
 ### **For Individual Developers**
-- **Pre-commit Security**: Scan code before commits
+- **Pre-commit Security**: Scan code before commits with GitHub hooks
 - **Learning Tool**: Understand vulnerabilities with AI explanations
-- **CI/CD Integration**: Automated security workflows
+- **IDE Integration**: Use as command-line tool in development workflow
 
 ### **For Security Teams**
-- **Enterprise Scanning**: Bulk repository analysis
+- **Enterprise Scanning**: Bulk repository analysis with detailed reporting
 - **Trend Analysis**: Security posture tracking over time
 - **Executive Reports**: Professional summaries for stakeholders
+- **Policy Enforcement**: Custom rule creation and enforcement
 
 ### **For DevOps Teams**
-- **Pipeline Integration**: SARIF output for security tools
-- **Performance Monitoring**: Prometheus metrics and health checks
-- **Scalability**: Docker and Kubernetes deployment ready
+- **CI/CD Integration**: Automated security workflows with SARIF output
+- **Performance Monitoring**: Track security scanning performance
+- **Scalability**: API-based integration for large-scale deployments
 
 ---
 
@@ -171,21 +408,52 @@ auditor performance --include-models --breakdown-language
 
 ### **✅ Production Ready**
 - **96% Test Success Rate** (27/28 backend tests passing)
-- **OpenRouter Integration** with working API key pre-configured
+- **OpenRouter Integration** with working API key support
 - **Comprehensive CLI Suite** with 15+ professional commands
 - **Advanced Analytics** with forecasting and visualizations
-- **Complete Documentation** and setup guides
+- **Complete Documentation** and implementation guides
 
 ### **✅ Enterprise Features**
 - **Multi-Model AI**: 4 specialized LLM models for different security tasks
 - **Professional Tooling**: Rich CLI interface and comprehensive API
 - **Advanced Analytics**: Business intelligence for security teams
-- **Production Monitoring**: Prometheus metrics, health checks, caching
-- **Docker Ready**: Complete containerized setup for deployment
+- **Production Monitoring**: Health checks, metrics, and performance tracking
+- **PIP Package**: Easy installation and distribution
 
 ---
 
-## 📄 **Documentation Files**
+## 📋 **Installation Methods**
+
+### **Method 1: PyPI (Recommended)**
+```bash
+pip install ai-code-security-auditor
+```
+
+### **Method 2: From Source**
+```bash
+git clone <repository-url>
+cd ai-code-security-auditor
+pip install -e .
+```
+
+### **Method 3: From Wheel**
+```bash
+pip install ai_code_security_auditor-2.0.0-py3-none-any.whl
+```
+
+### **Verification**
+```bash
+# Test CLI
+auditor --help
+auditor models
+
+# Test API import
+python -c "from app.main import app; print('✅ Installation successful')"
+```
+
+---
+
+## 📚 **Documentation Files**
 
 For detailed information, see the organized documentation in the `docs/` folder:
 
@@ -195,37 +463,35 @@ For detailed information, see the organized documentation in the `docs/` folder:
 | 🚀 **Essential** | [01-PROJECT_OVERVIEW.md](docs/01-PROJECT_OVERVIEW.md) | Executive summary and features overview |
 | 🚀 **Essential** | [02-LOCAL_SETUP_GUIDE.md](docs/02-LOCAL_SETUP_GUIDE.md) | Complete installation and setup instructions |
 | 🚀 **Essential** | [03-LOCAL_TESTING_GUIDE.md](docs/03-LOCAL_TESTING_GUIDE.md) | Step-by-step testing procedures |
-| 📖 **Core** | [04-README.md](docs/04-README.md) | Main project documentation with usage examples |
+| 📖 **Core** | [04-README.md](docs/04-README.md) | Detailed usage guides and examples |
 | 📖 **Core** | [05-CLI_Commands.md](docs/05-CLI_Commands.md) | Complete CLI reference guide |
-
-**📚 Additional Documentation**: See the [Documentation Index](docs/00-DOCUMENTATION_INDEX.md) for complete file listing and organization.
 
 ---
 
-## 🚀 **What's Included**
+## 🚀 **What's New in v2.0.0**
 
-This repository contains a **complete, production-ready AI security platform** with:
+### **📦 PIP Package Distribution**
+- Easy installation with `pip install ai-code-security-auditor`
+- No more complex deployment scripts or Docker requirements
+- Clean, focused distribution for maximum compatibility
 
-### **📁 Complete Local Setup Guide**
-A comprehensive **DOCX file** has been created at:
-**`/app/AI_Code_Security_Auditor_Complete_Local_Setup_Guide.docx`**
+### **🧠 Multi-Model AI Integration**
+- **DeepCoder 14B**: Specialized code patch generation
+- **LLaMA 3.3 70B**: High-quality security analysis
+- **Qwen 2.5 Coder 32B**: Fast vulnerability classification
+- **Kimi Dev 72B**: Educational explanations and context
 
-This 50+ page guide includes:
-- **Multiple installation methods** (Docker, Local Python, Production)
-- **Step-by-step instructions** from prerequisites to deployment
-- **Comprehensive testing procedures** with expected results
-- **CLI usage guide** with all commands and examples
-- **API testing instructions** with sample requests
-- **Troubleshooting guide** with common issues and solutions
-- **Development setup** for contributors
-- **Production deployment** procedures
+### **📊 Advanced Analytics Engine**
+- Trend forecasting with predictive analysis
+- Performance optimization insights
+- Executive-ready reports and dashboards
+- Rule effectiveness intelligence
 
-### **📚 Organized Documentation**
-All README files have been organized in the `docs/` folder with:
-- **Numbered prefixes** for logical reading order (00-17)
-- **Categorized sections** (Getting Started, Core Docs, Advanced Features)
-- **Navigation index** for easy access to all documentation
-- **Use case organization** for different user types
+### **🖥️ Professional CLI Interface**
+- 15+ specialized commands for different workflows
+- Rich terminal visualizations with colors and progress bars
+- Multiple output formats (JSON, CSV, SARIF, GitHub Actions)
+- Advanced filtering and report generation
 
 ---
 
@@ -243,9 +509,8 @@ All README files have been organized in the `docs/` folder with:
 
 - **📚 Complete Documentation**: Available in organized `/docs` directory
 - **🛠️ API Reference**: http://localhost:8000/docs (when server is running)
-- **📈 Monitoring Dashboard**: http://localhost:5555 (Flower interface)
 - **🐛 Bug Reports**: GitHub Issues for bug reports and feature requests
-- **💬 Community Support**: GitHub Discussions for questions
+- **💬 Community Support**: GitHub Discussions for questions and help
 
 ---
 

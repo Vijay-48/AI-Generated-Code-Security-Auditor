@@ -1,916 +1,601 @@
-# 🛡️ AI Code Security Auditor v2.0.0 - Complete Local Setup Guide
+# 🛠️ AI Code Security Auditor - Setup Guide v2.0.0
 
-> **Production-ready AI-powered security scanner with multi-model LLM integration, advanced analytics, and comprehensive vulnerability detection.**
-
-## 🏗️ Project Architecture
-
-This is a **FastAPI-based Python application** (not a full-stack web app) with:
-- **Core API Server**: FastAPI application with OpenRouter AI integration
-- **CLI Tools**: Professional command-line interface with rich visuals
-- **Background Workers**: Celery workers for async processing
-- **Caching Layer**: Redis for performance optimization
-- **Analytics Engine**: Comprehensive security analytics and reporting
-- **Multi-Model AI**: 4 specialized LLM models for different security tasks
-
-## 📋 Table of Contents
-
-1. [Prerequisites](#prerequisites)
-2. [Quick Start (5 minutes)](#quick-start-5-minutes)
-3. [Method 1: Docker Setup (Recommended)](#method-1-docker-setup-recommended)
-4. [Method 2: Local Python Environment](#method-2-local-python-environment)
-5. [Method 3: Production Deployment](#method-3-production-deployment)
-6. [Environment Configuration](#environment-configuration)
-7. [Running the Application](#running-the-application)
-8. [CLI Usage](#cli-usage)
-9. [API Testing](#api-testing)
-10. [Troubleshooting](#troubleshooting)
-11. [Development Setup](#development-setup)
+> **Complete implementation instructions for the AI Code Security Auditor PIP package**
 
 ---
 
-## 📋 Prerequisites
+## 📋 **Prerequisites**
 
-### System Requirements
-- **Python 3.11+** (required)
-- **Git** (for cloning the repository)
-- **Docker & Docker Compose** (for Docker setup)
-- **Redis** (for caching - optional but recommended)
-- **8GB RAM** recommended (4GB minimum)
-- **5GB free disk space**
+### **System Requirements**
+- **Python 3.11+** - Required for modern language features and compatibility
+- **pip 21.0+** - For package installation and dependency management
+- **4GB RAM minimum** - For AI model processing (8GB+ recommended)
+- **2GB disk space** - For models and data storage
 
-### API Keys Required
-- **OpenRouter API Key** (for AI models) - **Already configured in this project**
-- **GitHub Token** (optional - for repository scanning)
+### **Optional Dependencies**
+- **Git** - For repository scanning features
+- **Redis** - For caching and async processing (performance enhancement)
+- **curl** - For API testing and health checks
+
+### **Operating System Support**
+- ✅ **Linux** (Ubuntu 20.04+, CentOS 8+, Debian 11+)
+- ✅ **macOS** (10.15+, ARM64 and x86_64)
+- ✅ **Windows** (10+, WSL2 recommended)
 
 ---
 
-## 🚀 Quick Start (3 methods)
+## 🚀 **Installation Methods**
 
-### Option A: Docker (Recommended - 2 minutes)
+### **Method 1: PyPI Installation (Recommended)**
+
 ```bash
-# 1. Start all services with Docker
-docker-compose up -d
+# Install from PyPI (when published)
+pip install ai-code-security-auditor
 
-# 2. Wait 30 seconds, then test
-curl http://localhost:8000/health
-
-# 3. Access services
-echo "🌐 API Documentation: http://localhost:8000/docs"
-echo "📊 Worker Monitoring: http://localhost:5555"
-echo "✅ Docker setup complete!"
+# Verify installation
+auditor --help
+auditor models
 ```
 
-### Option B: Local Python (Advanced users)
+### **Method 2: Wheel Installation**
+
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
+# Install from wheel file
+pip install ai_code_security_auditor-2.0.0-py3-none-any.whl
 
-# 2. Start Redis (required)
-redis-server --daemonize yes
-
-# 3. Run the API server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-# 4. Test CLI tools
-python -m auditor.cli models
+# Verify installation
+auditor --help
 ```
 
-### Option C: CLI Only (Fastest for scanning)
+### **Method 3: Source Installation (Developers)**
+
 ```bash
-# 1. Install as package
+# Clone repository (if developing)
+git clone <repository-url>
+cd ai-code-security-auditor
+
+# Install in development mode
 pip install -e .
 
-# 2. Test installation
-auditor models
+# Verify installation
+auditor --help
+```
 
-# 3. Scan your code
-auditor scan . --output-format github --save report.md
+### **Method 4: Virtual Environment (Recommended for Testing)**
+
+```bash
+# Create virtual environment
+python -m venv ai-auditor-env
+
+# Activate virtual environment
+# Linux/macOS:
+source ai-auditor-env/bin/activate
+# Windows:
+ai-auditor-env\Scripts\activate
+
+# Install package
+pip install ai-code-security-auditor
+
+# Verify installation
+auditor --help
 ```
 
 ---
 
-## 🐳 Method 1: Docker Setup (Recommended)
+## 🔧 **Configuration**
 
-### Step 1: Prerequisites
+### **1. API Key Setup (Required)**
+
+The AI Code Security Auditor requires an OpenRouter API key for LLM functionality.
+
+#### **Get Your API Key**
+1. Visit [OpenRouter.ai](https://openrouter.ai/)
+2. Create an account (free tier available)
+3. Navigate to API Keys section
+4. Generate a new API key
+
+#### **Configure API Key**
+
+**Method 1: Environment Variable (Recommended)**
 ```bash
-# Install Docker (Ubuntu/Debian)
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-newgrp docker
+# Linux/macOS
+export OPENROUTER_API_KEY="your-api-key-here"
+echo 'export OPENROUTER_API_KEY="your-api-key-here"' >> ~/.bashrc
+source ~/.bashrc
 
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+# Windows
+set OPENROUTER_API_KEY=your-api-key-here
+# Or add to system environment variables
 ```
 
-### Step 2: Environment Setup
-```bash
-# The .env file is already configured with working API keys
-# Verify the configuration:
-cat .env
-
-# Should show:
-# OPENROUTER_API_KEY=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
-# REDIS_URL=redis://localhost:6379/0
-# (other configuration...)
+**Method 2: .env File**
+Create a `.env` file in your working directory:
+```env
+OPENROUTER_API_KEY=your-api-key-here
+OPENROUTER_REFERER=https://your-domain.com  # Optional
+OPENROUTER_TITLE=AI Code Security Auditor   # Optional
 ```
 
-### Step 3: Run the Application Stack
+### **2. CLI Configuration (Optional)**
+
+Create a configuration file for customized defaults:
+
 ```bash
-# Start all services
-docker-compose up -d
+# Create config directory
+mkdir -p ~/.config/auditor
 
-# Check service status
-docker-compose ps
+# Create configuration file
+cat > ~/.config/auditor/config.yaml << 'EOF'
+# AI Code Security Auditor Configuration v2.0.0
 
-# Expected output:
-# NAME                   SERVICE    STATUS    PORTS
-# app-app-1             app        Up        0.0.0.0:8000->8000/tcp
-# app-redis-1           redis      Up        0.0.0.0:6379->6379/tcp
-# app-worker-1          worker     Up        
-# app-flower-1          flower     Up        0.0.0.0:5555->5555/tcp
+# API Settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  timeout: 300
+
+# Scanning Settings
+scanning:
+  default_model: "agentica-org/deepcoder-14b-preview:free"
+  timeout: 300
+  max_file_size: "10MB"
+  batch_size: 10
+  
+# Analytics Settings
+analytics:
+  retention_days: 365
+  cache_ttl: 3600
+  enable_forecasting: true
+  
+# Output Settings
+output:
+  default_format: "table"
+  colors: true
+  progress_bars: true
+  show_details: true
+  
+# Filter Settings
+filters:
+  default_excludes:
+    - "*/node_modules/*"
+    - "*/.git/*" 
+    - "*/venv/*"
+    - "*/env/*"
+    - "*/__pycache__/*"
+    - "*/test*/*"
+    - "*/build/*"
+    - "*/dist/*"
+    - "*.log"
+    - "*.tmp"
+    
+  default_includes:
+    - "*.py"
+    - "*.js"
+    - "*.jsx"
+    - "*.ts" 
+    - "*.tsx"
+    - "*.java"
+    - "*.go"
+    - "*.php"
+    - "*.rb"
+    - "*.cpp"
+    - "*.c"
+
+# Model Preferences
+models:
+  preferred:
+    code_patches: "agentica-org/deepcoder-14b-preview:free"
+    quality_assessment: "meta-llama/llama-3.3-70b-instruct:free" 
+    fast_classification: "qwen/qwen-2.5-coder-32b-instruct:free"
+    security_explanations: "moonshotai/kimi-dev-72b:free"
+    
+  # Model-specific settings
+  settings:
+    temperature: 0.1
+    max_tokens: 4000
+    timeout: 120
+
+# GitHub Integration (Optional)
+github:
+  token: ""  # Set your GitHub token here
+  default_branch: "main"
+  max_files_per_repo: 1000
+  
+# Logging Settings
+logging:
+  level: "INFO"
+  format: "detailed"
+  log_to_file: false
+  log_file: "auditor.log"
+EOF
 ```
 
-### Services Architecture
-The Docker setup runs these services:
+### **3. Redis Setup (Optional - for Enhanced Performance)**
 
-| Service | Purpose | Port | Description |
-|---------|---------|------|-------------|
-| **app** | FastAPI Server | 8000 | Main API with security scanning |
-| **redis** | Cache & Message Broker | 6379 | Caching and job queue |
-| **worker** | Background Jobs | - | Celery worker for async tasks |
-| **flower** | Monitoring | 5555 | Real-time task monitoring |
+Redis provides caching and async processing capabilities for improved performance.
 
-### Step 4: Verify Installation
+#### **Install Redis**
+
+**Ubuntu/Debian:**
 ```bash
-# Test API health
-curl http://localhost:8000/health
-
-# Expected response:
-# {"status":"ok","version":"2.0.0","features":["async_processing","caching","websockets"],"cache_status":"connected"}
-
-# Test AI models
-curl http://localhost:8000/models
-
-# Test security scanning
-curl -X POST "http://localhost:8000/audit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "import os\nos.system(user_input)",
-    "language": "python"
-  }'
-```
-
----
-
-## 🐍 Method 2: Local Python Environment
-
-### Step 1: Python Environment Setup
-```bash
-# Ensure Python 3.11+ is installed
-python --version  # Should be 3.11 or higher
-
-# Create Python virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Upgrade pip and install build tools
-pip install --upgrade pip setuptools wheel
-
-# Install all dependencies
-pip install -r requirements.txt
-
-# Verify security tools are installed
-bandit --version
-semgrep --version
-```
-
-### Step 2: Install Redis (Required for Full Features)
-```bash
-# Ubuntu/Debian
-sudo apt-get update && sudo apt-get install redis-server
+sudo apt update
+sudo apt install redis-server
 sudo systemctl start redis-server
 sudo systemctl enable redis-server
+```
 
-# macOS
+**macOS:**
+```bash
+# Using Homebrew
 brew install redis
 brew services start redis
-
-# Windows (using WSL recommended)
-# Or use Docker: docker run -d -p 6379:6379 redis:7-alpine
-
-# Verify Redis is running
-redis-cli ping  # Should return PONG
 ```
 
-### Step 3: Directory Setup
+**Docker (Cross-platform):**
 ```bash
-# Create required directories
-mkdir -p chroma_db
-mkdir -p data
-mkdir -p logs
-
-# Set permissions
-chmod 755 chroma_db data logs
-
-# Verify directory structure
-ls -la chroma_db data logs
+docker run -d --name redis -p 6379:6379 redis:alpine
 ```
 
-### Step 4: Run the Application Components
-
-#### Option A: Full Stack (API + Workers)
+#### **Configure Redis Environment Variables**
 ```bash
-# Terminal 1: Run the main API server
-export PYTHONPATH="/app:$PYTHONPATH"
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+export REDIS_URL="redis://localhost:6379/0"
+export REDIS_HOST="localhost"
+export REDIS_PORT="6379"
+export REDIS_DB="0"
 
-# Terminal 2: Run Celery worker (optional but recommended)
-export PYTHONPATH="/app:$PYTHONPATH"
-celery -A app.celery_app worker --loglevel=info --concurrency=2
-
-# Terminal 3: Run Flower monitoring (optional)
-export PYTHONPATH="/app:$PYTHONPATH"
-celery -A app.celery_app flower --port=5555
+# For async processing
+export CELERY_BROKER_URL="redis://localhost:6379/1"
+export CELERY_RESULT_BACKEND="redis://localhost:6379/2"
 ```
 
-#### Option B: API Server Only (Simpler)
-```bash
-# Just run the main API server
-cd /app
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+---
 
-#### Option C: CLI Tools Only (No server needed)
-```bash
-# Install as editable package
-pip install -e .
+## ✅ **Verification & Testing**
 
-# Use CLI tools directly
+### **1. Basic Functionality Test**
+
+```bash
+# Test CLI help
+auditor --help
+
+# Test model listing
 auditor models
-auditor scan . --output-format table
+
+# Test basic analysis
+auditor analyze --code "print('hello world')" --language python
 ```
 
-## ✅ Verify Installation Success
+### **2. Advanced Features Test**
 
-### Quick Verification Tests
-
-#### Test 1: Python Application Import
 ```bash
-cd /app
+# Test file scanning
+echo 'import os; os.system(user_input)' > vulnerable.py
+auditor scan vulnerable.py
+
+# Test with advanced analysis
+auditor analyze --code "exec(user_data)" --language python --advanced
+
+# Clean up
+rm vulnerable.py
+```
+
+### **3. API Server Test**
+
+#### **Start the API Server**
+```bash
+# Method 1: Direct uvicorn
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# Method 2: Python script
 python -c "
+import uvicorn
 from app.main import app
-print('✅ FastAPI app imports successfully')
-print('✅ App title:', app.title)
-print('✅ App version:', app.version)
-"
-```
-**Expected Output:**
-```
-✅ FastAPI app imports successfully
-✅ App title: AI Code Security Auditor
-✅ App version: 2.0.0
-```
-
-#### Test 2: CLI Package Installation
-```bash
-# Test CLI commands
-auditor --help
-
-# Test model listing (requires API server)
-auditor --api-url http://localhost:8000 models
-```
-**Expected Output:**
-```
-🤖 Available Models:
-==================================================
-  • deepcoder-14b-preview: agentica-org/deepcoder-14b-preview:free
-  • kimi-dev-72b: moonshotai/kimi-dev-72b:free
-  • qwen-2.5-coder-32b-instruct: qwen/qwen-2.5-coder-32b-instruct:free
-  • llama-3.3-70b-instruct: meta-llama/llama-3.3-70b-instruct:free
-```
-
-#### Test 3: API Server Health
-```bash
-# Start the API server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
-
-# Wait for startup, then test
-sleep 5
-curl http://localhost:8000/health
-```
-**Expected Response:**
-```json
-{
-  "status": "ok",
-  "version": "2.0.0",
-  "features": ["async_processing", "caching", "websockets"],
-  "cache_status": "disconnected"
-}
-```
-
-#### Test 4: Full Security Scan Test
-```bash
-# Create a vulnerable test file
-cat > /tmp/vulnerable_test.py << 'EOF'
-import os
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
-user_input = input("Enter command: ")
-os.system(f"rm {user_input}")
-EOF
-
-# Scan with CLI
-auditor --api-url http://localhost:8000 analyze \
-  --code "$(cat /tmp/vulnerable_test.py)" \
-  --language python
-
-# Cleanup
-rm /tmp/vulnerable_test.py
-```
-**Expected Results:**
-- Should detect **CRITICAL** AWS access key
-- Should detect **HIGH** severity command injection
-- Should provide detailed vulnerability descriptions
-
-### Installation Success Checklist
-
-✅ **Python Dependencies**: All packages installed without errors  
-✅ **Package Installation**: `pip install -e .` completed successfully  
-✅ **CLI Commands**: `auditor --help` shows command list  
-✅ **API Server**: Health check returns status "ok"  
-✅ **OpenRouter Integration**: Models endpoint shows 4 AI models  
-✅ **Security Scanning**: CLI can detect vulnerabilities  
-✅ **Secret Detection**: Can identify AWS keys, passwords, API keys  
-✅ **Multi-Language Support**: Python and JavaScript scanning works
-
-If all tests pass, your installation is **production-ready**! 🎉
-
----
-
-## 🏭 Method 3: Production Deployment
-
-### Step 1: Production Docker Compose
-```bash
-# Use the production configuration
-docker-compose -f docker-compose.prod.yml up -d
-
-# Or build with specific optimizations
-docker build -f Dockerfile.prod -t ai-security-auditor:prod .
-```
-
-### Step 2: Environment Variables for Production
-```bash
-# Create production .env file
-cp .env .env.prod
-
-# Edit for production settings
-nano .env.prod
-
-# Add production-specific variables:
-# OPENROUTER_API_KEY=your-production-key
-# REDIS_URL=redis://production-redis:6379/0
-# DATABASE_URL=postgresql://user:pass@db:5432/security_auditor
-```
-
-### Step 3: Run with Production Settings
-```bash
-# Load production environment
-export $(cat .env.prod | xargs)
-
-# Run with production settings
-gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
----
-
-## ⚙️ Environment Configuration
-
-### Required Environment Variables
-```bash
-# Core Configuration (.env file)
-OPENROUTER_API_KEY=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
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1/chat/completions
-OPENROUTER_REFERER=http://localhost:8000
-OPENROUTER_TITLE="AI Code Security Auditor"
-
-# Redis Configuration
-REDIS_URL=redis://localhost:6379/0
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_DB=0
-
-# Celery Configuration
-CELERY_BROKER_URL=redis://localhost:6379/1
-CELERY_RESULT_BACKEND=redis://localhost:6379/2
-```
-
-### Optional Environment Variables
-```bash
-# GitHub Integration (for repository scanning)
-GITHUB_TOKEN=ghp_your_github_token_here
-GITHUB_WEBHOOK_SECRET=your_webhook_secret
-
-# Database Configuration
-DATABASE_URL=sqlite:///./security_auditor.db
-
-# Monitoring
-PROMETHEUS_METRICS=true
-LOG_LEVEL=INFO
-```
-
-### Verify Environment Setup
-```bash
-# Check if all environment variables are loaded
-python -c "
-from app.config import settings
-print('✅ OpenRouter API Key:', '***' + settings.OPENROUTER_API_KEY[-10:] if settings.OPENROUTER_API_KEY else '❌ Missing')
-print('✅ Redis URL:', settings.REDIS_URL)
-print('✅ Database URL:', settings.DATABASE_URL)
+uvicorn.run(app, host='0.0.0.0', port=8000)
 "
 ```
 
----
-
-## 🚀 Running the Application
-
-### Understanding the Services
-This is **NOT a traditional web application** with frontend/backend separation. Instead, it's:
-
-1. **FastAPI REST API** (`app.main:app`) - Core security scanning service
-2. **CLI Tools** (`auditor` command) - Professional command-line interface  
-3. **Background Workers** (Celery) - Async job processing
-4. **Caching Layer** (Redis) - Performance optimization
-5. **Monitoring** (Flower) - Worker and job monitoring
-
-### Service Endpoints
-Once running, the following endpoints will be available:
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Main API** | http://localhost:8000 | Core security scanning API |
-| **API Docs** | http://localhost:8000/docs | Interactive API documentation |
-| **OpenAPI Schema** | http://localhost:8000/openapi.json | API schema |
-| **Health Check** | http://localhost:8000/health | Service status and version |
-| **Metrics** | http://localhost:8000/metrics | Prometheus metrics |
-| **Models** | http://localhost:8000/models | Available AI models |
-| **Analytics** | http://localhost:8000/api/analytics/overview | Phase 9 analytics dashboard |
-| **Flower Dashboard** | http://localhost:5555 | Celery task monitoring (if running) |
-| **Redis** | localhost:6379 | Cache and message broker |
-
-### Running Modes
-
-#### Mode 1: Full Production Stack (Docker)
+#### **Test API Endpoints**
 ```bash
-# All services running in containers
-docker-compose up -d
-
-# Services: API + Redis + Workers + Monitoring
+# Health check
 curl http://localhost:8000/health
-curl http://localhost:5555  # Flower dashboard
-```
 
-#### Mode 2: Development Mode (Local Python)
-```bash
-# API server with hot-reload
-cd /app
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Models endpoint
+curl http://localhost:8000/models
 
-# Optional: Run workers in separate terminals
-celery -A app.celery_app worker --loglevel=info
-celery -A app.celery_app flower --port=5555
-```
-
-#### Mode 3: CLI-Only Mode (No server)
-```bash
-# Install CLI tools
-pip install -e .
-
-# Use directly without running a server
-auditor models
-auditor scan . --output-format github
-auditor analyze --code "os.system(user_input)" --language python
-```
-
-### Checking Service Status
-```bash
-# Check if all services are running
-docker-compose ps
-
-# Check application logs
-docker-compose logs app
-
-# Check worker logs
-docker-compose logs worker
-
-# Check Redis status
-docker-compose logs redis
-
-# Check if ports are listening
-netstat -tulnp | grep -E ':(8000|6379|5555)'
-```
-
----
-
-## 💻 CLI Usage
-
-### Installation as Package
-```bash
-# Install the CLI tool
-pip install -e .
-
-# Verify installation
-auditor --help
-ai-security-auditor --help  # Alternative command name
-```
-
-### CLI Commands
-
-#### 1. List Available Models
-```bash
-auditor models
-```
-
-#### 2. Scan Files/Directories
-```bash
-# Basic directory scan
-auditor scan .
-
-# Scan with specific model
-auditor scan . --model "agentica-org/deepcoder-14b-preview:free"
-
-# Scan with advanced analysis
-auditor scan . --advanced
-
-# Exclude certain directories
-auditor scan . \
-  --exclude "*/tests/*" \
-  --exclude "*/node_modules/*" \
-  --exclude "*/.git/*"
-
-# Generate GitHub Actions report
-auditor scan . \
-  --output-format github \
-  --save security-report.md
-```
-
-#### 3. Analyze Code Directly
-```bash
-# Analyze specific code
-auditor analyze \
-  --code "import os; os.system(user_input)" \
-  --language python \
-  --model "agentica-org/deepcoder-14b-preview:free"
-```
-
-#### 4. Advanced Analytics (Phase 9 Features)
-```bash
-# Trend analysis
-auditor trends-detailed --period 30 --include-forecast
-
-# Top vulnerability rules
-auditor top-rules --limit 10 --severity high
-
-# Performance analysis
-auditor performance --include-models --breakdown-language
-
-# Generate reports
-auditor generate-report \
-  --report-type security_summary \
-  --time-range 7d \
-  --format markdown \
-  --save weekly-report.md
-```
-
----
-
-## 🧪 API Testing
-
-### Basic API Tests
-```bash
-# Test 1: Health Check
-curl -X GET "http://localhost:8000/health"
-
-# Expected: {"status":"ok","version":"2.0.0",...}
-
-# Test 2: Available Models
-curl -X GET "http://localhost:8000/models"
-
-# Expected: {"available_models":[...],"recommendations":{...}}
-
-# Test 3: Basic Security Scan
+# Basic audit
 curl -X POST "http://localhost:8000/audit" \
   -H "Content-Type: application/json" \
   -d '{
-    "code": "import os\nos.system(user_input)",
+    "code": "print(\"Hello, World!\")",
     "language": "python"
   }'
-
-# Expected: {"scan_results":{...},"vulnerabilities":[...],...}
 ```
 
-### Advanced API Tests
+### **4. Performance Test**
+
 ```bash
-# Test 4: Model-Specific Analysis
-curl -X POST "http://localhost:8000/audit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "SELECT * FROM users WHERE id = " + user_id,
-    "language": "python",
-    "model": "agentica-org/deepcoder-14b-preview:free",
-    "use_advanced_analysis": true
-  }'
+# Test with larger file
+auditor scan /path/to/large/project --max-files 100
 
-# Test 5: JavaScript Scanning
-curl -X POST "http://localhost:8000/audit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "eval(userInput); document.write(data);",
-    "language": "javascript"
-  }'
-
-# Test 6: Async Job Processing
-curl -X POST "http://localhost:8000/async/audit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "import os\nos.system(user_input)",
-    "language": "python",
-    "priority": "high"
-  }'
-```
-
-### Analytics API Tests (Phase 9)
-```bash
-# Test 7: Trend Analysis
-curl "http://localhost:8000/api/analytics/trends/detailed?period=30&granularity=daily"
-
-# Test 8: Top Rules Analysis
-curl "http://localhost:8000/api/analytics/top-rules?limit=10&severity_filter=high"
-
-# Test 9: Performance Metrics
-curl "http://localhost:8000/api/analytics/performance/detailed?include_model_stats=true"
+# Test with different models
+auditor analyze --code "SELECT * FROM users" --language python --model "meta-llama/llama-3.3-70b-instruct:free"
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## 🔧 **Advanced Configuration**
 
-### Common Issues and Solutions
+### **1. Custom Security Rules**
 
-#### Issue 1: "Connection refused" on port 8000
-```bash
-# Check if service is running
-docker-compose ps
-curl http://localhost:8000/health
+Create custom vulnerability detection rules:
 
-# If not running, restart
-docker-compose down && docker-compose up -d
-
-# Check logs for errors
-docker-compose logs app
+```yaml
+# ~/.config/auditor/custom_rules.yaml
+custom_rules:
+  - name: "Custom SQL Injection"
+    pattern: "SELECT.*\\+.*user_input"
+    language: "python"
+    severity: "HIGH"
+    description: "Potential SQL injection via string concatenation"
+    
+  - name: "Hardcoded Password"
+    pattern: "password\\s*=\\s*['\"][^'\"]{8,}['\"]"
+    language: "*"
+    severity: "CRITICAL"  
+    description: "Hardcoded password detected"
 ```
 
-#### Issue 2: "Module not found" errors
-```bash
-# Reinstall dependencies
-pip install -r requirements.txt
+### **2. Integration Scripts**
 
-# Check Python path
-export PYTHONPATH="${PYTHONPATH}:/app"
+#### **Pre-commit Hook**
+Create `.git/hooks/pre-commit`:
+```bash
+#!/bin/bash
+echo "Running security audit..."
+auditor scan --staged-only --output-format github
+if [ $? -ne 0 ]; then
+    echo "Security issues found. Commit rejected."
+    exit 1
+fi
+```
+
+#### **CI/CD Integration**
+```yaml
+# GitHub Actions example
+name: Security Audit
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install auditor
+      run: pip install ai-code-security-auditor
+    - name: Run security audit
+      run: |
+        auditor scan . --output-format sarif --save results.sarif
+      env:
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    - name: Upload results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: results.sarif
+```
+
+### **3. Enterprise Configuration**
+
+For enterprise deployments, create `/etc/auditor/enterprise.yaml`:
+
+```yaml
+# Enterprise Configuration
+enterprise:
+  # License settings
+  license:
+    key: "enterprise-license-key"
+    features: ["bulk_scanning", "advanced_analytics", "sso"]
+    
+  # SSO Configuration  
+  sso:
+    enabled: true
+    provider: "okta"
+    domain: "company.okta.com"
+    
+  # Compliance Settings
+  compliance:
+    standards: ["SOC2", "PCI-DSS", "GDPR"]
+    reporting:
+      frequency: "weekly"
+      recipients: ["security-team@company.com"]
+      
+  # Performance Settings
+  performance:
+    max_concurrent_scans: 50
+    cache_size: "2GB"
+    worker_processes: 8
+    
+  # Database Settings (for analytics)
+  database:
+    type: "postgresql"
+    host: "analytics-db.company.com"
+    port: 5432
+    database: "security_analytics"
+    ssl_mode: "require"
+```
+
+---
+
+## 🐛 **Troubleshooting**
+
+### **Common Issues**
+
+#### **1. Import Errors**
+```bash
+# Error: ModuleNotFoundError
+# Solution: Ensure package is properly installed
+pip install --upgrade ai-code-security-auditor
 
 # Verify installation
-python -c "import app.main; print('✅ App imports correctly')"
+python -c "import app.main; print('✅ Import successful')"
 ```
 
-#### Issue 3: Redis connection errors
+#### **2. API Key Issues**
 ```bash
-# Check Redis status
-redis-cli ping  # Should return PONG
+# Error: API key not configured
+# Solution: Set environment variable
+export OPENROUTER_API_KEY="your-key"
 
-# If using Docker
-docker-compose logs redis
-
-# Restart Redis
-docker-compose restart redis
+# Verify key is set
+auditor models
 ```
 
-#### Issue 4: OpenRouter API errors
+#### **3. Permission Errors**
 ```bash
-# Verify API key is loaded
-python -c "
-import os
-from app.config import settings
-key = settings.OPENROUTER_API_KEY
-print('API Key loaded:', 'Yes' if key else 'No')
-print('Key length:', len(key) if key else 0)
-"
+# Error: Permission denied
+# Solution: Check file permissions
+chmod +x $(which auditor)
 
-# Test API key manually
-curl -H "Authorization: Bearer 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" \
-  -H "HTTP-Referer: http://localhost:8000" \
-  -H "X-Title: AI Code Security Auditor" \
-  https://openrouter.ai/api/v1/models
+# Or install in user space
+pip install --user ai-code-security-auditor
 ```
 
-#### Issue 5: Permission errors
+#### **4. Redis Connection Issues**
 ```bash
-# Fix file permissions
-sudo chown -R $USER:$USER /app/chroma_db
-sudo chown -R $USER:$USER /app/data
-chmod 755 /app/chroma_db /app/data
+# Error: Redis connection failed
+# Solution: Check Redis status
+redis-cli ping
+
+# If not installed, install Redis or disable caching
+export REDIS_URL=""
 ```
 
-### Performance Issues
+### **Debug Mode**
 
-#### Slow scanning performance
+Enable debug logging for troubleshooting:
+
 ```bash
-# Enable Redis caching
+# Set debug environment
+export AUDITOR_DEBUG=true
+export AUDITOR_LOG_LEVEL=DEBUG
+
+# Run with verbose output
+auditor scan . --verbose --debug
+```
+
+### **Performance Issues**
+
+If experiencing slow performance:
+
+```bash
+# Use faster models for classification
+auditor scan . --model "qwen/qwen-2.5-coder-32b-instruct:free"
+
+# Reduce batch size
+auditor scan . --batch-size 5
+
+# Enable caching (requires Redis)
 export REDIS_URL="redis://localhost:6379/0"
-
-# Use async endpoints
-curl -X POST "http://localhost:8000/async/audit" \
-  -H "Content-Type: application/json" \
-  -d '{"code":"...","language":"python"}'
-
-# Check cache status
-curl "http://localhost:8000/async/cache/stats"
-```
-
-#### High memory usage
-```bash
-# Monitor memory usage
-docker stats
-
-# Limit memory in docker-compose.yml
-# Add under services:
-#   mem_limit: 2g
-#   memswap_limit: 2g
-```
-
-### Debug Mode
-
-#### Enable Debug Logging
-```bash
-# Set environment variable
-export LOG_LEVEL=DEBUG
-
-# Or in .env file
-echo "LOG_LEVEL=DEBUG" >> .env
-
-# Restart services
-docker-compose restart
-```
-
-#### Check System Resources
-```bash
-# Check disk space
-df -h
-
-# Check memory
-free -h
-
-# Check CPU usage
-top
-
-# Check open files
-lsof -i :8000
-lsof -i :6379
 ```
 
 ---
 
-## 🛠️ Development Setup
+## 📊 **Health Monitoring**
 
-### Development Environment
+### **System Health Check**
+
+Create a health monitoring script:
+
 ```bash
-# Install development dependencies
-pip install -e ".[dev]"
+#!/bin/bash
+# health_check.sh
 
-# Install pre-commit hooks
-pre-commit install
+echo "🔍 AI Code Security Auditor Health Check"
+echo "========================================"
 
-# Run tests
-pytest -v
+# Check Python version
+echo "Python version: $(python --version)"
 
-# Run with coverage
-pytest --cov=app --cov=auditor --cov-report=html
+# Check package installation
+if command -v auditor >/dev/null 2>&1; then
+    echo "✅ CLI tool installed"
+else
+    echo "❌ CLI tool not found"
+    exit 1
+fi
+
+# Check API key
+if [ -z "$OPENROUTER_API_KEY" ]; then
+    echo "⚠️  API key not configured"
+else
+    echo "✅ API key configured"
+fi
+
+# Check Redis (optional)
+if redis-cli ping >/dev/null 2>&1; then
+    echo "✅ Redis available"
+else
+    echo "ℹ️  Redis not available (optional)"
+fi
+
+# Test basic functionality
+echo "Testing basic functionality..."
+if auditor --help >/dev/null 2>&1; then
+    echo "✅ Basic functionality working"
+else
+    echo "❌ Basic functionality failed"
+    exit 1
+fi
+
+# Test model access (requires API key)
+if [ ! -z "$OPENROUTER_API_KEY" ]; then
+    if auditor models >/dev/null 2>&1; then
+        echo "✅ Model access working"
+    else
+        echo "⚠️  Model access failed (check API key)"
+    fi
+fi
+
+echo "🎉 Health check completed successfully!"
 ```
 
-### Running Tests
+Run with:
 ```bash
-# Run all tests
-pytest
-
-# Run specific test categories
-pytest -m unit          # Unit tests only
-pytest -m integration   # Integration tests only
-pytest -m api          # API tests only
-
-# Run tests with output
-pytest -v -s
-
-# Generate coverage report
-pytest --cov=app tests/ --cov-report=html
-open htmlcov/index.html
-```
-
-### Development Tools
-```bash
-# Code formatting
-black app/ auditor/
-isort app/ auditor/
-
-# Type checking
-mypy app/
-
-# Linting
-flake8 app/ auditor/
-
-# Security scanning (dogfooding!)
-auditor scan . --advanced
-```
-
----
-
-## 📊 Monitoring and Maintenance
-
-### Health Checks
-```bash
-# Comprehensive health check
-curl http://localhost:8000/health | jq
-
-# Check all services
-curl http://localhost:8000/ | jq '.features'
-
-# Monitor metrics
-curl http://localhost:8000/metrics
-```
-
-### Log Management
-```bash
-# View application logs
-docker-compose logs -f app
-
-# View worker logs
-docker-compose logs -f worker
-
-# View all logs
-docker-compose logs -f
-```
-
-### Backup and Recovery
-```bash
-# Backup database and cache
-mkdir -p backups
-cp -r chroma_db backups/chroma_db_$(date +%Y%m%d)
-redis-cli SAVE
-cp dump.rdb backups/redis_$(date +%Y%m%d).rdb
-
-# Restore from backup
-cp backups/chroma_db_20241219 chroma_db/
-cp backups/redis_20241219.rdb dump.rdb
-docker-compose restart
+chmod +x health_check.sh
+./health_check.sh
 ```
 
 ---
 
-## 🚀 Next Steps
+## 🚀 **Next Steps**
 
-### After Successful Setup
-1. **🔍 Run Your First Scan**: Use the CLI to scan your codebase
-2. **📊 Explore Analytics**: Check out the Phase 9 analytics features
-3. **🔗 CI/CD Integration**: Set up GitHub Actions workflows
-4. **📈 Monitor Performance**: Use the Flower dashboard and metrics
-5. **🛡️ Security Review**: Regular scans and trend analysis
+After successful installation:
 
-### Integration Ideas
-- **VS Code Extension**: Use the CLI in your development workflow
-- **GitHub Actions**: Automated security scanning on PRs
-- **Slack/Teams**: Webhook notifications for critical findings
-- **JIRA Integration**: Automatic ticket creation for vulnerabilities
-
-### Resources
-- **📚 Full Documentation**: Available in `/docs` directory
-- **🛠️ API Reference**: http://localhost:8000/docs
-- **📈 Monitoring**: http://localhost:5555 (Flower dashboard)
-- **💬 GitHub Issues**: For bug reports and feature requests
+1. **📖 Read the CLI Reference**: [CLI Commands Guide](05-CLI_Commands.md)
+2. **🧪 Run Sample Tests**: [Testing Guide](03-LOCAL_TESTING_GUIDE.md)  
+3. **📊 Explore Analytics**: Try `auditor trends --help`
+4. **🔧 Customize Configuration**: Modify `~/.config/auditor/config.yaml`
+5. **🤝 Join Community**: GitHub Discussions for questions and tips
 
 ---
 
-## 🏁 Conclusion
+## 📞 **Support**
 
-You now have a **production-ready AI Code Security Auditor** running locally! This setup includes:
+If you encounter any issues during setup:
 
-✅ **Multi-Model AI Integration**: 4 specialized LLM models  
-✅ **Comprehensive Security Scanning**: Bandit, Semgrep, secret detection  
-✅ **Professional CLI Tools**: Rich terminal interface  
-✅ **Advanced Analytics**: Trend analysis and reporting  
-✅ **Production Features**: Caching, async processing, monitoring  
-✅ **Full Docker Environment**: Ready for deployment
-
-The system is now ready to secure your codebases with the power of AI! 🛡️✨
+- **📚 Documentation**: Check the [Documentation Index](00-DOCUMENTATION_INDEX.md)
+- **🐛 Bug Reports**: GitHub Issues with detailed error messages
+- **💬 Community**: GitHub Discussions for setup questions
+- **📧 Enterprise**: Contact enterprise support for business licenses
 
 ---
 
-**Made with ❤️ by the AI Security Team**  
-*Transforming code security through artificial intelligence*
+<div align="center">
+
+**[⬅️ Back to Main README](../README.md) • [➡️ Testing Guide](03-LOCAL_TESTING_GUIDE.md)**
+
+</div>
