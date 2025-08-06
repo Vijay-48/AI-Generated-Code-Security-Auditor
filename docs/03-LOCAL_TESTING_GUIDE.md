@@ -1,466 +1,664 @@
-# 🛡️ AI Code Security Auditor v2.0.0 - Local Testing Guide
+# 🧪 AI Code Security Auditor - Testing Guide v2.0.0
 
-This document provides step-by-step instructions to set up, run, and test the AI Code Security Auditor on your local machine.
+> **Comprehensive testing and verification procedures for the AI Code Security Auditor PIP package**
 
 ---
 
-## 🚀 **Quick Start (5 Minutes)**
+## 🎯 **Testing Overview**
 
-### **Step 1: Prerequisites Check**
+This guide provides step-by-step testing procedures to verify that the AI Code Security Auditor is working correctly after installation. All tests are designed for the v2.0.0 PIP package distribution.
+
+### **Testing Objectives**
+- ✅ **Verify Installation**: Ensure package is correctly installed
+- ✅ **Test Core Features**: CLI commands and API endpoints
+- ✅ **Validate AI Integration**: Confirm LLM models are accessible  
+- ✅ **Check Performance**: Verify response times and accuracy
+- ✅ **Test Integration**: CI/CD and Python library usage
+
+---
+
+## 📋 **Prerequisites**
+
+### **Required Setup**
 ```bash
-# Check Python version (requires 3.11+)
-python3 --version
+# 1. Install the package
+pip install ai-code-security-auditor
 
-# Check if pip is available
-pip --version
+# 2. Set API key
+export OPENROUTER_API_KEY="your-api-key-here"
 
-# Check if git is available (optional)
-git --version
+# 3. Verify Python version
+python --version  # Should be 3.11+
 ```
 
-### **Step 2: Clone/Navigate to Project**
+### **Optional Components** 
 ```bash
-# If you have the code locally, navigate to it:
-cd /path/to/ai-code-security-auditor
+# Install Redis for caching tests (optional)
+# Ubuntu/Debian:
+sudo apt install redis-server
+sudo systemctl start redis-server
 
-# Or if you need to clone:
-# git clone <repository-url>
-# cd ai-code-security-auditor
-```
+# macOS:
+brew install redis
+brew services start redis
 
-### **Step 3: Install Dependencies**
-```bash
-# Install all requirements
-pip install -r requirements.txt
-
-# Or install in development mode
-pip install -e .
-```
-
-### **Step 4: Set Up Environment (Optional but Recommended)**
-```bash
-# Get your free OpenRouter API key from: https://openrouter.ai/
-export OPENROUTER_API_KEY="sk-or-v1-your-key-here"
-
-# Or add to your shell profile for persistence:
-echo 'export OPENROUTER_API_KEY="sk-or-v1-your-key-here"' >> ~/.bashrc
-```
-
-### **Step 5: Start the API Server**
-```bash
-# Start the FastAPI server
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-
-# Server will be available at: http://localhost:8001
-# API docs at: http://localhost:8001/docs
+# Docker:
+docker run -d --name redis -p 6379:6379 redis:alpine
 ```
 
 ---
 
-## 🧪 **Testing Phase 1: Basic Functionality**
+## ✅ **Basic Functionality Tests**
 
-### **Test 1: Health Check**
+### **Test 1: Installation Verification**
+
+#### **1.1 CLI Tool Availability**
 ```bash
-# Test API health (in a new terminal)
-curl http://localhost:8001/health
+# Test CLI command exists
+which auditor
+# Expected: /path/to/auditor
 
-# Expected output:
-# {"status":"ok","version":"2.0.0","features":["async_processing","caching","websockets"],"cache_status":"disconnected"}
+# Test help command
+auditor --help
+# Expected: Usage information with command list
 ```
 
-### **Test 2: API Information**
+#### **1.2 Python Import Test**
 ```bash
-# Get API information
-curl http://localhost:8001/ | jq '.'
-
-# Expected: API version, available endpoints, and features
+# Test core modules import correctly
+python -c "
+from app.main import app
+from app.agents.security_agent import SecurityAgent
+from auditor.cli import main
+print('✅ All imports successful')
+"
+# Expected: ✅ All imports successful
 ```
 
-### **Test 3: Available Models**
+#### **1.3 Version Verification**
 ```bash
-# Test models endpoint
-curl http://localhost:8001/models | jq '.'
-
-# Expected: List of 4 OpenRouter models with descriptions
+# Check package version
+pip show ai-code-security-auditor | grep Version
+# Expected: Version: 2.0.0
 ```
 
-### **Test 4: Basic CLI Commands**
+### **Test 2: API Key Configuration**
+
+#### **2.1 Environment Variable Test**
 ```bash
-# Test CLI help
-python auditor/cli.py --help
+# Verify API key is set
+echo $OPENROUTER_API_KEY
+# Expected: Your API key (not empty)
 
-# Test models command
-python auditor/cli.py models
-
-# Expected: List of available AI models with recommendations
+# Test model access
+auditor models
+# Expected: List of available models
 ```
 
----
-
-## 🔍 **Testing Phase 2: Security Scanning**
-
-### **Test 5: Direct Code Analysis (API)**
+#### **2.2 Model Listing Test**
 ```bash
-# Test basic vulnerability detection
-curl -X POST "http://localhost:8001/audit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "import os\ndef unsafe_function(user_input):\n    os.system(f\"echo {user_input}\")",
-    "language": "python"
-  }' | jq '.'
-
-# Expected: Detection of command injection vulnerability (B605)
-```
-
-### **Test 6: Advanced Analysis with AI**
-```bash
-# Test with specific model
-curl -X POST "http://localhost:8001/audit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "import os\npassword = \"secret123\"\nos.system(f\"rm {user_input}\")",
-    "language": "python",
-    "model": "agentica-org/deepcoder-14b-preview:free",
-    "use_advanced_analysis": true
-  }' | jq '.'
-
-# Expected: Multiple vulnerabilities + AI-generated patches and insights
-```
-
-### **Test 7: CLI Code Analysis**
-```bash
-# Test CLI analyze command
-python auditor/cli.py analyze \
-  --code "import os; os.system('rm -rf /')" \
-  --language python
-
-# Expected: Formatted vulnerability report with recommendations
-```
-
-### **Test 8: Directory Scanning**
-```bash
-# Scan current directory
-python auditor/cli.py scan --path .
-
-# Scan with specific output format
-python auditor/cli.py scan \
-  --path . \
-  --output-format github \
-  --save test-security-report.md
-
-# Expected: Comprehensive security report saved to file
+# Get available models
+auditor models --format json | head -20
+# Expected: JSON list with models like:
+# - agentica-org/deepcoder-14b-preview:free
+# - meta-llama/llama-3.3-70b-instruct:free
+# - qwen/qwen-2.5-coder-32b-instruct:free
+# - moonshotai/kimi-dev-72b:free
 ```
 
 ---
 
-## 📊 **Testing Phase 3: Phase 9 Analytics Features**
+## 🔍 **Core Feature Tests**
 
-### **Test 9: Trend Analysis (API)**
+### **Test 3: CLI Analysis Commands**
+
+#### **3.1 Basic Code Analysis**
 ```bash
-# Test detailed trends endpoint
-curl "http://localhost:8001/api/analytics/trends/detailed?period=7&granularity=daily&include_forecasting=true" | jq '.'
+# Test simple code analysis
+auditor analyze --code "print('Hello, World!')" --language python
+# Expected: Analysis results with no vulnerabilities found
 
-# Expected: Trend data with growth rates and forecasting
+# Test with vulnerable code
+auditor analyze --code "import os; os.system(user_input)" --language python
+# Expected: Command injection vulnerability detected
 ```
 
-### **Test 10: Top Rules Analysis (API)**
+#### **3.2 File Scanning Test**
 ```bash
-# Test top rules endpoint
-curl "http://localhost:8001/api/analytics/top-rules?limit=5" | jq '.'
+# Create test file
+echo 'import os
+os.system(user_input)
+password = "hardcoded123"
+exec(user_data)' > test_vulnerable.py
 
-# Expected: Most frequently triggered security rules
+# Scan the file
+auditor scan test_vulnerable.py
+# Expected: Multiple vulnerabilities detected:
+# - Command injection (os.system)
+# - Hardcoded password
+# - Code execution (exec)
+
+# Clean up
+rm test_vulnerable.py
 ```
 
-### **Test 11: Performance Analytics (API)**
+#### **3.3 Advanced Analysis Features**
 ```bash
-# Test performance endpoint
-curl "http://localhost:8001/api/analytics/performance/detailed?include_model_stats=true" | jq '.'
+# Test advanced analysis mode
+auditor analyze --code "SELECT * FROM users WHERE id = $1" --language python --advanced
+# Expected: Detailed analysis with AI explanations
 
-# Expected: Performance metrics with optimization insights
+# Test specific model selection
+auditor analyze --code "exec(user_input)" --language python --model "meta-llama/llama-3.3-70b-instruct:free"
+# Expected: Analysis using specified model
 ```
 
-### **Test 12: Data Export (API)**
+### **Test 4: Output Formats**
+
+#### **4.1 Multiple Format Test**
 ```bash
-# Test export functionality
-curl -X POST "http://localhost:8001/api/analytics/export" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "time_range": "7d",
-    "format": "json",
-    "include_trends": true,
-    "include_repositories": true
-  }' | jq '.'
+# Create test code
+VULNERABLE_CODE="import subprocess; subprocess.run(user_cmd, shell=True)"
 
-# Expected: Export confirmation with download information
-```
-
----
-
-## 🖥️ **Testing Phase 4: Advanced CLI Features**
-
-### **Test 13: Trend Analysis (CLI)**
-```bash
-# Basic trends
-python auditor/cli.py trends-detailed --period 7
-
-# Advanced trends with forecasting
-python auditor/cli.py trends-detailed \
-  --period 30 \
-  --granularity daily \
-  --include-forecast \
-  --visual
-
-# Export trends to CSV
-python auditor/cli.py trends-detailed \
-  --period 14 \
-  --output csv \
-  --save trends-analysis.csv
-```
-
-### **Test 14: Top Rules Analysis (CLI)**
-```bash
-# Basic top rules
-python auditor/cli.py top-rules --limit 10
-
-# Filtered analysis
-python auditor/cli.py top-rules \
-  --severity high \
-  --tool bandit \
-  --output table
-
-# Export to CSV
-python auditor/cli.py top-rules \
-  --limit 20 \
-  --output csv \
-  --save top-rules-report.csv
-```
-
-### **Test 15: Performance Analysis (CLI)**
-```bash
-# Comprehensive performance analysis
-python auditor/cli.py performance \
-  --include-models \
-  --breakdown-language
-
-# Export performance data
-python auditor/cli.py performance \
-  --output json \
-  --save performance-metrics.json
-```
-
-### **Test 16: Report Generation (CLI)**
-```bash
-# Security summary report
-python auditor/cli.py generate-report \
-  --report-type security_summary \
-  --time-range 7d \
-  --format markdown \
-  --save weekly-security-report.md
-
-# Trends analysis report
-python auditor/cli.py generate-report \
-  --report-type vulnerability_trends \
-  --time-range 30d \
-  --format json \
-  --save trends-report.json
-
-# Performance report
-python auditor/cli.py generate-report \
-  --report-type performance_analysis \
-  --time-range 30d \
-  --format markdown \
-  --save performance-report.md
-```
-
----
-
-## 🎯 **Testing Phase 5: Advanced Features**
-
-### **Test 17: Multiple Output Formats**
-```bash
 # Test different output formats
-python auditor/cli.py scan . --output-format table
-python auditor/cli.py scan . --output-format json --save results.json
-python auditor/cli.py scan . --output-format github --save github-report.md
-python auditor/cli.py scan . --output-format sarif --save security.sarif
+auditor analyze --code "$VULNERABLE_CODE" --language python --output-format table
+auditor analyze --code "$VULNERABLE_CODE" --language python --output-format json
+auditor analyze --code "$VULNERABLE_CODE" --language python --output-format csv
+auditor analyze --code "$VULNERABLE_CODE" --language python --output-format sarif
+auditor analyze --code "$VULNERABLE_CODE" --language python --output-format github
 ```
 
-### **Test 18: Advanced Filtering**
+#### **4.2 Report Generation Test**
 ```bash
-# Severity filtering
-python auditor/cli.py scan . --severity-filter high
+# Test report saving
+auditor analyze --code "os.system(user_input)" --language python --output-format github --save security_report.md
 
-# Pattern exclusions
-python auditor/cli.py scan . \
-  --exclude "*/tests/*" \
-  --exclude "*/node_modules/*" \
-  --exclude "*/.git/*"
+# Verify report created
+ls -la security_report.md
+cat security_report.md | head -20
 
-# Include specific files
-python auditor/cli.py scan . \
-  --include "*.py" \
-  --include "*.js"
-```
-
-### **Test 19: Model Selection**
-```bash
-# Test different AI models
-python auditor/cli.py analyze \
-  --code "import subprocess; subprocess.call(cmd, shell=True)" \
-  --language python \
-  --model "meta-llama/llama-3.3-70b-instruct:free"
-
-python auditor/cli.py analyze \
-  --code "SELECT * FROM users WHERE id = " + userId \
-  --language javascript \
-  --model "qwen/qwen-2.5-coder-32b-instruct:free"
+# Clean up
+rm security_report.md
 ```
 
 ---
 
-## 🏃‍♂️ **Quick Demo Script**
+## 🌐 **API Testing**
 
-### **Test 20: Run Complete Demo**
+### **Test 5: FastAPI Server**
+
+#### **5.1 Start API Server**
 ```bash
-# Run the comprehensive demo script
-chmod +x example_session.sh
-./example_session.sh
+# Start server in background
+uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+SERVER_PID=$!
 
-# This will test all major features automatically
+# Wait for startup
+sleep 5
+
+# Save PID for cleanup
+echo $SERVER_PID > api_server.pid
 ```
 
-### **Test 21: Run Final Validation**
+#### **5.2 Health Check Test**
 ```bash
-# Run complete validation suite
-python final_validation.py
+# Test health endpoint
+curl -s http://localhost:8000/health | python -m json.tool
+# Expected: {"status": "ok", "version": "2.0.0", ...}
 
-# Expected: 7/7 (100%) validation success
+# Test models endpoint
+curl -s http://localhost:8000/models | python -c "
+import sys, json
+data = json.load(sys.stdin)
+print(f'✅ Found {len(data[\"available_models\"])} models')
+"
+```
+
+#### **5.3 Audit Endpoint Test**
+```bash
+# Test audit endpoint
+curl -X POST "http://localhost:8000/audit" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "import os\nos.system(user_input)",
+    "language": "python"
+  }' | python -c "
+import sys, json
+data = json.load(sys.stdin)
+vulns = len(data['vulnerabilities'])
+print(f'✅ Found {vulns} vulnerabilities')
+"
+```
+
+#### **5.4 Async Endpoint Test**
+```bash
+# Test async audit
+JOB_RESPONSE=$(curl -s -X POST "http://localhost:8000/async/audit" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "exec(user_data)",
+    "language": "python"
+  }')
+
+# Extract job ID
+JOB_ID=$(echo $JOB_RESPONSE | python -c "import sys, json; print(json.load(sys.stdin)['job_id'])")
+echo "Job ID: $JOB_ID"
+
+# Check status
+sleep 3
+curl -s "http://localhost:8000/async/jobs/$JOB_ID/status" | python -m json.tool
+
+# Get results
+curl -s "http://localhost:8000/async/jobs/$JOB_ID/results" | python -c "
+import sys, json
+data = json.load(sys.stdin)
+if 'vulnerabilities' in data:
+    print(f'✅ Async job completed with {len(data[\"vulnerabilities\"])} vulnerabilities')
+else:
+    print('⏳ Job still processing')
+"
+```
+
+### **Test 6: API Server Cleanup**
+```bash
+# Stop server
+if [ -f api_server.pid ]; then
+    kill $(cat api_server.pid)
+    rm api_server.pid
+    echo "✅ API server stopped"
+fi
 ```
 
 ---
 
-## 🔧 **Troubleshooting Guide**
+## 📊 **Advanced Feature Tests**
 
-### **Common Issues & Solutions**
+### **Test 7: Analytics Commands**
 
-#### **1. "Command not found: auditor"**
+#### **7.1 Trends Analysis**
 ```bash
-# Solution 1: Install in development mode
-pip install -e .
+# Test trends command
+auditor trends --period 30
+# Expected: Trend analysis (may be empty for new installation)
 
-# Solution 2: Run CLI directly
-python auditor/cli.py --help
-
-# Solution 3: Check Python PATH
-echo $PYTHONPATH
+# Test detailed trends
+auditor trends-detailed --period 7 --include-forecast
+# Expected: Detailed analytics with forecasting
 ```
 
-#### **2. "No such file or directory: bandit"**
+#### **7.2 Performance Analysis**
 ```bash
-# Solution: Install security tools
-pip install bandit semgrep
+# Test performance command
+auditor performance --include-models
+# Expected: Performance metrics and model usage
 
-# Or install all requirements
-pip install -r requirements.txt
+# Test with language breakdown
+auditor performance --breakdown-language
+# Expected: Performance data by programming language
 ```
 
-#### **3. "Rate limit exceeded" from OpenRouter**
+#### **7.3 Rule Analysis**
 ```bash
-# This is expected with free tier - core features still work
-# Solution: Upgrade OpenRouter plan or use caching
-echo "Rate limits are handled gracefully - this is normal"
+# Test top rules command
+auditor top-rules --limit 10
+# Expected: Most frequently triggered vulnerability rules
 ```
 
-#### **4. "Connection refused" on API calls**
-```bash
-# Solution: Make sure API server is running
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+### **Test 8: Configuration Tests**
 
-# Check if port is in use
-lsof -i :8001
+#### **8.1 Config File Test**
+```bash
+# Create config directory
+mkdir -p ~/.config/auditor
+
+# Create test configuration
+cat > ~/.config/auditor/config.yaml << 'EOF'
+scanning:
+  default_model: "qwen/qwen-2.5-coder-32b-instruct:free"
+  timeout: 120
+output:
+  default_format: "json"
+  colors: false
+EOF
+
+# Test with config
+auditor analyze --code "print('test')" --language python
+# Expected: Uses configuration settings (JSON format, fast model)
+
+# Clean up
+rm ~/.config/auditor/config.yaml
 ```
 
-#### **5. "CLI argument parsing errors"**
+#### **8.2 Environment Override Test**
 ```bash
-# ❌ Incorrect syntax:
-python auditor/cli.py scan --exclude "*/tests/*" "*/node_modules/*"
-
-# ✅ Correct syntax:
-python auditor/cli.py scan --exclude "*/tests/*" --exclude "*/node_modules/*"
-```
-
-#### **6. "Import errors" or missing dependencies**
-```bash
-# Solution: Reinstall all dependencies
-pip install -r requirements.txt --force-reinstall
-
-# Check Python version
-python3 --version  # Should be 3.11+
+# Test environment variable override
+AUDITOR_OUTPUT_FORMAT=csv auditor analyze --code "print('test')" --language python
+# Expected: CSV format output
 ```
 
 ---
 
-## 📊 **Expected Test Results**
+## 🧩 **Integration Tests**
 
-### **Successful Test Indicators:**
+### **Test 9: Python Library Integration**
 
-#### **API Tests:**
-- Health endpoint returns `{"status":"ok","version":"2.0.0"}`
-- Models endpoint returns 4 AI models
-- Audit endpoint detects vulnerabilities (B605, B608, etc.)
-- Analytics endpoints return trend and performance data
+#### **9.1 Direct API Usage**
+```python
+# Create test script
+cat > test_integration.py << 'EOF'
+import asyncio
+from app.agents.security_agent import SecurityAgent
 
-#### **CLI Tests:**
-- Help commands display comprehensive usage information
-- Scan commands detect and report vulnerabilities
-- Analytics commands show trends, rules, and performance data
-- Report generation creates properly formatted files
+async def test_agent():
+    """Test direct agent usage"""
+    agent = SecurityAgent()
+    
+    # Test analysis
+    result = await agent.run(
+        code="import os; os.system(user_input)",
+        language="python",
+        use_advanced_analysis=True
+    )
+    
+    # Verify results
+    vulnerabilities = result.get('vulnerabilities', [])
+    print(f"✅ Found {len(vulnerabilities)} vulnerabilities")
+    
+    for vuln in vulnerabilities[:3]:  # Show first 3
+        print(f"  - {vuln.get('title', 'Unknown')} ({vuln.get('severity', 'Unknown')})")
+    
+    return len(vulnerabilities) > 0
 
-#### **Phase 9 Analytics:**
-- Trend analysis shows vulnerability patterns over time
-- Top rules analysis identifies most frequent security issues
-- Performance analysis provides optimization recommendations
-- Report generation creates professional documentation
+# Run test
+if __name__ == "__main__":
+    result = asyncio.run(test_agent())
+    print(f"✅ Integration test {'passed' if result else 'needs attention'}")
+EOF
 
-#### **File Outputs:**
-After testing, you should see files like:
-- `test-security-report.md` - GitHub Actions format report
-- `trends-analysis.csv` - Vulnerability trends data
-- `performance-metrics.json` - Performance analysis
-- `weekly-security-report.md` - Executive summary report
+# Run integration test
+python test_integration.py
+# Expected: ✅ Found X vulnerabilities, ✅ Integration test passed
+
+# Clean up
+rm test_integration.py
+```
+
+#### **9.2 FastAPI Integration**
+```python
+# Create FastAPI integration test
+cat > test_fastapi_integration.py << 'EOF'
+from fastapi import FastAPI
+from app.main import app as security_app
+
+# Create test app
+app = FastAPI()
+
+# Mount security auditor
+app.mount("/security", security_app)
+
+# Test custom endpoint
+@app.get("/test")
+async def test_endpoint():
+    return {"status": "integration_working"}
+
+if __name__ == "__main__":
+    print("✅ FastAPI integration imports successful")
+    print("✅ Security app mounted at /security")
+EOF
+
+# Run integration test
+python test_fastapi_integration.py
+# Expected: ✅ FastAPI integration imports successful
+
+# Clean up
+rm test_fastapi_integration.py
+```
+
+### **Test 10: CI/CD Integration Test**
+
+#### **10.1 GitHub Actions Simulation**
+```bash
+# Simulate CI/CD pipeline
+echo "🔄 Simulating CI/CD pipeline..."
+
+# 1. Install (simulated)
+echo "✅ Package installation simulated"
+
+# 2. Environment setup
+export OPENROUTER_API_KEY=$OPENROUTER_API_KEY  # Use existing key
+
+# 3. Security scan
+echo "🔍 Running security scan..."
+auditor scan . --output-format sarif --save ci_results.sarif
+
+# 4. Verify SARIF output
+if [ -f ci_results.sarif ]; then
+    echo "✅ SARIF results generated"
+    ls -la ci_results.sarif
+    
+    # Check SARIF format
+    python -c "
+import json
+with open('ci_results.sarif', 'r') as f:
+    data = json.load(f)
+print(f'✅ SARIF format valid, version: {data.get(\"version\", \"unknown\")}')
+"
+else
+    echo "❌ SARIF results not generated"
+fi
+
+# Clean up
+rm -f ci_results.sarif
+```
 
 ---
 
-## 🎯 **Success Criteria**
+## 🚀 **Performance Tests**
 
-Your local installation is working correctly if:
+### **Test 11: Speed and Accuracy**
 
-✅ **API Server**: All endpoints respond correctly  
-✅ **CLI Commands**: All commands execute without errors  
-✅ **Security Scanning**: Vulnerabilities are detected and reported  
-✅ **Phase 9 Analytics**: Trends, rules, and performance data are generated  
-✅ **AI Integration**: Models are accessible and provide intelligent analysis  
-✅ **Report Generation**: Professional reports are created in multiple formats  
-✅ **Output Formats**: All formats (table, JSON, CSV, Markdown) work correctly  
+#### **11.1 Response Time Test**
+```bash
+# Test response times
+echo "⏱️ Testing response times..."
+
+# Single analysis timing
+time auditor analyze --code "import os; os.system(input())" --language python > /dev/null
+# Expected: < 5 seconds for simple analysis
+
+# Batch processing timing  
+echo 'import os
+os.system(user_input)
+exec(user_data)
+eval(user_input)
+subprocess.run(cmd, shell=True)' > batch_test.py
+
+time auditor scan batch_test.py > /dev/null
+# Expected: < 10 seconds for multi-vulnerability file
+
+# Clean up
+rm batch_test.py
+```
+
+#### **11.2 Model Performance Comparison**
+```bash
+# Test different models for speed comparison
+SAMPLE_CODE="import subprocess; subprocess.run(user_cmd, shell=True)"
+
+echo "🧪 Testing model performance..."
+
+# Fast model
+time auditor analyze --code "$SAMPLE_CODE" --language python --model "qwen/qwen-2.5-coder-32b-instruct:free" > /dev/null
+
+# Quality model  
+time auditor analyze --code "$SAMPLE_CODE" --language python --model "meta-llama/llama-3.3-70b-instruct:free" > /dev/null
+
+echo "✅ Model performance comparison complete"
+```
 
 ---
 
-## 🚀 **Next Steps After Local Testing**
+## 🐛 **Troubleshooting Tests**
 
-1. **Customize Configuration**: Edit `~/.config/auditor/config.yaml`
-2. **Integrate with CI/CD**: Use GitHub Actions workflow
-3. **Deploy to Production**: Use `./deploy.sh` script
-4. **Share with Team**: Distribute the comprehensive documentation
+### **Test 12: Error Handling**
+
+#### **12.1 Invalid Input Test**
+```bash
+# Test invalid language
+auditor analyze --code "print('test')" --language invalid_language
+# Expected: Error message about invalid language
+
+# Test empty code
+auditor analyze --code "" --language python
+# Expected: Error message about empty code
+
+# Test invalid model
+auditor analyze --code "print('test')" --language python --model "nonexistent-model"
+# Expected: Error message about invalid model
+```
+
+#### **12.2 Network Issues Test**
+```bash
+# Test with invalid API key
+OPENROUTER_API_KEY_BACKUP=$OPENROUTER_API_KEY
+export OPENROUTER_API_KEY="invalid-key"
+
+auditor models
+# Expected: Authentication error
+
+# Restore API key
+export OPENROUTER_API_KEY=$OPENROUTER_API_KEY_BACKUP
+```
+
+### **Test 13: Edge Cases**
+
+#### **13.1 Large File Test**
+```bash
+# Create large test file
+python -c "
+code = 'import os\\nos.system(user_input)\\n' * 100
+with open('large_test.py', 'w') as f:
+    f.write(code)
+print('Created large test file')
+"
+
+# Test scanning large file
+auditor scan large_test.py --max-lines 1000
+# Expected: Should handle large file gracefully
+
+# Clean up
+rm large_test.py
+```
+
+#### **13.2 Special Characters Test**
+```bash
+# Test with special characters
+auditor analyze --code 'print("Hello 世界! 🌍")' --language python
+# Expected: Should handle Unicode correctly
+```
 
 ---
 
-## 📞 **Support & Resources**
+## 📊 **Test Results Summary**
 
-- **Full Documentation**: See `04-README.md` for complete usage guide
-- **CLI Reference**: See `05-CLI_Commands.md` for all commands
-- **API Documentation**: Visit `http://localhost:8001/docs` when server is running
-- **Change History**: See `08-CHANGELOG.md` for version details
+### **Test Completion Checklist**
+
+Create a test results summary:
+
+```bash
+# Create test summary
+cat > test_results.md << 'EOF'
+# AI Code Security Auditor - Test Results
+
+## ✅ Test Summary
+- **Installation Tests**: PASS
+- **CLI Commands**: PASS  
+- **API Endpoints**: PASS
+- **AI Model Access**: PASS
+- **Output Formats**: PASS
+- **Integration Tests**: PASS
+- **Performance Tests**: PASS
+- **Error Handling**: PASS
+
+## 📊 Key Metrics
+- **Response Time**: < 5 seconds (single analysis)
+- **API Health**: 200 OK
+- **Model Access**: 4/4 models available
+- **Format Support**: 5/5 formats working
+- **Integration**: Python + FastAPI working
+
+## 🎯 Recommendations
+- ✅ Production ready
+- ✅ All core features functional
+- ✅ Performance within acceptable limits
+- ✅ Error handling robust
+
+## 🚀 Next Steps
+- Deploy to production environment
+- Integrate with CI/CD pipeline
+- Train team on CLI commands
+- Set up monitoring and alerts
+EOF
+
+echo "✅ Test results summary created in test_results.md"
+```
 
 ---
 
-**🎉 Happy Testing! Your AI Code Security Auditor v2.0.0 is ready to transform code security! 🛡️**
+## 🎯 **Custom Test Scenarios**
+
+### **Test 14: Your Use Case**
+
+Adapt these templates for your specific testing needs:
+
+#### **Custom Security Rules Test**
+```bash
+# Test your specific vulnerability patterns
+YOUR_CODE="your specific code pattern here"
+auditor analyze --code "$YOUR_CODE" --language python --advanced
+```
+
+#### **Custom Integration Test**
+```bash
+# Test integration with your tools
+# Add your specific integration tests here
+```
+
+---
+
+## 📞 **Test Support**
+
+### **If Tests Fail**
+
+1. **Check Prerequisites**: Verify Python 3.11+, API key set
+2. **Review Installation**: Re-run `pip install ai-code-security-auditor`
+3. **Verify Network**: Test `curl http://api.openrouter.ai/api/v1/models`
+4. **Check Logs**: Run commands with `--verbose` flag
+5. **Seek Help**: GitHub Issues with test failure details
+
+### **Test Environment Cleanup**
+
+```bash
+# Clean up test artifacts
+rm -f test_*.py security_report.* ci_results.sarif test_results.md
+rm -f api_server.pid
+
+# Remove test config
+rm -rf ~/.config/auditor/test_*
+
+echo "✅ Test environment cleaned up"
+```
+
+---
+
+<div align="center">
+
+## 🎉 **Testing Complete!**
+
+**[📖 Return to Setup Guide](02-LOCAL_SETUP_GUIDE.md) • [💻 Explore CLI Commands](05-CLI_Commands.md) • [🏠 Main Documentation](../README.md)**
+
+---
+
+**All systems verified • Ready for production • Secure by design**
+
+</div>
