@@ -91,7 +91,7 @@ class SecurityScanner:
 
     async def _run_bandit(self, file_path: str) -> Dict[str, Any]:
         try:
-            cmd = ['/root/.venv/bin/bandit', '-f', 'json', file_path]
+            cmd = ['bandit', '-f', 'json', file_path]
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             return json.loads(res.stdout) if res.stdout else {}
         except Exception as e:
@@ -100,7 +100,7 @@ class SecurityScanner:
 
     async def _run_semgrep(self, file_path: str) -> Dict[str, Any]:
         try:
-            cmd = ['/root/.venv/bin/semgrep', '--config=auto', '--json', '--timeout=30', file_path]
+            cmd = ['semgrep', '--config=auto', '--json', '--timeout=30', file_path]
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
             return json.loads(res.stdout) if res.stdout else {}
         except Exception as e:

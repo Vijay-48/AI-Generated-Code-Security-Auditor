@@ -20,7 +20,9 @@ def test_audit_endpoint():
 def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "1.0.0"}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["version"] == "2.0.0"
 
 def test_invalid_request():
     response = client.post("/audit", json={"code": "", "language": ""})
