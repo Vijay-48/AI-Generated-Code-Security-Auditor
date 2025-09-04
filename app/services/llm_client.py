@@ -44,7 +44,7 @@ def query_openrouter(prompt: str, model: str = ModelType.DEEPCODER, max_tokens: 
         "temperature": temperature
     }
 
-    response = requests.post(settings.OPENROUTER_BASE_URL, headers=headers, data=json.dumps(payload))
+    response = requests.post(settings.OPENROUTER_BASE_URL, headers=headers, data=json.dumps(payload), timeout=30)
     response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"]
 
@@ -78,7 +78,7 @@ def query_openrouter_with_messages(messages: list, model: str = ModelType.DEEPCO
         "temperature": temperature
     }
 
-    response = requests.post(settings.OPENROUTER_BASE_URL, headers=headers, data=json.dumps(payload))
+    response = requests.post(settings.OPENROUTER_BASE_URL, headers=headers, data=json.dumps(payload), timeout=30)
     response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"]
 
