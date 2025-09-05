@@ -1,0 +1,84 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🚀 Start Robust FastAPI Server",
+            "type": "python",
+            "request": "launch",
+            "program": "cursor_robust_server.py",
+            "console": "integratedTerminal",
+            "env": {
+                "OPENROUTER_API_KEY": "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",
+                "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1/chat/completions"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "server",
+                "order": 1
+            }
+        },
+        {
+            "name": "🧪 Run Robust Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "cursor_robust_tests.py",
+            "console": "integratedTerminal",
+            "env": {
+                "OPENROUTER_API_KEY": "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"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "testing",
+                "order": 2
+            }
+        },
+        {
+            "name": "🔍 CLI - List Models",
+            "type": "python",
+            "request": "launch",
+            "program": "cursor_robust_cli.py",
+            "args": ["models"],
+            "console": "integratedTerminal",
+            "env": {
+                "OPENROUTER_API_KEY": "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"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "cli",
+                "order": 3
+            }
+        },
+        {
+            "name": "🛡️ CLI - Scan Test File",
+            "type": "python",
+            "request": "launch",
+            "program": "cursor_robust_cli.py",
+            "args": ["scan", "--path", "test.py"],
+            "console": "integratedTerminal",
+            "env": {
+                "OPENROUTER_API_KEY": "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"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "cli",
+                "order": 4
+            }
+        },
+        {
+            "name": "🔧 Debug - Server with Breakpoints",
+            "type": "python",
+            "request": "launch",
+            "program": "cursor_robust_server.py",
+            "console": "integratedTerminal",
+            "stopOnEntry": false,
+            "env": {
+                "OPENROUTER_API_KEY": "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"
+            },
+            "presentation": {
+                "hidden": false,
+                "group": "debug",
+                "order": 5
+            }
+        }
+    ]
+}
