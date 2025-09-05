@@ -58,3 +58,15 @@ INFO:     127.0.0.1:39770 - "POST /audit HTTP/1.1" 200 OK
 INFO:     127.0.0.1:50974 - "POST /audit HTTP/1.1" 200 OK
 INFO:     127.0.0.1:55822 - "POST /audit HTTP/1.1" 422 Unprocessable Entity
 INFO:     127.0.0.1:35652 - "POST /audit HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:48644 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48660 - "GET /models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47820 - "GET /health HTTP/1.1" 200 OK
+✅ Stored audit scan in analytics: f163f605-f109-4376-a4b6-f253736af405
+INFO:     127.0.0.1:47836 - "POST /audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53060 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53072 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53082 - "GET /models HTTP/1.1" 200 OK
+✅ Stored audit scan in analytics: f0ae50b2-fb36-4542-ac8e-f7335d9cd651
+INFO:     127.0.0.1:40910 - "POST /audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42044 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42050 - "GET /models HTTP/1.1" 200 OK

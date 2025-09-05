@@ -1,0 +1,29 @@
+2025-09-05 12:31:26,167 - __main__ - INFO - 🚀 Starting AI Code Security Auditor FastAPI Server...
+2025-09-05 12:31:26,167 - __main__ - INFO - 🔧 Cursor AI Development Mode - Robust Configuration
+============================================================
+🎯 AI Code Security Auditor - READY
+============================================================
+📚 API Documentation: http://localhost:8000/docs
+🔍 Health Check: http://localhost:8000/health
+🤖 Models Endpoint: http://localhost:8000/models
+🔥 Interactive API: http://localhost:8000/redoc
+============================================================
+💡 Server is stable and ready for CLI commands!
+🛑 Press Ctrl+C to stop the server
+============================================================
+INFO:     Started server process [10573]
+INFO:     Waiting for application startup.
+🚀 Starting AI Code Security Auditor...
+❌ Redis connection failed: Error Multiple exceptions: [Errno 111] Connect call failed ('127.0.0.1', 6379), [Errno 99] Cannot assign requested address connecting to localhost:6379.
+❌ Failed to initialize WebSocket manager: Error Multiple exceptions: [Errno 111] Connect call failed ('127.0.0.1', 6379), [Errno 99] Cannot assign requested address connecting to localhost:6379.
+❌ Redis connection failed: Error Multiple exceptions: [Errno 111] Connect call failed ('127.0.0.1', 6379), [Errno 99] Cannot assign requested address connecting to localhost:6379.
+✅ Analytics service connected to Redis cache
+✅ Analytics service initialized successfully
+✅ Analytics service initialized successfully
+✅ Application startup complete
+INFO:     Application startup complete.
+ERROR:    [Errno 98] error while attempting to bind on address ('127.0.0.1', 8000): address already in use
+INFO:     Waiting for application shutdown.
+🔄 Shutting down AI Code Security Auditor...
+✅ Application shutdown complete
+INFO:     Application shutdown complete.
