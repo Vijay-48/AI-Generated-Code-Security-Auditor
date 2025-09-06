@@ -57,14 +57,14 @@ class RobustCLI:
         
         # First, check if server is available
         if not self.wait_for_server():
-            print("💡 Try starting the server first: python cursor_robust_server.py")
+            print("Try starting the server first: python cursor_robust_server.py")
             return 1
         
         # Run the CLI command with retries
         for attempt in range(self.max_retries):
             try:
-                print(f"🤖 Running CLI command (attempt {attempt + 1}/{self.max_retries})")
-                print(f"📝 Command: python -m auditor.cli {' '.join(args)}")
+                print(f"Running CLI command (attempt {attempt + 1}/{self.max_retries})")
+                print(f"Command: python -m auditor.cli {' '.join(args)}")
                 
                 cmd = [sys.executable, "-m", "auditor.cli"] + args
                 
@@ -76,36 +76,35 @@ class RobustCLI:
                     env={**os.environ, "OPENROUTER_API_KEY": os.environ['OPENROUTER_API_KEY']}
                 )
                 
-                print("✅ Command completed successfully!")
+                print("Command completed successfully!")
                 return result.returncode
                 
             except subprocess.TimeoutExpired:
-                print(f"⏰ Command timed out (attempt {attempt + 1})")
+                print(f"Command timed out (attempt {attempt + 1})")
                 if attempt < self.max_retries - 1:
-                    print(f"🔄 Retrying in {self.retry_delay} seconds...")
+                    print(f"Retrying in {self.retry_delay} seconds...")
                     time.sleep(self.retry_delay)
                 else:
-                    print("❌ Command timed out after all retries")
-                    print("💡 Try with a simpler command or restart the server")
+                    print("Command timed out after all retries")
+                    print("Try with a simpler command or restart the server")
                     return 1
                     
             except subprocess.CalledProcessError as e:
-                print(f"❌ Command failed with exit code {e.returncode} (attempt {attempt + 1})")
+                print(f"Command failed with exit code {e.returncode} (attempt {attempt + 1})")
                 if attempt < self.max_retries - 1:
-                    print(f"🔄 Retrying in {self.retry_delay} seconds...")
+                    print(f"Retrying in {self.retry_delay} seconds...")
                     time.sleep(self.retry_delay)
                 else:
-                    print("❌ Command failed after all retries")
-                    print("💡 Ask Cursor AI: 'Help me debug this CLI error'")
+                    print("Command failed after all retries")
                     return e.returncode
                     
             except Exception as e:
-                print(f"❌ Unexpected error: {e} (attempt {attempt + 1})")
+                print(f"Unexpected error: {e} (attempt {attempt + 1})")
                 if attempt < self.max_retries - 1:
-                    print(f"🔄 Retrying in {self.retry_delay} seconds...")
+                    print(f"Retrying in {self.retry_delay} seconds...")
                     time.sleep(self.retry_delay)
                 else:
-                    print("❌ Unexpected error after all retries")
+                    print("Unexpected error after all retries")
                     return 1
         
         return 1
