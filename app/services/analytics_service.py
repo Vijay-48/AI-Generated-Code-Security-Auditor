@@ -9,7 +9,14 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 from collections import defaultdict
-import redis.asyncio as redis
+# Try to import Redis, but make it optional
+try:
+    import redis.asyncio as redis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+    print("Warning: Redis not available for analytics service")
+
 from sqlalchemy import create_engine, desc, func, and_
 from sqlalchemy.orm import sessionmaker
 
