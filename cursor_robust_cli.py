@@ -34,22 +34,22 @@ class RobustCLI:
     
     def wait_for_server(self, timeout=30):
         """Wait for server to be ready with health checks"""
-        print("🔍 Checking server availability...")
+        print("Checking server availability...")
         
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
                 response = requests.get(f"{self.server_url}/health", timeout=5)
                 if response.status_code == 200:
-                    print("✅ Server is ready!")
+                    print("Server is ready!")
                     return True
             except requests.exceptions.RequestException:
                 pass
             
-            print("⏳ Waiting for server... (will retry)")
+            print("Waiting for server... (will retry)")
             time.sleep(2)
         
-        print("❌ Server not responding after 30 seconds")
+        print("Server not responding after 30 seconds")
         return False
     
     def run_cli_with_retry(self, args):
