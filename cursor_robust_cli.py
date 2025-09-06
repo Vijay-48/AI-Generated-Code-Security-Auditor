@@ -111,7 +111,7 @@ class RobustCLI:
 
 def show_help():
     """Show help information"""
-    print("🛡️ AI Code Security Auditor - Robust CLI Wrapper")
+    print("AI Code Security Auditor - Robust CLI Wrapper")
     print("=" * 50)
     print("Usage examples:")
     print("  python cursor_robust_cli.py models")
@@ -121,10 +121,10 @@ def show_help():
     print("")
     print("Output formats: table, json, github, sarif, csv")
     print("")
-    print("💡 Make sure the server is running first:")
+    print("Make sure the server is running first:")
     print("   python cursor_robust_server.py")
     print("")
-    print("💡 Use Cursor AI chat (Ctrl+L) for help with commands!")
+    print("Use the application for help with commands!")
 
 def main():
     """Main CLI function"""
