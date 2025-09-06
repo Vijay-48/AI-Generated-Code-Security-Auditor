@@ -63,7 +63,7 @@ def scan(ctx, path, model, output_format, output_file, severity_filter,
             click.echo("❌ No supported files found to scan")
             sys.exit(1)
             
-        click.echo(f"🔍 Scanning {len(files_to_scan)} files with {model.split('/')[1].split(':')[0]}")
+        click.echo(f"Scanning {len(files_to_scan)} files with {model.split('/')[1].split(':')[0]}")
         
         # Scan files
         all_results = []
@@ -83,7 +83,7 @@ def scan(ctx, path, model, output_format, output_file, severity_filter,
                                 high_severity_found = True
                                 
                 except Exception as e:
-                    click.echo(f"\n⚠️  Error scanning {file_path}: {str(e)}", err=True)
+                    click.echo(f"\nError scanning {file_path}: {str(e)}", err=True)
         
         # Filter by severity
         if severity_filter != 'all':
