@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Robust CLI Wrapper for AI Code Security Auditor
-Includes retry logic, connection stability, and better error handling
+Windows-compatible with improved error handling and connection stability
 """
 import os
 import sys
@@ -9,6 +9,14 @@ import time
 import requests
 import subprocess
 from pathlib import Path
+
+# Windows-compatible output encoding
+if sys.platform.startswith('win'):
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    elif hasattr(sys.stdout, 'buffer'):
+        import codecs
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
 # Set environment variables
 os.environ.setdefault('OPENROUTER_API_KEY', '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')
