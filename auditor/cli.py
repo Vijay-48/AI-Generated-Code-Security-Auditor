@@ -179,20 +179,20 @@ def models(ctx):
         
         data = response.json()
         
-        click.echo("🤖 Available Models:")
+        click.echo("Available Models:")
         click.echo("=" * 50)
         
         for model in data['available_models']:
             model_name = model.split('/')[1].split(':')[0]
             click.echo(f"  • {model_name}: {model}")
         
-        click.echo("\n💡 Recommendations:")
+        click.echo("\nRecommendations:")
         for use_case, model in data['recommendations'].items():
             model_name = model.split('/')[1].split(':')[0] 
             click.echo(f"  • {use_case}: {model_name}")
         
     except Exception as e:
-        click.echo(f"❌ Failed to fetch models: {str(e)}", err=True)
+        click.echo(f"Failed to fetch models: {str(e)}", err=True)
         sys.exit(1)
 
 def discover_files(path: str, include: tuple, exclude: tuple) -> List[Path]:
