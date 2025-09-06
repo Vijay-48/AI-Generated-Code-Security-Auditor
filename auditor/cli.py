@@ -60,7 +60,7 @@ def scan(ctx, path, model, output_format, output_file, severity_filter,
         files_to_scan = discover_files(path, include, exclude)
         
         if not files_to_scan:
-            click.echo("❌ No supported files found to scan")
+            click.echo("No supported files found to scan")
             sys.exit(1)
             
         click.echo(f"Scanning {len(files_to_scan)} files with {model.split('/')[1].split(':')[0]}")
