@@ -55,13 +55,17 @@ class AnalyticsService:
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
             
             # Connect to Redis for caching (optional)
-            try:
-                if not cache_service.connected:
-                    await cache_service.connect()
-                self.redis_client = cache_service.redis_client
-                print("✅ Analytics service connected to Redis cache")
-            except Exception as e:
-                print(f"⚠️ Analytics service: Redis unavailable, using database only: {e}")
+            if REDIS_AVAILABLE:
+                try:
+                    if not cache_service.connected:
+                        await cache_service.connect()
+                    self.redis_client = cache_service.redis_client
+                    print("✅ Analytics service connected to Redis cache")
+                except Exception as e:
+                    print(f"⚠️ Analytics service: Redis unavailable, using database only: {e}")
+                    self.redis_client = None
+            else:
+                print("⚠️ Analytics service: Redis not installed, using database only")
                 self.redis_client = None
             
             print("✅ Analytics service initialized successfully")
