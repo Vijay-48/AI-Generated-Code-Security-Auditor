@@ -141,30 +141,30 @@ def analyze(ctx, code, language, model, advanced):
         result = response.json()
         
         # Display results
-        click.echo("🔍 Analysis Results:")
+        click.echo("Analysis Results:")
         click.echo("=" * 50)
         
         vulnerabilities = result.get('vulnerabilities', [])
         if vulnerabilities:
             for vuln in vulnerabilities:
-                click.echo(f"📍 {vuln['title']} ({vuln['id']})")
+                click.echo(f"[!] {vuln['title']} ({vuln['id']})")
                 click.echo(f"   Severity: {vuln['severity']}")
                 click.echo(f"   Line: {vuln['line_number']}")
                 click.echo(f"   Description: {vuln['description']}")
                 click.echo()
         else:
-            click.echo("✅ No vulnerabilities detected")
+            click.echo("No vulnerabilities detected")
         
         # Show AI-generated patches if available
         patches = result.get('patches', [])
         for patch in patches:
             if 'error' not in patch.get('patch', {}):
-                click.echo("🤖 AI-Generated Fix:")
+                click.echo("AI-Generated Fix:")
                 click.echo(patch['patch'].get('diff', 'No diff available')[:500])
                 click.echo()
         
     except Exception as e:
-        click.echo(f"❌ Analysis failed: {str(e)}", err=True)
+        click.echo(f"Analysis failed: {str(e)}", err=True)
         sys.exit(1)
 
 @cli.command()
