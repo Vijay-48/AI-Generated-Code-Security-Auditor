@@ -368,16 +368,16 @@ def generate_table_output(results: List[Dict]) -> str:
 def generate_github_output(results: List[Dict]) -> str:
     """Generate GitHub Actions format output"""
     output = []
-    output.append("## 🛡️ AI Security Audit Results")
+    output.append("## AI Security Audit Results")
     output.append("")
     
     total_vulns = sum(len(r.get('vulnerabilities', [])) for r in results)
     
     if total_vulns == 0:
-        output.append("✅ **No vulnerabilities detected!** Your code is secure.")
+        output.append("**No vulnerabilities detected!** Your code is secure.")
         return "\n".join(output)
     
-    output.append(f"❌ **{total_vulns} vulnerabilities detected**")
+    output.append(f"**{total_vulns} vulnerabilities detected**")
     output.append("")
     output.append("| File | Issue | Severity | Line | AI Fix |")
     output.append("|------|-------|----------|------|--------|")
@@ -389,16 +389,16 @@ def generate_github_output(results: List[Dict]) -> str:
         
         for vuln in vulnerabilities:
             file_short = file_path.split('/')[-1] if '/' in file_path else file_path
-            severity_emoji = {'HIGH': '🔴', 'MEDIUM': '🟡', 'LOW': '🟢', 'CRITICAL': '⚫'}.get(vuln['severity'], '🔍')
+            severity_indicator = {'HIGH': 'HIGH', 'MEDIUM': 'MEDIUM', 'LOW': 'LOW', 'CRITICAL': 'CRITICAL'}.get(vuln['severity'], 'UNKNOWN')
             
             # Check if AI fix is available
             patch = patches.get(vuln['id'], {})
-            ai_fix = "✅" if patch.get('patch', {}).get('diff') and 'error' not in patch.get('patch', {}) else "❌"
+            ai_fix = "Available" if patch.get('patch', {}).get('diff') and 'error' not in patch.get('patch', {}) else "No"
             
-            output.append(f"| `{file_short}` | {vuln['title']} | {severity_emoji} {vuln['severity']} | {vuln['line_number']} | {ai_fix} |")
+            output.append(f"| `{file_short}` | {vuln['title']} | {severity_indicator} | {vuln['line_number']} | {ai_fix} |")
     
     output.append("")
-    output.append("### 🤖 AI-Powered Features")
+    output.append("### AI-Powered Features")
     output.append("- Code patch generation with DeepCoder")
     output.append("- Quality assessment with LLaMA 3.3")
     output.append("- Security explanations with Kimi")
