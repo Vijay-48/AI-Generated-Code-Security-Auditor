@@ -109,7 +109,7 @@ def scan(ctx, path, model, output_format, output_file, severity_filter,
             sys.exit(1)
             
     except Exception as e:
-        click.echo(f"❌ Scan failed: {str(e)}", err=True)
+        click.echo(f"Scan failed: {str(e)}", err=True)
         sys.exit(1)
 
 @cli.command()
