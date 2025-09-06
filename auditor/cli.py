@@ -95,17 +95,17 @@ def scan(ctx, path, model, output_format, output_file, severity_filter,
         if output_file:
             with open(output_file, 'w') as f:
                 f.write(output)
-            click.echo(f"📄 Report saved to {output_file}")
+            click.echo(f"Report saved to {output_file}")
         else:
             click.echo(output)
         
         # Summary
         total_vulns = sum(len(r.get('vulnerabilities', [])) for r in all_results)
-        click.echo(f"\n📊 Scan complete: {total_vulns} vulnerabilities found across {len(all_results)} files")
+        click.echo(f"\nScan complete: {total_vulns} vulnerabilities found across {len(all_results)} files")
         
         # Exit with error if configured
         if fail_on_high and high_severity_found:
-            click.echo("❌ High/Critical severity vulnerabilities found - failing build")
+            click.echo("High/Critical severity vulnerabilities found - failing build")
             sys.exit(1)
             
     except Exception as e:
