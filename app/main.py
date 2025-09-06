@@ -16,19 +16,26 @@ from app.websocket_manager import websocket_manager
 async def lifespan(app: FastAPI):
     """Handle app startup and shutdown events"""
     # Startup
-    print("🚀 Starting AI Code Security Auditor...")
+    print("STARTING AI Code Security Auditor...")
+    
+    # Initialize cache service (Redis optional)
     await init_cache()
+    
+    # Initialize WebSocket manager (Redis optional)  
     await websocket_manager.initialize()
+    
+    # Initialize analytics service
     await initialize_analytics_service()
-    print("✅ Application startup complete")
+    
+    print("Application startup complete")
     
     yield
     
     # Shutdown
-    print("🔄 Shutting down AI Code Security Auditor...")
+    print("Shutting down AI Code Security Auditor...")
     await websocket_manager.shutdown()
     await shutdown_cache()
-    print("✅ Application shutdown complete")
+    print("Application shutdown complete")
 
 
 app = FastAPI(
