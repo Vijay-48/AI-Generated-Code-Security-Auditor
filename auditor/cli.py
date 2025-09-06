@@ -334,7 +334,7 @@ def generate_output(results: List[Dict], format_type: str) -> str:
 def generate_table_output(results: List[Dict]) -> str:
     """Generate table format output"""
     output = []
-    output.append("🔍 Security Audit Results")
+    output.append("Security Audit Results")
     output.append("=" * 80)
     
     for result in results:
@@ -342,11 +342,11 @@ def generate_table_output(results: List[Dict]) -> str:
         vulnerabilities = result.get('vulnerabilities', [])
         
         if vulnerabilities:
-            output.append(f"\n📁 File: {file_path}")
+            output.append(f"\nFile: {file_path}")
             output.append("-" * 50)
             
             for vuln in vulnerabilities:
-                output.append(f"  🚨 {vuln['title']} ({vuln['id']})")
+                output.append(f"  [!] {vuln['title']} ({vuln['id']})")
                 output.append(f"     Severity: {vuln['severity']}")
                 output.append(f"     Line: {vuln['line_number']}")
                 output.append(f"     Description: {vuln['description']}")
@@ -357,11 +357,11 @@ def generate_table_output(results: List[Dict]) -> str:
                     if patch.get('vuln', {}).get('id') == vuln['id']:
                         patch_info = patch.get('patch', {})
                         if 'error' not in patch_info and patch_info.get('diff'):
-                            output.append(f"     🤖 AI Fix Available: {patch_info.get('confidence', 'MEDIUM')} confidence")
+                            output.append(f"     AI Fix Available: {patch_info.get('confidence', 'MEDIUM')} confidence")
                 output.append("")
     
     if not any(result.get('vulnerabilities') for result in results):
-        output.append("✅ No vulnerabilities found!")
+        output.append("No vulnerabilities found!")
     
     return "\n".join(output)
 
