@@ -371,13 +371,13 @@ def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, A
         # Create agent and scan
         agent = SecurityAgent()
         
-        result = agent.run(
+        result = asyncio.run(agent.run(
             code=code,
             language=language,
             filename=str(file_path.name),
             preferred_model=model,
             use_advanced_analysis=advanced
-        )
+        ))
         
         return result
         
