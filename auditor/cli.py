@@ -15,13 +15,19 @@ from pathlib import Path
 from typing import List, Dict, Any
 import fnmatch
 
+# Add current directory to Python path to enable imports
+current_dir = Path(__file__).parent.parent.absolute()
+if str(current_dir) not in sys.path:
+    sys.path.insert(0, str(current_dir))
+
 # Import configuration to validate API keys
 try:
     from app.config import settings, validate_api_keys
     from app.services.scanner import SecurityScanner
     from app.agents.security_agent import SecurityAgent
-except ImportError:
-    print("❌ Error: Could not import required modules. Run from project root directory.")
+except ImportError as e:
+    print(f"❌ Error: Could not import required modules: {e}")
+    print("💡 Make sure you're in the project root directory")
     print("💡 Usage: python -m auditor.cli --help")
     sys.exit(1)
 
