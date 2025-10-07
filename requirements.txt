@@ -1,41 +1,34 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-alembic
-bandit
-semgrep
-langchain
-langchain-openai
-langgraph
-chromadb
-sentence-transformers
-httpx
-requests
-pytest
-pytest-asyncio
-python-multipart
-aiofiles
-pydantic-settings
-langchain-community
-langchain-core
-langchain-deepseek
-click
-gunicorn
-prometheus-client
-pathlib2
-# Async Processing & Caching
-redis>=4.5.0
-celery[redis]
-kombu
-websockets
-python-socketio[asyncio-client]
-eventlet
-flower
-# Git Integration for Bulk Repository Scanning
-GitPython>=3.1.0
-# CLI Enhancements for Phase 7B
-tqdm>=4.65.0
-colorama>=0.4.6
-pyyaml>=6.0
-# ASCII Visualizations for Phase 7C
+# AI Code Security Auditor - Hackathon Version
+# Core Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.20.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# AI/LLM Integration
+openai>=1.0.0
+httpx>=0.25.0
+requests>=2.31.0
+
+# Security Scanning Tools
+bandit>=1.7.5
+semgrep>=1.45.0
+
+# CLI and Terminal
+click>=8.1.7
 rich>=13.0.0
+colorama>=0.4.6
+tqdm>=4.65.0
+
+# Data Processing
+pydantic>=2.0.0
+python-multipart>=0.0.6
+aiofiles>=23.2.1
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Utilities
+python-dotenv>=1.0.0
+pathlib>=1.0.1

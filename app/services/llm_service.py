@@ -1,55 +1,100 @@
 import json
 import re
 import httpx
+import openai
+from typing import Optional, Dict, Any
 from app.config import settings
-from app.services.llm_client import ModelType, query_openrouter_with_messages, generate_fix, assess_fix_quality
 
 class LLMService:
     def __init__(self):
-        # Default models for different use cases
-        self.patch_model = ModelType.DEEPCODER  # Best for code generation
-        self.assessment_model = ModelType.LLAMA  # Best for quality assessment
-        self.classification_model = ModelType.QWEN  # Fast classification
-        self.explanation_model = ModelType.KIMI  # Best explanations
+        # Model configuration
+        self.patch_model = "openai/gpt-4"
+        self.assessment_model = "openai/gpt-4" 
+        self.classification_model = "qwen/qwen-2.5-coder-32b-instruct:free"
+        self.explanation_model = "openai/gpt-4"
         
-        self.base_url = settings.OPENROUTER_BASE_URL.replace("/chat/completions", "")
-        self.headers = {
+        # OpenRouter configuration
+        self.openrouter_headers = {
             "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
             "HTTP-Referer": settings.OPENROUTER_REFERER,
-            "X-Title": settings.OPENROUTER_TITLE
+            "X-Title": settings.OPENROUTER_TITLE,
+            "Content-Type": "application/json"
         }
+        
+        # OpenAI configuration
+        if settings.OPENAI_API_KEY:
+            openai.api_key = settings.OPENAI_API_KEY
 
-    async def _call_openrouter(self, messages, max_tokens, temperature, model=None):
-        """Legacy method for backward compatibility - now uses httpx for async"""
-        if model is None:
-            model = self.patch_model
-            
-        async with httpx.AsyncClient() as client:
-            data = {
-                "model": model,
-                "messages": messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature
-            }
-            response = await client.post(
-                f"{self.base_url}/chat/completions",
-                headers=self.headers,
-                json=data,
-                timeout=60.0
+    async def _call_openai_direct(self, messages: list, model: str = "gpt-4", max_tokens: int = 2000, temperature: float = 0.1) -> Dict[str, Any]:
+        """Call OpenAI API directly"""
+        try:
+            client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            response = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature
             )
-            response.raise_for_status()
-            return response.json()
+            return {
+                "choices": [{
+                    "message": {
+                        "content": response.choices[0].message.content
+                    }
+                }]
+            }
+        except Exception as e:
+            raise Exception(f"OpenAI API error: {str(e)}")
 
-    async def generate_fix_diff(self, vulnerable_code, vulnerability, remediation_pattern):
-        """Generate security fix using DeepCoder model optimized for code patches"""
-        system_prompt = """You are an expert security engineer who generates precise git diff patches to fix security vulnerabilities. Use the DeepCoder model's advanced code understanding to create accurate, minimal diffs."""
+    async def _call_openrouter(self, messages: list, model: str, max_tokens: int = 2000, temperature: float = 0.1) -> Dict[str, Any]:
+        """Call OpenRouter API for multi-model access"""
+        try:
+            async with httpx.AsyncClient() as client:
+                data = {
+                    "model": model,
+                    "messages": messages,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature
+                }
+                response = await client.post(
+                    settings.OPENROUTER_BASE_URL,
+                    headers=self.openrouter_headers,
+                    json=data,
+                    timeout=60.0
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            raise Exception(f"OpenRouter API error: {str(e)}")
+
+    async def _call_llm(self, messages: list, model: str, max_tokens: int = 2000, temperature: float = 0.1) -> Dict[str, Any]:
+        """Smart LLM caller - routes to appropriate API based on model and available keys"""
+        
+        # If it's an OpenAI model and we have OpenAI API key, use direct API
+        if model.startswith("openai/") and settings.OPENAI_API_KEY:
+            openai_model = model.replace("openai/", "")
+            return await self._call_openai_direct(messages, openai_model, max_tokens, temperature)
+        
+        # Otherwise use OpenRouter
+        elif settings.OPENROUTER_API_KEY:
+            return await self._call_openrouter(messages, model, max_tokens, temperature)
+        
+        else:
+            raise Exception("No API keys available. Set OPENAI_API_KEY or OPENROUTER_API_KEY")
+
+    async def generate_fix_diff(self, vulnerable_code: str, vulnerability: Dict[str, Any], remediation_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate security fix using AI (prefers GPT-4 for best results)"""
+        
+        system_prompt = """You are an expert security engineer who generates precise git diff patches to fix security vulnerabilities. 
+        Focus on creating minimal, effective changes that resolve the security issue without breaking functionality."""
         
         user_prompt = (
-            f"VULNERABLE CODE:\n```\n{vulnerable_code}\n```\n"
-            f"VULNERABILITY: {vulnerability['title']} ({vulnerability['cwe_id']})\n"
-            f"REMEDIATION PATTERN:\n{remediation_pattern['remediation_code']}\n"
-            "Generate a git diff patch to fix this security vulnerability.\n"
-            "Return JSON: {{\"diff\": \"...\", \"explanation\": \"...\", \"confidence\": \"HIGH/MEDIUM/LOW\", \"potential_issues\": [], \"additional_recommendations\": []}}"
+            f"VULNERABLE CODE:\n```\n{vulnerable_code}\n```\n\n"
+            f"VULNERABILITY: {vulnerability.get('title', 'Unknown')} ({vulnerability.get('cwe_id', 'Unknown')})\n"
+            f"DESCRIPTION: {vulnerability.get('description', 'No description')}\n"
+            f"SEVERITY: {vulnerability.get('severity', 'Unknown')}\n\n"
+            f"REMEDIATION GUIDANCE:\n{remediation_pattern.get('remediation_code', 'Use secure coding practices')}\n\n"
+            "Generate a secure fix for this code. Return your response as JSON with these keys:\n"
+            '{"diff": "git diff format patch", "explanation": "clear explanation of the fix", "confidence": "HIGH/MEDIUM/LOW", "potential_issues": ["list of potential issues"], "additional_recommendations": ["extra security suggestions"]}'
         )
         
         messages = [
@@ -58,12 +103,9 @@ class LLMService:
         ]
         
         try:
-            # Use DeepCoder model for optimal code generation
-            response = await self._call_openrouter(
-                messages, max_tokens=2000, temperature=0.1, model=self.patch_model
-            )
+            response = await self._call_llm(messages, self.patch_model, max_tokens=2000, temperature=0.1)
             content = response['choices'][0]['message']['content']
-            return self._parse_response(content)
+            return self._parse_json_response(content)
         except Exception as e:
             return {
                 "error": str(e),
@@ -74,16 +116,17 @@ class LLMService:
                 "additional_recommendations": ["Manual review required"]
             }
 
-    async def assess_fix_quality(self, original_code, fixed_code, vulnerability):
-        """Assess fix quality using LLaMA model for balanced, high-quality analysis"""
+    async def assess_fix_quality(self, original_code: str, fixed_code: str, vulnerability: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess fix quality using AI"""
+        
         system_prompt = "You are a senior security architect performing code review. Provide comprehensive quality assessment."
         
         user_prompt = (
-            f"Rate this security fix for {vulnerability['title']} (CWE: {vulnerability['cwe_id']}):\n"
-            f"ORIGINAL:\n```\n{original_code}\n```\n"
-            f"FIXED:\n```\n{fixed_code}\n```\n"
-            "Return JSON with these keys: "
-            "{{\"overall_score\": 85, \"correctness\": \"HIGH/MEDIUM/LOW\", \"completeness\": \"...\", \"code_quality\": \"...\", \"performance_impact\": \"...\", \"issues_found\": [], \"recommendations\": []}}"
+            f"Rate this security fix for {vulnerability.get('title', 'Unknown')} (CWE: {vulnerability.get('cwe_id', 'Unknown')}):\n\n"
+            f"ORIGINAL CODE:\n```\n{original_code}\n```\n\n"
+            f"FIXED CODE:\n```\n{fixed_code}\n```\n\n"
+            "Evaluate the fix and return JSON with these keys: "
+            '{"overall_score": 85, "correctness": "HIGH/MEDIUM/LOW", "completeness": "description", "code_quality": "description", "performance_impact": "description", "issues_found": ["list"], "recommendations": ["list"]}'
         )
         
         messages = [
@@ -92,75 +135,85 @@ class LLMService:
         ]
         
         try:
-            # Use LLaMA for balanced quality assessment
-            response = await self._call_openrouter(
-                messages, max_tokens=800, temperature=0.1, model=self.assessment_model
-            )
+            response = await self._call_llm(messages, self.assessment_model, max_tokens=800, temperature=0.1)
             content = response['choices'][0]['message']['content']
-            return self._parse_json(content)
+            return self._parse_json_response(content)
         except Exception as e:
             return {"error": f"Error assessing fix: {str(e)}"}
 
-    async def classify_vulnerability_fast(self, code_snippet, vulnerability):
-        """Fast vulnerability classification using Qwen model"""
+    async def classify_vulnerability_fast(self, code_snippet: str, vulnerability: Dict[str, Any]) -> Dict[str, Any]:
+        """Fast vulnerability classification using efficient model"""
+        
         user_prompt = (
-            f"Quickly classify this vulnerability:\n"
-            f"CODE:\n```\n{code_snippet}\n```\n"
-            f"ISSUE: {vulnerability['title']} ({vulnerability['id']})\n"
-            f"CURRENT SEVERITY: {vulnerability['severity']}\n"
-            "Return JSON: {{\"true_severity\": \"CRITICAL/HIGH/MEDIUM/LOW\", \"category\": \"...\", \"exploitability\": \"HIGH/MEDIUM/LOW\", \"priority\": \"URGENT/HIGH/MEDIUM/LOW\"}}"
+            f"Quickly classify this security vulnerability:\n\n"
+            f"CODE:\n```\n{code_snippet}\n```\n\n"
+            f"ISSUE: {vulnerability.get('title', 'Unknown')} ({vulnerability.get('id', 'Unknown')})\n"
+            f"CURRENT SEVERITY: {vulnerability.get('severity', 'Unknown')}\n\n"
+            "Return JSON: "
+            '{"true_severity": "CRITICAL/HIGH/MEDIUM/LOW", "category": "vulnerability category", "exploitability": "HIGH/MEDIUM/LOW", "priority": "URGENT/HIGH/MEDIUM/LOW", "reasoning": "brief explanation"}'
         )
         
         try:
-            # Use Qwen for fast classification
-            response = await self._call_openrouter(
+            response = await self._call_llm(
                 [{"role": "user", "content": user_prompt}], 
-                max_tokens=300, temperature=0.1, model=self.classification_model
+                self.classification_model, 
+                max_tokens=300, 
+                temperature=0.1
             )
             content = response['choices'][0]['message']['content']
-            return self._parse_json(content)
+            return self._parse_json_response(content)
         except Exception as e:
             return {"error": f"Error classifying vulnerability: {str(e)}"}
 
-    async def explain_vulnerability(self, code_snippet, vulnerability):
-        """Generate detailed security explanation using Kimi model"""
+    async def explain_vulnerability(self, code_snippet: str, vulnerability: Dict[str, Any]) -> str:
+        """Generate detailed security explanation using AI"""
+        
         user_prompt = (
-            f"Explain this security vulnerability in detail for developers:\n"
-            f"CODE:\n```\n{code_snippet}\n```\n"
-            f"VULNERABILITY: {vulnerability['title']}\n"
+            f"Explain this security vulnerability in detail for developers:\n\n"
+            f"CODE:\n```\n{code_snippet}\n```\n\n"
+            f"VULNERABILITY: {vulnerability.get('title', 'Unknown')}\n"
             f"DESCRIPTION: {vulnerability.get('description', 'No description')}\n"
-            "Explain:\n1. What is the security risk?\n2. How could this be exploited?\n"
-            "3. What are potential impacts?\n4. Best practices to prevent this?\n"
-            "Provide clear, educational explanation."
+            f"SEVERITY: {vulnerability.get('severity', 'Unknown')}\n\n"
+            "Provide a comprehensive explanation covering:\n"
+            "1. What is the security risk?\n"
+            "2. How could this be exploited?\n"
+            "3. What are the potential impacts?\n"
+            "4. Best practices to prevent this vulnerability?\n\n"
+            "Make it educational and easy to understand for developers."
         )
         
         try:
-            # Use Kimi for detailed explanations
-            response = await self._call_openrouter(
+            response = await self._call_llm(
                 [{"role": "user", "content": user_prompt}], 
-                max_tokens=1000, temperature=0.2, model=self.explanation_model
+                self.explanation_model, 
+                max_tokens=1000, 
+                temperature=0.2
             )
             return response['choices'][0]['message']['content']
         except Exception as e:
             return f"Error generating explanation: {str(e)}"
 
-    def get_model_recommendations(self):
+    def get_model_recommendations(self) -> Dict[str, Any]:
         """Return current model configuration and recommendations"""
         return {
             "patch_generation": self.patch_model,
             "quality_assessment": self.assessment_model, 
             "fast_classification": self.classification_model,
             "explanations": self.explanation_model,
+            "available_models": settings.AVAILABLE_MODELS,
             "recommendations": {
-                "code_patches": "DeepCoder - Optimized for code generation and diffs",
-                "quality_review": "LLaMA 3.3 - Balanced, high-quality analysis",
-                "fast_triage": "Qwen - Fast vulnerability classification",
-                "security_education": "Kimi - Detailed explanations and guidance"
+                "best_quality": "openai/gpt-4 - Highest quality analysis and fixes",
+                "cost_effective": "openai/gpt-3.5-turbo - Good quality, lower cost",
+                "free_options": "Use OpenRouter free models for testing"
+            },
+            "api_status": {
+                "openai_available": bool(settings.OPENAI_API_KEY),
+                "openrouter_available": bool(settings.OPENROUTER_API_KEY)
             }
         }
 
-    def _parse_response(self, content: str) -> dict:
-        """Parse LLM response and extract JSON"""
+    def _parse_json_response(self, content: str) -> Dict[str, Any]:
+        """Parse JSON response from LLM, handling various formats"""
         try:
             # Look for JSON in code blocks
             json_match = re.search(r'```json\n({.*?})\n```', content, re.DOTALL)
@@ -172,29 +225,18 @@ class LLMService:
             if json_match:
                 return json.loads(json_match.group())
             
-            # Fallback if JSON parsing fails
+            # If no JSON found, return the content as explanation
             return {
-                "diff": content,
-                "explanation": "Generated diff patch",
+                "explanation": content,
                 "confidence": "MEDIUM",
                 "potential_issues": [],
                 "additional_recommendations": []
             }
+            
         except json.JSONDecodeError:
             return {
-                "diff": content,
-                "explanation": "Generated diff patch",
-                "confidence": "MEDIUM",
+                "explanation": content,
+                "confidence": "MEDIUM", 
                 "potential_issues": ["JSON parsing failed"],
-                "additional_recommendations": ["Verify diff manually"]
+                "additional_recommendations": ["Manual review recommended"]
             }
-
-    def _parse_json(self, content: str) -> dict:
-        """Parse JSON response from assessment"""
-        try:
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-            return {"error": "Could not parse assessment response"}
-        except json.JSONDecodeError:
-            return {"error": "Invalid JSON format in assessment response"}
