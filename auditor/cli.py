@@ -174,13 +174,13 @@ def analyze(code, language, model, advanced):
         # Create agent and analyze
         agent = SecurityAgent()
         
-        result = agent.run(
+        result = asyncio.run(agent.run(
             code=code,
             language=language,
             filename="<direct_input>",
             preferred_model=model,
             use_advanced_analysis=advanced
-        )
+        ))
         
         # Display results
         click.echo("\n🔍 Analysis Results:")
