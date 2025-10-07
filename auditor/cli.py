@@ -325,13 +325,13 @@ API_KEY = "sk-1234567890abcdef"  # Hardcoded secret
         # Create agent and test
         agent = SecurityAgent()
         
-        result = agent.run(
+        result = asyncio.run(agent.run(
             code=test_code,
             language="python", 
             filename="test.py",
             preferred_model="openai/gpt-4",
             use_advanced_analysis=False
-        )
+        ))
         
         vulnerabilities = result.get('vulnerabilities', [])
         
