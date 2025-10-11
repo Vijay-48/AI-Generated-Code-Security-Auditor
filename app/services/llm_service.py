@@ -104,40 +104,33 @@ class LLMService:
         """Smart LLM caller - routes to appropriate API based on model and available keys"""
         
         # Determine which provider to use based on model prefix or name
-        # Models with "/" prefix (groq/, openai/, qwen/, etc.) are OpenRouter routing identifiers
-        # Only unprefixed native Groq models should go directly to Groq API
-        
-        has_provider_prefix = "/" in model
-        
-        # Native Groq models (no prefix, direct Groq API access)
-        is_native_groq_model = (
-            not has_provider_prefix and (
-                model.startswith("llama-3.") or 
-                model.startswith("llama3-") or
-                model.startswith("mixtral-") or
-                model.startswith("gemma-") or
-                model == "llama-3.1-8b-instant" or
-                model == "llama-3.3-70b-versatile"
-            )
+        # Groq models: groq/, llama-, mixtral-, gemma-, openai/gpt-oss-*
+        is_groq_model = (
+            model.startswith("groq/") or 
+            model.startswith("llama-") or 
+            model.startswith("mixtral-") or
+            model.startswith("gemma-") or
+            (model.startswith("openai/") and "gpt-oss" in model)
         )
         
-        # OpenRouter models (have provider prefix or are in OpenRouter catalog)
+        # OpenRouter models: everything else with a provider prefix or specific keywords
         is_openrouter_model = (
-            has_provider_prefix or  # Any model with provider/ prefix goes to OpenRouter
             "qwen" in model.lower() or
             "mistral" in model.lower() or
             "deepseek" in model.lower() or
             "kimi" in model.lower() or
             "nemotron" in model.lower() or
-            "glm" in model.lower()
+            "glm" in model.lower() or
+            model.startswith("meta-llama/") or
+            model.startswith("nvidia/")
         )
         
         try:
-            # Route to GroqCloud for native Groq models (no prefix)
-            if is_native_groq_model and settings.GROQ_API_KEY:
+            # Route to GroqCloud for Groq models
+            if is_groq_model and settings.GROQ_API_KEY:
                 return await self._call_groq(messages, model, max_tokens, temperature)
             
-            # Route to OpenRouter for models with provider prefix or OpenRouter-specific models
+            # Route to OpenRouter for OpenRouter models
             elif is_openrouter_model and settings.OPENROUTER_API_KEY:
                 return await self._call_openrouter(messages, model, max_tokens, temperature)
             
