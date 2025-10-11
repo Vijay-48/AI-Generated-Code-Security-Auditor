@@ -242,6 +242,159 @@ def analyze(code, language, model, advanced):
         sys.exit(1)
 
 @cli.command()
+@click.option('--path', required=True, help='File to scan and fix')
+@click.option('--model', default=None, help='AI model to use for fix generation')
+@click.option('--output-file', help='Save fixes to file')
+@click.option('--vuln-id', help='Fix specific vulnerability ID only')
+def fix(path, model, output_file, vuln_id):
+    """🔧 Generate code fix suggestions for vulnerabilities
+    
+    Scans a file and provides AI-generated code fixes for detected vulnerabilities.
+    
+    Examples:
+      python -m auditor.cli fix --path app.py
+      python -m auditor.cli fix --path app.py --output-file fixes.md
+      python -m auditor.cli fix --path app.py --vuln-id B605
+    """
+    
+    # Check API keys first
+    if not check_api_keys():
+        sys.exit(1)
+    
+    # Use default model if none specified
+    if not model:
+        model = settings.MODEL_CODE_GENERATION
+    
+    try:
+        path_obj = Path(path)
+        if not path_obj.exists():
+            click.echo(f"❌ File not found: {path}")
+            sys.exit(1)
+        
+        if not path_obj.is_file():
+            click.echo(f"❌ Path is not a file: {path}")
+            sys.exit(1)
+        
+        # Read code
+        with open(path_obj, 'r', encoding='utf-8', errors='ignore') as f:
+            code = f.read()
+        
+        language = SUPPORTED_EXTENSIONS.get(path_obj.suffix, 'python')
+        
+        click.echo(f"🔍 Scanning {path} for vulnerabilities...")
+        click.echo(f"🤖 Using model: {model}")
+        click.echo()
+        
+        # Scan and get fixes
+        agent = SecurityAgent()
+        result = asyncio.run(agent.run(
+            code=code,
+            language=language,
+            filename=str(path_obj.name),
+            preferred_model=model,
+            use_advanced_analysis=True
+        ))
+        
+        vulnerabilities = result.get('vulnerabilities', [])
+        patches = result.get('patches', [])
+        
+        if not vulnerabilities:
+            click.echo("✅ No vulnerabilities found! Your code looks secure.")
+            return
+        
+        # Filter by vuln_id if specified
+        if vuln_id:
+            vulnerabilities = [v for v in vulnerabilities if vuln_id in v.get('id', '')]
+            patches = [p for p in patches if vuln_id in p.get('vuln', {}).get('id', '')]
+        
+        # Generate fix report
+        fix_report = []
+        fix_report.append("# 🔧 AI-Generated Security Fixes")
+        fix_report.append(f"\n**File:** `{path}`")
+        fix_report.append(f"**Generated:** {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        fix_report.append(f"**Vulnerabilities Found:** {len(vulnerabilities)}")
+        fix_report.append("\n" + "=" * 80 + "\n")
+        
+        # Display fixes
+        for i, vuln in enumerate(vulnerabilities, 1):
+            severity_emoji = {
+                'CRITICAL': '🔴', 'HIGH': '🟠', 'MEDIUM': '🟡', 'LOW': '🟢'
+            }.get(vuln.get('severity', 'LOW'), '🔵')
+            
+            fix_report.append(f"\n## {severity_emoji} Vulnerability {i}: {vuln.get('title', 'Unknown')}")
+            fix_report.append(f"\n**ID:** `{vuln.get('id', 'Unknown')}`")
+            fix_report.append(f"**Severity:** {vuln.get('severity', 'Unknown')}")
+            fix_report.append(f"**Line:** {vuln.get('line_number', 'N/A')}")
+            fix_report.append(f"\n**Description:**")
+            fix_report.append(f"{vuln.get('description', 'No description')}")
+            
+            # Find matching patch
+            matching_patches = [p for p in patches if p.get('vuln', {}).get('id') == vuln.get('id')]
+            
+            if matching_patches:
+                for patch in matching_patches:
+                    patch_data = patch.get('patch', {})
+                    
+                    if 'error' in patch_data:
+                        fix_report.append(f"\n⚠️  **Fix Generation Error:** {patch_data['error']}")
+                        continue
+                    
+                    # Show fix explanation
+                    explanation = patch_data.get('explanation', 'No explanation available')
+                    fix_report.append(f"\n### 🛠️ Recommended Fix")
+                    fix_report.append(f"\n**Explanation:**")
+                    fix_report.append(f"{explanation}")
+                    
+                    # Show confidence
+                    confidence = patch_data.get('confidence', 'MEDIUM')
+                    fix_report.append(f"\n**Confidence:** {confidence}")
+                    
+                    # Show code diff
+                    diff = patch_data.get('diff', '')
+                    if diff:
+                        fix_report.append(f"\n**Code Changes:**")
+                        fix_report.append(f"```diff")
+                        fix_report.append(diff)
+                        fix_report.append(f"```")
+                    
+                    # Show potential issues
+                    issues = patch_data.get('potential_issues', [])
+                    if issues:
+                        fix_report.append(f"\n**⚠️ Potential Issues:**")
+                        for issue in issues:
+                            fix_report.append(f"- {issue}")
+                    
+                    # Show additional recommendations
+                    recommendations = patch_data.get('additional_recommendations', [])
+                    if recommendations:
+                        fix_report.append(f"\n**💡 Additional Recommendations:**")
+                        for rec in recommendations:
+                            fix_report.append(f"- {rec}")
+            else:
+                fix_report.append(f"\n⚠️  No automated fix available for this vulnerability.")
+                fix_report.append(f"💡 Manual review and remediation recommended.")
+            
+            fix_report.append("\n" + "-" * 80)
+        
+        # Output report
+        report_text = "\n".join(fix_report)
+        
+        if output_file:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(report_text)
+            click.echo(f"💾 Fix report saved to: {output_file}")
+        else:
+            click.echo(report_text)
+        
+        click.echo(f"\n📊 Summary: Generated fixes for {len(vulnerabilities)} vulnerabilities")
+        
+    except Exception as e:
+        click.echo(f"❌ Fix generation failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+@cli.command()
 def models():
     """📋 List available AI models and their capabilities
     
