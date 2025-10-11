@@ -14,24 +14,58 @@ class Settings(BaseSettings):
     
     # OpenRouter API Configuration
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1/chat/completions"
-    OPENROUTER_REFERER: str = "https://ai-code-security-auditor.com"
-    OPENROUTER_TITLE: str = "AI Code Security Auditor"
+    OPENROUTER_BASE_URL: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1/chat/completions")
+    OPENROUTER_REFERER: str = os.getenv("OPENROUTER_REFERER", "http://localhost:8000")
+    OPENROUTER_TITLE: str = os.getenv("OPENROUTER_TITLE", "AI Code Security Auditor")
     
-    # OpenAI API Configuration  
+    # GroqCloud API Configuration
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1/chat/completions")
+    
+    # OpenAI API Configuration (optional)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     
+    # Model Configuration - Primary Models
+    MODEL_PATCH_GENERATION: str = os.getenv("MODEL_PATCH_GENERATION", "groq/compound")
+    MODEL_QUALITY_ASSESSMENT: str = os.getenv("MODEL_QUALITY_ASSESSMENT", "qwen/qwen-2.5-72b-instruct")
+    MODEL_FAST_CLASSIFICATION: str = os.getenv("MODEL_FAST_CLASSIFICATION", "llama-3.1-8b-instant")
+    MODEL_CODE_GENERATION: str = os.getenv("MODEL_CODE_GENERATION", "qwen/qwen-2.5-coder-32b-instruct")
+    MODEL_SECURITY_ANALYSIS: str = os.getenv("MODEL_SECURITY_ANALYSIS", "openai/gpt-oss-20b")
+    MODEL_DETAILED_EXPLANATION: str = os.getenv("MODEL_DETAILED_EXPLANATION", "meta-llama/llama-3.3-70b-instruct")
+    
+    # Model Configuration - Secondary/Fallback Models
+    MODEL_PATCH_GENERATION_SECONDARY: str = os.getenv("MODEL_PATCH_GENERATION_SECONDARY", "qwen/qwen-2.5-coder-32b-instruct")
+    MODEL_QUALITY_ASSESSMENT_SECONDARY: str = os.getenv("MODEL_QUALITY_ASSESSMENT_SECONDARY", "meta-llama/llama-3.3-70b-instruct")
+    MODEL_FAST_CLASSIFICATION_SECONDARY: str = os.getenv("MODEL_FAST_CLASSIFICATION_SECONDARY", "qwen/qwen-2.5-coder-32b-instruct")
+    MODEL_DETAILED_EXPLANATION_SECONDARY: str = os.getenv("MODEL_DETAILED_EXPLANATION_SECONDARY", "qwen/qwen-2.5-72b-instruct")
+    
     # Available Models Configuration
-    DEFAULT_MODEL: str = "openai/gpt-4"
+    DEFAULT_MODEL: str = os.getenv("MODEL_CODE_GENERATION", "qwen/qwen-2.5-coder-32b-instruct")
     AVAILABLE_MODELS: dict = {
-        "openai/gpt-4": "OpenAI GPT-4 - Best overall analysis",
-        "openai/gpt-3.5-turbo": "OpenAI GPT-3.5 Turbo - Fast and efficient", 
-        "agentica-org/deepcoder-14b-preview:free": "DeepCoder - Code patches",
-        "meta-llama/llama-3.3-70b-instruct:free": "LLaMA 3.3 - Quality assessment",
-        "qwen/qwen-2.5-coder-32b-instruct:free": "Qwen - Fast classification",
-        "moonshotai/kimi-dev-72b:free": "Kimi - Security explanations"
+        # GroqCloud Models
+        "groq/compound": "Groq Compound - Built-in Python code execution for patches",
+        "groq/compound-mini": "Groq Compound Mini - Lightweight code execution",
+        "openai/gpt-oss-20b": "GPT-OSS 20B - Strong multi-purpose with code execution",
+        "openai/gpt-oss-120b": "GPT-OSS 120B - Large model with Python execution",
+        "llama-3.1-8b-instant": "LLaMA 3.1 8B - Ultra-fast classification",
+        "llama-3.3-70b-versatile": "LLaMA 3.3 70B - Advanced reasoning",
+        "meta-llama/llama-4-scout-17b": "LLaMA 4 Scout 17B - Advanced analysis",
+        "qwen/qwen3-32b": "Qwen3 32B - General reasoning, multilingual",
+        "moonshotai/kimi-k2-instruct": "Kimi K2 - Versatile chat and reasoning",
+        
+        # OpenRouter Models
+        "qwen/qwen-2.5-coder-32b-instruct": "Qwen2.5 Coder 32B - Optimized for code generation",
+        "qwen/qwen-3-coder-480b-a35b": "Qwen3 Coder 480B - Cutting edge for code",
+        "qwen/qwen-2.5-72b-instruct": "Qwen2.5 72B - High coding & math capabilities",
+        "meta-llama/llama-3.3-70b-instruct": "LLaMA 3.3 70B - Multilingual, instruction-tuned",
+        "mistralai/mistral-nemo": "Mistral Nemo 12B - 128K context, multilingual",
+        "meta-llama/llama-3.2-3b-instruct": "LLaMA 3.2 3B - Efficient NLP/coding",
+        "deepseek/deepseek-v3.1": "DeepSeek V3.1 - Advanced free AI model",
+        "moonshotai/kimi-dev-72b": "Kimi Dev 72B - Code and chat applications",
+        "nvidia/nemotron-nano-9b-v2": "NVIDIA Nemotron Nano 9B - High utility for coding",
+        "z-ai/glm-4.5-air": "GLM 4.5 Air - Free, code and research"
     }
     
     # Security Scanner Configuration
