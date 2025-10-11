@@ -89,11 +89,14 @@ def validate_api_keys():
     """Validate that required API keys are present"""
     errors = []
     
-    if not settings.OPENROUTER_API_KEY and not settings.OPENAI_API_KEY:
-        errors.append("❌ No API keys found! Set OPENROUTER_API_KEY or OPENAI_API_KEY")
+    if not settings.OPENROUTER_API_KEY and not settings.GROQ_API_KEY and not settings.OPENAI_API_KEY:
+        errors.append("❌ No API keys found! Set OPENROUTER_API_KEY, GROQ_API_KEY, or OPENAI_API_KEY")
     
     if settings.OPENROUTER_API_KEY and len(settings.OPENROUTER_API_KEY) < 10:
         errors.append("❌ OPENROUTER_API_KEY appears invalid (too short)")
+    
+    if settings.GROQ_API_KEY and len(settings.GROQ_API_KEY) < 10:
+        errors.append("❌ GROQ_API_KEY appears invalid (too short)")
         
     if settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith('sk-'):
         errors.append("❌ OPENAI_API_KEY appears invalid (should start with 'sk-')")
@@ -101,7 +104,8 @@ def validate_api_keys():
     if errors:
         print("\n".join(errors))
         print("\n📖 Get API keys from:")
-        print("   • OpenRouter: https://openrouter.ai/")  
+        print("   • OpenRouter: https://openrouter.ai/")
+        print("   • GroqCloud: https://console.groq.com/keys")
         print("   • OpenAI: https://platform.openai.com/api-keys")
         return False
     
