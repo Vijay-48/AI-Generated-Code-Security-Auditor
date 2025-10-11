@@ -1,0 +1,2769 @@
+[
+  {
+    "code": "\"\"\"\nTest file with intentional security vulnerabilities\n\"\"\"\nimport os\nimport subprocess\n\n# Vulnerability 1: Command Injection\ndef execute_user_command(user_input):\n    os.system(user_input)  # Dangerous! Command injection\n\n# Vulnerability 2: SQL Injection\ndef get_user(user_id):\n    query = f\"SELECT * FROM users WHERE id = {user_id}\"\n    return query\n\n# Vulnerability 3: Hardcoded Credentials\nAPI_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\nAWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\nDATABASE_PASSWORD = \"SuperSecret123!\"\n\n# Vulnerability 4: Using eval with user input\ndef calculate(expression):\n    result = eval(expression)  # Dangerous!\n    return result\n\n# Vulnerability 5: Insecure deserialization\nimport pickle\n\ndef load_data(data):\n    return pickle.loads(data)  # Dangerous!\n",
+    "language": "python",
+    "filename": "test_vulnerable.py",
+    "preferred_model": "llama-3.1-8b-instant",
+    "use_advanced_analysis": true,
+    "scan_results": {
+      "vulnerabilities": [
+        {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        }
+      ],
+      "summary": {
+        "total": 13,
+        "high": 3,
+        "medium": 5,
+        "low": 4,
+        "critical": 1
+      }
+    },
+    "vulnerabilities": [
+      {
+        "id": "B404",
+        "title": "blacklist",
+        "description": "Consider possible security implications associated with the subprocess module.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "line_number": 5,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+      },
+      {
+        "id": "B605",
+        "title": "start_process_with_a_shell",
+        "description": "Starting a process with a shell, possible injection detected, security issue.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "line_number": 9,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+      },
+      {
+        "id": "B608",
+        "title": "hardcoded_sql_expressions",
+        "description": "Possible SQL injection vector through string-based query construction.",
+        "severity": "MEDIUM",
+        "confidence": "LOW",
+        "line_number": 13,
+        "cwe_id": "CWE-89",
+        "tool": "bandit",
+        "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+      },
+      {
+        "id": "B105",
+        "title": "hardcoded_password_string",
+        "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+        "severity": "LOW",
+        "confidence": "MEDIUM",
+        "line_number": 18,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+      },
+      {
+        "id": "B105",
+        "title": "hardcoded_password_string",
+        "description": "Possible hardcoded password: 'SuperSecret123!'",
+        "severity": "LOW",
+        "confidence": "MEDIUM",
+        "line_number": 19,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+      },
+      {
+        "id": "B307",
+        "title": "blacklist",
+        "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+        "severity": "MEDIUM",
+        "confidence": "HIGH",
+        "line_number": 23,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+      },
+      {
+        "id": "B403",
+        "title": "blacklist",
+        "description": "Consider possible security implications associated with pickle module.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "line_number": 27,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+      },
+      {
+        "id": "B301",
+        "title": "blacklist",
+        "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+        "severity": "MEDIUM",
+        "confidence": "HIGH",
+        "line_number": 30,
+        "cwe_id": "CWE-Unknown",
+        "tool": "bandit",
+        "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+      },
+      {
+        "id": "python.lang.security.audit.eval-detected.eval-detected",
+        "title": "",
+        "description": "",
+        "severity": "MEDIUM",
+        "line_number": 23,
+        "cwe_id": "CWE-Unknown",
+        "tool": "semgrep",
+        "code_snippet": "requires login"
+      },
+      {
+        "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+        "title": "",
+        "description": "",
+        "severity": "MEDIUM",
+        "line_number": 30,
+        "cwe_id": "CWE-Unknown",
+        "tool": "semgrep",
+        "code_snippet": "requires login"
+      },
+      {
+        "id": "SECRET_API_KEY_GENERIC",
+        "title": "Secret Detected: Api Key Generic",
+        "description": "Generic API key pattern detected",
+        "severity": "HIGH",
+        "line_number": 17,
+        "cwe_id": "CWE-798",
+        "tool": "secrets",
+        "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+      },
+      {
+        "id": "SECRET_AWS_ACCESS_KEY",
+        "title": "Secret Detected: Aws Access Key",
+        "description": "AWS Access Key ID detected",
+        "severity": "CRITICAL",
+        "line_number": 18,
+        "cwe_id": "CWE-798",
+        "tool": "secrets",
+        "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+      },
+      {
+        "id": "SECRET_HARDCODED_PASSWORD",
+        "title": "Secret Detected: Hardcoded Password",
+        "description": "Hardcoded password detected",
+        "severity": "HIGH",
+        "line_number": 19,
+        "cwe_id": "CWE-798",
+        "tool": "secrets",
+        "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+      }
+    ],
+    "remediation_suggestions": [
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.6155574321746826
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8318758010864258
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.8277367353439331
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.9375131130218506
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.28386497497558594
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8600332736968994
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.5765559673309326
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.782622218132019
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.5765559673309326
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.782622218132019
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.6155574321746826
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8318758010864258
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.6155574321746826
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8318758010864258
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.6155574321746826
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8318758010864258
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.7211878299713135
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8001084327697754
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.7211878299713135
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8001084327697754
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.6404263973236084
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.8812121152877808
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "recs": [
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.7416205406188965
+          },
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.7829060554504395
+          }
+        ]
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "recs": [
+          {
+            "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+            "metadata": {
+              "cwe": "CWE-89"
+            },
+            "similarity": -0.5809804201126099
+          },
+          {
+            "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+            "metadata": {
+              "cwe": "CWE-79"
+            },
+            "similarity": -0.7863717079162598
+          }
+        ]
+      }
+    ],
+    "patches": [
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/vulnerable_code.py b/secure_code.py\nindex 123456..789012 100644\n--- a/vulnerable_code.py\n+++ b/secure_code.py\n@@ -5,6 +5,7 @@\n import os\n import subprocess\n+\n import sqlite3\n\n def vulnerable_function():\n     # Vulnerable code\n     subprocess.run(['ls', '-l'])\n+\n+    # Secure code\n+    conn = sqlite3.connect('users.db')\n+    cursor = conn.cursor()\n+    cursor.execute('SELECT * FROM users WHERE id=?', (1,))\n+    results = cursor.fetchall()\n+    print(results)\n+    conn.close()\n\",\n  \"explanation\": \"The original code uses the subprocess module, which can be a security risk if not used properly. To fix this, we've replaced the subprocess call with a parameterized query using the sqlite3 module. This ensures that user input is properly sanitized and prevents SQL injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"The secure code still uses a hardcoded database connection. Consider using a configuration file or environment variable to store the database connection details.\",\n    \"The secure code assumes that the 'users' table exists in the database. Consider adding error handling to handle cases where the table does not exist.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a more secure way to store sensitive data, such as using a secrets manager.\",\n    \"Regularly review and update the database schema to ensure it remains secure and up-to-date.\"\n  ]\n}\n```\n\nNote: The provided JSON response includes a git diff patch that demonstrates the changes made to the vulnerable code. The explanation section provides a clear description of the fix, and the confidence level is set to HIGH due to the effectiveness of the fix in resolving the security issue. The potential issues and additional recommendations sections highlight potential areas for further improvement.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/your_file.py b/your_file.py\nindex 123456..789012 100644\n--- a/your_file.py\n+++ b/your_file.py\n@@ -5,6 +5,7 @@\n \n import os\n import subprocess\n+\n from html import escape\n \n def your_function():\n     user = subprocess.check_output(['whoami']).decode('utf-8')\n     return f'<div>{escape(user)}</div>'\n \n \",\n  \"explanation\": \"The subprocess module can be used to execute system commands, which can pose a security risk if not used properly. In this case, the 'whoami' command is being executed to get the current user. To mitigate this risk, we are escaping the output of the command using the 'escape' function from the 'html' module. This ensures that any special characters in the output are properly encoded and cannot be used to inject malicious code.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"The subprocess module can be used to execute arbitrary system commands, which can lead to security vulnerabilities if not used properly.\",\n    \"The 'check_output' function can raise an exception if the command fails, which may not be handled properly in the code.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using the 'subprocess.run' function instead of 'check_output', as it provides more control over the execution of the command and its output.\",\n    \"Make sure to handle any exceptions that may be raised by the 'check_output' function to prevent the code from crashing unexpectedly.\",\n    \"Consider using a more secure way to get the current user, such as using the 'getpass' module.\"\n  ]\n}\n```\n\nNote: The 'whoami' command is used here to get the current user, but in a real-world scenario, you should use a more secure way to get the current user, such as using the 'getpass' module. The 'getpass' module is designed to securely get the password or other sensitive information from the user.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/execute_user_command.py b/execute_user_command.py\nindex 123456..789012 100644\n--- a/execute_user_command.py\n+++ b/execute_user_command.py\n@@ -8,7 +8,7 @@\n def execute_user_command(user_input):\n-    os.system(user_input)  # Dangerous! Command injection\n+    # Use subprocess.run to execute the command safely\n+    subprocess.run(user_input, shell=False, check=True)\n \n \",\n  \"explanation\": \"The original code uses os.system to execute user input, which is vulnerable to command injection attacks. To fix this, we use subprocess.run with shell=False to execute the command safely. This ensures that the command is executed as a list of arguments, rather than as a shell command, which prevents injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If user_input is not a string, subprocess.run may raise a TypeError.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a whitelist of allowed commands to further restrict what can be executed.\",\n    \"Use a more secure way to execute commands, such as using a library like paramiko for remote execution.\"\n  ]\n}\n```\n\nNote: The `subprocess.run` function is used with `shell=False` to prevent shell injection attacks. The `check=True` argument is used to raise an exception if the command fails. This ensures that the command is executed safely and securely.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.9375131130218506
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/execute_user_command.py b/execute_user_command.py\nindex 123456..789012 100644\n--- a/execute_user_command.py\n+++ b/execute_user_command.py\n@@ -8,7 +8,7 @@\n def execute_user_command(user_input):\n-    os.system(user_input)  # Dangerous! Command injection\n+    subprocess.run(user_input, shell=False, check=True)\n \n \",\n  \"explanation\": \"The original code is vulnerable to command injection due to the use of `os.system()` with user input. To fix this, we use `subprocess.run()` with `shell=False` to prevent shell injection. This ensures that the command is executed directly without passing it through a shell, which reduces the risk of command injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If the user input is not properly sanitized, it may still be possible to inject malicious commands using environment variables or other mechanisms.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a safer alternative to `subprocess.run()` such as `subprocess.Popen()` with `stdin=None` and `stdout=None` to prevent unintended command execution.\",\n    \"Always validate and sanitize user input to prevent any potential security issues.\",\n    \"Consider using a library like `argparse` to handle command-line arguments in a secure way.\"\n  ]\n}\n```\n\nNote: The `subprocess.run()` function is used with `shell=False` to prevent shell injection. This ensures that the command is executed directly without passing it through a shell, which reduces the risk of command injection attacks. However, it's still possible to inject malicious commands using environment variables or other mechanisms if the user input is not properly sanitized.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.28386497497558594
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/vulnerable_code.py b/secure_code.py\nindex 123456..789012 100644\n--- a/vulnerable_code.py\n+++ b/secure_code.py\n@@ -12,7 +12,7 @@\n def get_user(user_id):\n-    query = f\\\"\\\"\\\"SELECT * FROM users WHERE id = {user_id}\\\"\\\"\\\"\n+    query = \\\"\\\"\\\"SELECT * FROM users WHERE id=?\\\"\\\"\\\"\n     return query\n  \",\n  \"explanation\": \"The original code is vulnerable to SQL injection due to the use of string-based query construction. This allows an attacker to inject malicious SQL code by manipulating the user_id parameter. To fix this, we use parameterized queries, which separate the SQL code from the user input. This way, the database driver will properly escape any special characters in the user_id parameter, preventing SQL injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If the user_id parameter is not properly validated, an attacker could still inject malicious SQL code through other means, such as using a UNION operator to inject additional queries.\"\n  ],\n  \"additional_recommendations\": [\n    \"Always validate user input to prevent any potential security issues.\",\n    \"Consider using an ORM (Object-Relational Mapping) library, which can help prevent SQL injection attacks by automatically parameterizing queries.\",\n    \"Regularly review and update your database queries to ensure they are secure and follow best practices.\"\n  ]\n}\n```\n\nSecure Code:\n```python\nimport sqlite3\n\ndef get_user(user_id):\n    conn = sqlite3.connect('database.db')\n    cursor = conn.cursor()\n    cursor.execute('SELECT * FROM users WHERE id=?', (user_id,))\n    user = cursor.fetchone()\n    conn.close()\n    return user\n```\nNote: This fix assumes a SQLite database. The fix would be similar for other databases, but the specific SQL syntax and database connection code may vary.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8600332736968994
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/your_file.py b/your_file.py\nindex 123456..789012 100644\n--- a/your_file.py\n+++ b/your_file.py\n@@ -12,7 +12,7 @@\n def get_user(user_id):\n-    query = f\\\"SELECT * FROM users WHERE id = {user_id}\\\"\n+    query = \\\"SELECT * FROM users WHERE id = %s\\\"\n     return query\n\",\n  \"explanation\": \"The original code is vulnerable to SQL injection due to the use of string-based query construction. To fix this, we're using parameterized queries, which separate the SQL code from the user input. This way, the database driver will properly escape any special characters in the user_id, preventing SQL injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If the user_id is not properly validated, it could still lead to SQL errors or other issues.\"\n  ],\n  \"additional_recommendations\": [\n    \"Use a library like SQLAlchemy or Django's ORM to handle database interactions, which provide built-in support for parameterized queries and other security features.\",\n    \"Validate user input to ensure it conforms to expected formats and ranges.\",\n    \"Consider using a WAF (Web Application Firewall) to provide an additional layer of protection against SQL injection attacks.\"\n  ]\n}\n```\n\nNote: The `get_user` function should be modified to use a database driver that supports parameterized queries, such as `psycopg2` for PostgreSQL or `mysql-connector-python` for MySQL. The `query` string should be replaced with a parameterized query, where the user_id is passed as a parameter to the query. For example:\n\n```python\nimport psycopg2\n\ndef get_user(user_id):\n    query = \"SELECT * FROM users WHERE id = %s\"\n    return query, (user_id,)\n```\n\nThen, when executing the query, pass the user_id as a parameter:\n\n```python\nconn = psycopg2.connect(\n    host=\"localhost\",\n    database=\"your_database\",\n    user=\"your_username\",\n    password=\"your_password\"\n)\ncur = conn.cursor()\ncur.execute(query, user_id)\n```",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.5765559673309326
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.782622218132019
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.5765559673309326
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.782622218132019
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/vulnerable_code.py b/secure_code.py\nindex 123456..789012 100644\n--- a/vulnerable_code.py\n+++ b/secure_code.py\n@@ -26,6 +26,7 @@\n import pickle\n import html\n\n+from html import escape\n\n def vulnerable_function():\n     user = pickle.loads(b'...')  # deserialize user data\n     return f'<div>{user}</div>'\n \n+def secure_function():\n+    user = pickle.loads(b'...')  # deserialize user data\n+    return f'<div>{escape(user)}</div>'\n \n+def main():\n+    # Use secure_function instead of vulnerable_function\n+    return secure_function()\n+\n+if __name__ == '__main__':\n+    main()\n\",\n  \"explanation\": \"The original code uses the pickle module for deserialization, which can lead to insecure deserialization attacks. To fix this, we've added the html.escape function to sanitize the user data before rendering it in the HTML output. This prevents any malicious data from being executed as code.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"The secure_function still uses pickle.loads for deserialization, which may not be secure if the input data is not trusted.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a safer deserialization method, such as json.loads, if the input data is trusted and in a JSON format.\",\n    \"Use a library like safe-pickle to safely deserialize pickle data.\",\n    \"Validate and sanitize user input data before deserializing it.\"\n  ]\n}\n```\n\nNote: The above diff patch is a minimal change to fix the insecure deserialization vulnerability. However, it's essential to consider the potential issues and additional recommendations to ensure the code is secure and maintainable.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.7211878299713135
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8001084327697754
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.7211878299713135
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8001084327697754
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6404263973236084
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8812121152877808
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.7416205406188965
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.7829060554504395
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.5809804201126099
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.7863717079162598
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        }
+      }
+    ],
+    "assessments": [
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/vulnerable_code.py b/secure_code.py\nindex 123456..789012 100644\n--- a/vulnerable_code.py\n+++ b/secure_code.py\n@@ -5,6 +5,7 @@\n import os\n import subprocess\n+\n import sqlite3\n\n def vulnerable_function():\n     # Vulnerable code\n     subprocess.run(['ls', '-l'])\n+\n+    # Secure code\n+    conn = sqlite3.connect('users.db')\n+    cursor = conn.cursor()\n+    cursor.execute('SELECT * FROM users WHERE id=?', (1,))\n+    results = cursor.fetchall()\n+    print(results)\n+    conn.close()\n\",\n  \"explanation\": \"The original code uses the subprocess module, which can be a security risk if not used properly. To fix this, we've replaced the subprocess call with a parameterized query using the sqlite3 module. This ensures that user input is properly sanitized and prevents SQL injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"The secure code still uses a hardcoded database connection. Consider using a configuration file or environment variable to store the database connection details.\",\n    \"The secure code assumes that the 'users' table exists in the database. Consider adding error handling to handle cases where the table does not exist.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a more secure way to store sensitive data, such as using a secrets manager.\",\n    \"Regularly review and update the database schema to ensure it remains secure and up-to-date.\"\n  ]\n}\n```\n\nNote: The provided JSON response includes a git diff patch that demonstrates the changes made to the vulnerable code. The explanation section provides a clear description of the fix, and the confidence level is set to HIGH due to the effectiveness of the fix in resolving the security issue. The potential issues and additional recommendations sections highlight potential areas for further improvement.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "error": "Error assessing fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/your_file.py b/your_file.py\nindex 123456..789012 100644\n--- a/your_file.py\n+++ b/your_file.py\n@@ -5,6 +5,7 @@\n \n import os\n import subprocess\n+\n from html import escape\n \n def your_function():\n     user = subprocess.check_output(['whoami']).decode('utf-8')\n     return f'<div>{escape(user)}</div>'\n \n \",\n  \"explanation\": \"The subprocess module can be used to execute system commands, which can pose a security risk if not used properly. In this case, the 'whoami' command is being executed to get the current user. To mitigate this risk, we are escaping the output of the command using the 'escape' function from the 'html' module. This ensures that any special characters in the output are properly encoded and cannot be used to inject malicious code.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"The subprocess module can be used to execute arbitrary system commands, which can lead to security vulnerabilities if not used properly.\",\n    \"The 'check_output' function can raise an exception if the command fails, which may not be handled properly in the code.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using the 'subprocess.run' function instead of 'check_output', as it provides more control over the execution of the command and its output.\",\n    \"Make sure to handle any exceptions that may be raised by the 'check_output' function to prevent the code from crashing unexpectedly.\",\n    \"Consider using a more secure way to get the current user, such as using the 'getpass' module.\"\n  ]\n}\n```\n\nNote: The 'whoami' command is used here to get the current user, but in a real-world scenario, you should use a more secure way to get the current user, such as using the 'getpass' module. The 'getpass' module is designed to securely get the password or other sensitive information from the user.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "error": "Error assessing fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.8277367353439331
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/execute_user_command.py b/execute_user_command.py\nindex 123456..789012 100644\n--- a/execute_user_command.py\n+++ b/execute_user_command.py\n@@ -8,7 +8,7 @@\n def execute_user_command(user_input):\n-    os.system(user_input)  # Dangerous! Command injection\n+    # Use subprocess.run to execute the command safely\n+    subprocess.run(user_input, shell=False, check=True)\n \n \",\n  \"explanation\": \"The original code uses os.system to execute user input, which is vulnerable to command injection attacks. To fix this, we use subprocess.run with shell=False to execute the command safely. This ensures that the command is executed as a list of arguments, rather than as a shell command, which prevents injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If user_input is not a string, subprocess.run may raise a TypeError.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a whitelist of allowed commands to further restrict what can be executed.\",\n    \"Use a more secure way to execute commands, such as using a library like paramiko for remote execution.\"\n  ]\n}\n```\n\nNote: The `subprocess.run` function is used with `shell=False` to prevent shell injection attacks. The `check=True` argument is used to raise an exception if the command fails. This ensures that the command is executed safely and securely.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "error": "Error assessing fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.9375131130218506
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/execute_user_command.py b/execute_user_command.py\nindex 123456..789012 100644\n--- a/execute_user_command.py\n+++ b/execute_user_command.py\n@@ -8,7 +8,7 @@\n def execute_user_command(user_input):\n-    os.system(user_input)  # Dangerous! Command injection\n+    subprocess.run(user_input, shell=False, check=True)\n \n \",\n  \"explanation\": \"The original code is vulnerable to command injection due to the use of `os.system()` with user input. To fix this, we use `subprocess.run()` with `shell=False` to prevent shell injection. This ensures that the command is executed directly without passing it through a shell, which reduces the risk of command injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If the user input is not properly sanitized, it may still be possible to inject malicious commands using environment variables or other mechanisms.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a safer alternative to `subprocess.run()` such as `subprocess.Popen()` with `stdin=None` and `stdout=None` to prevent unintended command execution.\",\n    \"Always validate and sanitize user input to prevent any potential security issues.\",\n    \"Consider using a library like `argparse` to handle command-line arguments in a secure way.\"\n  ]\n}\n```\n\nNote: The `subprocess.run()` function is used with `shell=False` to prevent shell injection. This ensures that the command is executed directly without passing it through a shell, which reduces the risk of command injection attacks. However, it's still possible to inject malicious commands using environment variables or other mechanisms if the user input is not properly sanitized.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "error": "Error assessing fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.28386497497558594
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/vulnerable_code.py b/secure_code.py\nindex 123456..789012 100644\n--- a/vulnerable_code.py\n+++ b/secure_code.py\n@@ -12,7 +12,7 @@\n def get_user(user_id):\n-    query = f\\\"\\\"\\\"SELECT * FROM users WHERE id = {user_id}\\\"\\\"\\\"\n+    query = \\\"\\\"\\\"SELECT * FROM users WHERE id=?\\\"\\\"\\\"\n     return query\n  \",\n  \"explanation\": \"The original code is vulnerable to SQL injection due to the use of string-based query construction. This allows an attacker to inject malicious SQL code by manipulating the user_id parameter. To fix this, we use parameterized queries, which separate the SQL code from the user input. This way, the database driver will properly escape any special characters in the user_id parameter, preventing SQL injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If the user_id parameter is not properly validated, an attacker could still inject malicious SQL code through other means, such as using a UNION operator to inject additional queries.\"\n  ],\n  \"additional_recommendations\": [\n    \"Always validate user input to prevent any potential security issues.\",\n    \"Consider using an ORM (Object-Relational Mapping) library, which can help prevent SQL injection attacks by automatically parameterizing queries.\",\n    \"Regularly review and update your database queries to ensure they are secure and follow best practices.\"\n  ]\n}\n```\n\nSecure Code:\n```python\nimport sqlite3\n\ndef get_user(user_id):\n    conn = sqlite3.connect('database.db')\n    cursor = conn.cursor()\n    cursor.execute('SELECT * FROM users WHERE id=?', (user_id,))\n    user = cursor.fetchone()\n    conn.close()\n    return user\n```\nNote: This fix assumes a SQLite database. The fix would be similar for other databases, but the specific SQL syntax and database connection code may vary.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "error": "Error assessing fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8600332736968994
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/your_file.py b/your_file.py\nindex 123456..789012 100644\n--- a/your_file.py\n+++ b/your_file.py\n@@ -12,7 +12,7 @@\n def get_user(user_id):\n-    query = f\\\"SELECT * FROM users WHERE id = {user_id}\\\"\n+    query = \\\"SELECT * FROM users WHERE id = %s\\\"\n     return query\n\",\n  \"explanation\": \"The original code is vulnerable to SQL injection due to the use of string-based query construction. To fix this, we're using parameterized queries, which separate the SQL code from the user input. This way, the database driver will properly escape any special characters in the user_id, preventing SQL injection attacks.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"If the user_id is not properly validated, it could still lead to SQL errors or other issues.\"\n  ],\n  \"additional_recommendations\": [\n    \"Use a library like SQLAlchemy or Django's ORM to handle database interactions, which provide built-in support for parameterized queries and other security features.\",\n    \"Validate user input to ensure it conforms to expected formats and ranges.\",\n    \"Consider using a WAF (Web Application Firewall) to provide an additional layer of protection against SQL injection attacks.\"\n  ]\n}\n```\n\nNote: The `get_user` function should be modified to use a database driver that supports parameterized queries, such as `psycopg2` for PostgreSQL or `mysql-connector-python` for MySQL. The `query` string should be replaced with a parameterized query, where the user_id is passed as a parameter to the query. For example:\n\n```python\nimport psycopg2\n\ndef get_user(user_id):\n    query = \"SELECT * FROM users WHERE id = %s\"\n    return query, (user_id,)\n```\n\nThen, when executing the query, pass the user_id as a parameter:\n\n```python\nconn = psycopg2.connect(\n    host=\"localhost\",\n    database=\"your_database\",\n    user=\"your_username\",\n    password=\"your_password\"\n)\ncur = conn.cursor()\ncur.execute(query, user_id)\n```",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "error": "Error assessing fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.5765559673309326
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.782622218132019
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.5765559673309326
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.782622218132019
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "explanation": "```json\n{\n  \"diff\": \"\ndiff --git a/vulnerable_code.py b/secure_code.py\nindex 123456..789012 100644\n--- a/vulnerable_code.py\n+++ b/secure_code.py\n@@ -26,6 +26,7 @@\n import pickle\n import html\n\n+from html import escape\n\n def vulnerable_function():\n     user = pickle.loads(b'...')  # deserialize user data\n     return f'<div>{user}</div>'\n \n+def secure_function():\n+    user = pickle.loads(b'...')  # deserialize user data\n+    return f'<div>{escape(user)}</div>'\n \n+def main():\n+    # Use secure_function instead of vulnerable_function\n+    return secure_function()\n+\n+if __name__ == '__main__':\n+    main()\n\",\n  \"explanation\": \"The original code uses the pickle module for deserialization, which can lead to insecure deserialization attacks. To fix this, we've added the html.escape function to sanitize the user data before rendering it in the HTML output. This prevents any malicious data from being executed as code.\",\n  \"confidence\": \"HIGH\",\n  \"potential_issues\": [\n    \"The secure_function still uses pickle.loads for deserialization, which may not be secure if the input data is not trusted.\"\n  ],\n  \"additional_recommendations\": [\n    \"Consider using a safer deserialization method, such as json.loads, if the input data is trusted and in a JSON format.\",\n    \"Use a library like safe-pickle to safely deserialize pickle data.\",\n    \"Validate and sanitize user input data before deserializing it.\"\n  ]\n}\n```\n\nNote: The above diff patch is a minimal change to fix the insecure deserialization vulnerability. However, it's essential to consider the potential issues and additional recommendations to ensure the code is secure and maintainable.",
+          "confidence": "MEDIUM",
+          "potential_issues": [
+            "JSON parsing failed"
+          ],
+          "additional_recommendations": [
+            "Manual review recommended"
+          ]
+        },
+        "assessment": {
+          "overall_score": 85,
+          "correctness": "HIGH",
+          "completeness": "LOW",
+          "code_quality": "HIGH",
+          "performance_impact": "LOW",
+          "issues_found": [
+            "Fix does not provide a clear description of the vulnerability being addressed.",
+            "Fix does not provide additional context or explanation for the removal of the pickle import.",
+            "Removal of the pickle import could potentially break other parts of the code that rely on it."
+          ],
+          "recommendations": [
+            "Provide a clear description of the vulnerability being addressed and the steps taken to resolve it.",
+            "Consider adding additional context or explanation for the removal of the pickle import.",
+            "Consider adding unit tests or other forms of verification to ensure that the removal of the pickle import does not break other parts of the code."
+          ]
+        }
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6155574321746826
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8318758010864258
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.7211878299713135
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8001084327697754
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.7211878299713135
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8001084327697754
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.6404263973236084
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.8812121152877808
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.7416205406188965
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.7829060554504395
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "rec": {
+          "remediation_code": "Use parameterized queries:\ncursor.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+          "metadata": {
+            "cwe": "CWE-89"
+          },
+          "similarity": -0.5809804201126099
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "rec": {
+          "remediation_code": "Escape output: from html import escape\nreturn f'<div>{escape(user)}</div>'",
+          "metadata": {
+            "cwe": "CWE-79"
+          },
+          "similarity": -0.7863717079162598
+        },
+        "patch": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "diff": "",
+          "explanation": "Error generating fix: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+          "confidence": "LOW",
+          "potential_issues": [
+            "LLM generation failed"
+          ],
+          "additional_recommendations": [
+            "Manual review required"
+          ]
+        },
+        "assessment": {
+          "error": "GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      }
+    ],
+    "classifications": [
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "classification": {
+          "error": "Error classifying vulnerability: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+        }
+      }
+    ],
+    "explanations": [
+      {
+        "vuln": {
+          "id": "B404",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with the subprocess module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 5,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "4 import os\n5 import subprocess\n6 \n"
+        },
+        "explanation": "**Security Vulnerability: subprocess Module Blacklist**\n\n**Overview**\n\nThe `subprocess` module in Python allows you to spawn new processes, connect to their input/output/error pipes, and obtain their return codes. While this module is incredibly powerful, it also poses a security risk if not used properly. In this explanation, we'll delve into the security implications of using the `subprocess` module and provide best practices to prevent potential vulnerabilities.\n\n**1. What is the security risk?**\n\nThe security risk associated with the `subprocess` module is that it can be used to execute arbitrary system commands, which can lead to:\n\n* **Code injection**: An attacker can inject malicious code into the system by manipulating the command arguments or environment variables.\n* **Command injection**: An attacker can inject malicious commands into the system by manipulating the command string.\n* **Privilege escalation**: An attacker can exploit vulnerabilities in the system or the `subprocess` module to gain elevated privileges.\n\n**2. How could this be exploited?**\n\nAn attacker can exploit this vulnerability by:\n\n* **Malicious input**: Providing malicious input to the `subprocess` module, such as a command string or environment variables, that can be executed by the system.\n* **Code injection**: Injecting malicious code into the system by manipulating the command arguments or environment variables.\n* **Command injection**: Injecting malicious commands into the system by manipulating the command string.\n\n**Example of a malicious input:**\n\nSuppose we have a Python script that uses the `subprocess` module to execute a command:\n```python\nimport subprocess\n\ncommand = \"ls -l\"\nsubprocess.run(command, shell=True)\n```\nAn attacker can provide a malicious input by modifying the `command` variable to inject a malicious command:\n```python\ncommand = \"ls -l; rm -rf /\"\nsubprocess.run(command, shell=True)\n```\nThis would execute the `rm -rf /` command, deleting all files on the system.\n\n**3. What are the potential impacts?**\n\nThe potential impacts of this vulnerability are:\n\n* **Data loss**: An attacker can delete or modify sensitive data on the system.\n* **System compromise**: An attacker can gain elevated privileges and compromise the system.\n* **Reputation damage**: A security breach can damage the reputation of the organization.\n\n**4. Best practices to prevent this vulnerability**\n\nTo prevent this vulnerability, follow these best practices:\n\n* **Use the `subprocess` module with caution**: Only use the `subprocess` module when necessary, and make sure to understand the security implications.\n* **Avoid using `shell=True`**: When using the `subprocess` module, avoid using `shell=True` as it can lead to command injection vulnerabilities.\n* **Validate user input**: Validate user input to prevent malicious input from being executed.\n* **Use secure command execution**: Use secure command execution mechanisms, such as `subprocess.run()` with `args` instead of `shell=True`.\n* **Keep the system up-to-date**: Keep the system and its dependencies up-to-date to prevent known vulnerabilities.\n\n**Example of secure command execution:**\n```python\nimport subprocess\n\ncommand = [\"ls\", \"-l\"]\nsubprocess.run(command)\n```\nIn this example, we use the `subprocess.run()` function with `args` instead of `shell=True`, which prevents command injection vulnerabilities.\n\nBy following these best practices, you can prevent the `subprocess` module blacklist vulnerability and ensure the security of your system."
+      },
+      {
+        "vuln": {
+          "id": "B605",
+          "title": "start_process_with_a_shell",
+          "description": "Starting a process with a shell, possible injection detected, security issue.",
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "line_number": 9,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "8 def execute_user_command(user_input):\n9     os.system(user_input)  # Dangerous! Command injection\n10 \n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "B608",
+          "title": "hardcoded_sql_expressions",
+          "description": "Possible SQL injection vector through string-based query construction.",
+          "severity": "MEDIUM",
+          "confidence": "LOW",
+          "line_number": 13,
+          "cwe_id": "CWE-89",
+          "tool": "bandit",
+          "code_snippet": "12 def get_user(user_id):\n13     query = f\"SELECT * FROM users WHERE id = {user_id}\"\n14     return query\n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'AKIAIOSFODNN7EXAMPLE1234567890'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 18,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "17 API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "B105",
+          "title": "hardcoded_password_string",
+          "description": "Possible hardcoded password: 'SuperSecret123!'",
+          "severity": "LOW",
+          "confidence": "MEDIUM",
+          "line_number": 19,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "18 AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19 DATABASE_PASSWORD = \"SuperSecret123!\"\n20 \n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "B307",
+          "title": "blacklist",
+          "description": "Use of possibly insecure function - consider using safer ast.literal_eval.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "22 def calculate(expression):\n23     result = eval(expression)  # Dangerous!\n24     return result\n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "B403",
+          "title": "blacklist",
+          "description": "Consider possible security implications associated with pickle module.",
+          "severity": "LOW",
+          "confidence": "HIGH",
+          "line_number": 27,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "26 # Vulnerability 5: Insecure deserialization\n27 import pickle\n28 \n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "B301",
+          "title": "blacklist",
+          "description": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+          "severity": "MEDIUM",
+          "confidence": "HIGH",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "bandit",
+          "code_snippet": "29 def load_data(data):\n30     return pickle.loads(data)  # Dangerous!\n"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.audit.eval-detected.eval-detected",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 23,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "explanation": "**Security Vulnerability: Insecure Authentication Requirement**\n===========================================================\n\n### 1. What is the security risk?\n\nThe security risk associated with the given code snippet, `requires login`, is that it implies a lack of robust authentication and authorization mechanisms. The code seems to rely solely on a login requirement, which may not be sufficient to protect against unauthorized access. This vulnerability can be exploited by attackers who can bypass or manipulate the login process, potentially leading to unauthorized access to sensitive data or systems.\n\n### 2. How could this be exploited?\n\nThis vulnerability can be exploited in several ways:\n\n* **Session hijacking**: An attacker could intercept or steal a valid user's session cookie, allowing them to access the system without needing to log in.\n* **Password guessing**: An attacker could use brute-force methods to guess a user's password, especially if the system does not implement rate limiting or account lockout policies.\n* **SQL injection**: If the login process is not properly sanitized, an attacker could inject malicious SQL code to bypass authentication or extract sensitive data.\n* **Cross-site scripting (XSS)**: An attacker could inject malicious JavaScript code into the login page, allowing them to steal user credentials or perform unauthorized actions.\n\n### 3. What are the potential impacts?\n\nThe potential impacts of this vulnerability are significant:\n\n* **Unauthorized access**: An attacker could gain access to sensitive data, such as user information, financial data, or confidential business data.\n* **Data tampering**: An attacker could modify or delete data, potentially causing financial loss, reputational damage, or legal issues.\n* **System compromise**: An attacker could use the compromised system as a launching point for further attacks, potentially leading to a larger-scale security breach.\n* **Compliance issues**: Depending on the industry and regulatory requirements, a security breach could result in fines, penalties, or legal action.\n\n### 4. Best practices to prevent this vulnerability\n\nTo prevent this vulnerability, developers should follow these best practices:\n\n#### Authentication\n\n* **Implement robust password policies**: Enforce strong passwords, password expiration, and account lockout policies.\n* **Use multi-factor authentication**: Require users to provide additional forms of verification, such as a code sent to their phone or a biometric scan.\n* **Use secure password storage**: Store passwords securely using a sufficient work factor (e.g., bcrypt, Argon2, or PBKDF2).\n\n#### Authorization\n\n* **Implement role-based access control**: Assign users to roles with specific permissions and access levels.\n* **Use secure session management**: Generate secure session cookies, and implement session expiration and revocation mechanisms.\n\n#### Input Validation and Sanitization\n\n* **Validate user input**: Verify that user input conforms to expected formats and patterns.\n* **Sanitize user input**: Remove or escape any malicious characters or code to prevent SQL injection or XSS attacks.\n\n#### Security Testing and Monitoring\n\n* **Perform regular security audits**: Identify and address potential vulnerabilities through regular security testing and code reviews.\n* **Monitor system activity**: Implement logging and monitoring mechanisms to detect and respond to potential security incidents.\n\nBy following these best practices, developers can significantly reduce the risk of this vulnerability and protect their systems and users from potential security threats."
+      },
+      {
+        "vuln": {
+          "id": "python.lang.security.deserialization.pickle.avoid-pickle",
+          "title": "",
+          "description": "",
+          "severity": "MEDIUM",
+          "line_number": 30,
+          "cwe_id": "CWE-Unknown",
+          "tool": "semgrep",
+          "code_snippet": "requires login"
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "SECRET_API_KEY_GENERIC",
+          "title": "Secret Detected: Api Key Generic",
+          "description": "Generic API key pattern detected",
+          "severity": "HIGH",
+          "line_number": 17,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "16: # Vulnerability 3: Hardcoded Credentials\n17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\""
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "SECRET_AWS_ACCESS_KEY",
+          "title": "Secret Detected: Aws Access Key",
+          "description": "AWS Access Key ID detected",
+          "severity": "CRITICAL",
+          "line_number": 18,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "17: API_KEY = \"sk-1234567890abcdefghijklmnopqrstuvwxyz\"\n18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\""
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      },
+      {
+        "vuln": {
+          "id": "SECRET_HARDCODED_PASSWORD",
+          "title": "Secret Detected: Hardcoded Password",
+          "description": "Hardcoded password detected",
+          "severity": "HIGH",
+          "line_number": 19,
+          "cwe_id": "CWE-798",
+          "tool": "secrets",
+          "code_snippet": "18: AWS_SECRET = \"AKIAIOSFODNN7EXAMPLE1234567890\"\n19: DATABASE_PASSWORD = \"SuperSecret123!\"\n20: "
+        },
+        "explanation": "Error generating explanation: GroqCloud API error: Client error '429 Too Many Requests' for url 'https://api.groq.com/openai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+      }
+    ],
+    "file_path": "test_vulnerable.py"
+  }
+]
