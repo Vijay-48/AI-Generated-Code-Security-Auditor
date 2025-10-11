@@ -232,7 +232,266 @@ The fix is minimal, follows Python best practices, and should work reliably acro
 
 ---
 
+---
+
+## 📂 Scanning External Folders & Projects
+
+### How to Scan Any Directory on Your Computer
+
+The CLI can scan files anywhere on your system, not just the test files!
+
+#### Scan a Specific File
+```bash
+# Scan a file in another directory
+python -m auditor.cli scan --path C:\Users\YourName\Documents\project\app.py
+
+# Linux/Mac
+python -m auditor.cli scan --path /home/user/projects/myapp/server.py
+```
+
+#### Scan an Entire Directory
+```bash
+# Windows - scan entire project folder
+python -m auditor.cli scan --path C:\Users\YourName\Documents\MyProject
+
+# Linux/Mac - scan entire project
+python -m auditor.cli scan --path /home/user/projects/myapp/
+```
+
+#### Scan Multiple Directories
+```bash
+# Scan src and lib folders
+python -m auditor.cli scan --path C:\MyProject\src
+python -m auditor.cli scan --path C:\MyProject\lib
+
+# Or use parent directory
+python -m auditor.cli scan --path C:\MyProject
+```
+
+### Advanced Scanning Options
+
+#### Filter Files with Include/Exclude Patterns
+```bash
+# Only scan Python files
+python -m auditor.cli scan --path C:\MyProject --include "*.py"
+
+# Scan JavaScript and TypeScript only
+python -m auditor.cli scan --path C:\MyProject --include "*.js" --include "*.ts"
+
+# Exclude test files
+python -m auditor.cli scan --path C:\MyProject --exclude "*/tests/*" --exclude "*/node_modules/*"
+
+# Scan everything except build folders
+python -m auditor.cli scan --path C:\MyProject --exclude "*/build/*" --exclude "*/dist/*"
+```
+
+#### Default Exclusions (Automatically Skipped)
+The scanner automatically ignores:
+- `node_modules/`
+- `venv/`, `env/`, `myenv/`
+- `.git/`
+- `__pycache__/`
+- `build/`, `dist/`
+- `.log`, `.tmp` files
+- `chroma_db/`
+
+#### Scan with Severity Filter
+```bash
+# Only show critical vulnerabilities
+python -m auditor.cli scan --path C:\MyProject --severity-filter critical
+
+# Show high and critical only
+python -m auditor.cli scan --path C:\MyProject --severity-filter high
+
+# Show all vulnerabilities (default)
+python -m auditor.cli scan --path C:\MyProject --severity-filter all
+```
+
+#### Save Results to File
+```bash
+# Save as JSON
+python -m auditor.cli scan --path C:\MyProject --output-format json --output-file results.json
+
+# Save as Markdown
+python -m auditor.cli scan --path C:\MyProject --output-format markdown --output-file report.md
+
+# Save as GitHub format
+python -m auditor.cli scan --path C:\MyProject --output-format github --output-file github_report.md
+
+# Save as SARIF (for security tools)
+python -m auditor.cli scan --path C:\MyProject --output-format sarif --output-file results.sarif
+```
+
+### Real-World Examples
+
+#### Example 1: Scan a GitHub Project
+```bash
+# Clone a repository
+cd C:\Projects
+git clone https://github.com/username/repo.git
+
+# Scan it
+python -m auditor.cli scan --path C:\Projects\repo
+
+# Save report
+python -m auditor.cli scan --path C:\Projects\repo --output-file security_report.md
+```
+
+#### Example 2: Scan Your Hackathon Project
+```bash
+# Navigate to project directory
+cd A:\Project\AI-Generated-Code-Security-Auditor
+
+# Scan the entire project (excluding tests)
+python -m auditor.cli scan --path . --exclude "*/tests/*"
+
+# Or scan specific components
+python -m auditor.cli scan --path app/
+python -m auditor.cli scan --path auditor/
+```
+
+#### Example 3: Scan a Web Application
+```bash
+# Scan backend
+python -m auditor.cli scan --path C:\MyWebApp\backend --include "*.py"
+
+# Scan frontend
+python -m auditor.cli scan --path C:\MyWebApp\frontend --include "*.js" --include "*.jsx"
+
+# Scan everything
+python -m auditor.cli scan --path C:\MyWebApp
+```
+
+#### Example 4: CI/CD Integration
+```bash
+# Fail build if high severity found
+python -m auditor.cli scan --path . --fail-on-high --output-format sarif --output-file results.sarif
+
+# Exit code will be non-zero if critical/high vulnerabilities found
+```
+
+### Supported File Extensions
+
+The scanner automatically detects and scans:
+- **Python:** `.py`
+- **JavaScript:** `.js`, `.jsx`, `.ts`, `.tsx`
+- **Java:** `.java`
+- **Go:** `.go`
+- **PHP:** `.php` (with additional configuration)
+- **Ruby:** `.rb` (with additional configuration)
+- **C/C++:** `.c`, `.cpp`, `.h` (with additional configuration)
+
+### Path Formats
+
+#### Windows Paths
+```bash
+# Absolute paths
+python -m auditor.cli scan --path C:\Users\Name\Documents\project
+
+# Relative paths (from current directory)
+python -m auditor.cli scan --path ..\other-project
+python -m auditor.cli scan --path .\src
+
+# UNC paths (network shares)
+python -m auditor.cli scan --path \\server\share\project
+```
+
+#### Linux/Mac Paths
+```bash
+# Absolute paths
+python -m auditor.cli scan --path /home/user/projects/myapp
+
+# Relative paths
+python -m auditor.cli scan --path ../other-project
+python -m auditor.cli scan --path ./src
+
+# Home directory
+python -m auditor.cli scan --path ~/projects/myapp
+```
+
+### Tips for Large Projects
+
+#### For Large Codebases (1000+ files)
+```bash
+# Scan in batches
+python -m auditor.cli scan --path C:\MyProject\module1
+python -m auditor.cli scan --path C:\MyProject\module2
+
+# Or use exclude to skip non-critical directories
+python -m auditor.cli scan --path C:\MyProject --exclude "*/docs/*" --exclude "*/examples/*"
+```
+
+#### For Better Performance
+```bash
+# Use faster model for classification
+python -m auditor.cli scan --path C:\MyProject --model llama-3.1-8b-instant
+
+# Skip advanced analysis for faster scanning
+python -m auditor.cli scan --path C:\MyProject --no-advanced
+```
+
+### Common Patterns
+
+#### Scan Only Production Code
+```bash
+python -m auditor.cli scan --path C:\MyProject\src --exclude "*/test*/*"
+```
+
+#### Scan Only Security-Sensitive Files
+```bash
+python -m auditor.cli scan --path C:\MyProject --include "*auth*" --include "*login*" --include "*password*"
+```
+
+#### Scan Configuration Files
+```bash
+python -m auditor.cli scan --path C:\MyProject --include "*.yml" --include "*.yaml" --include "*.json" --include "*.env"
+```
+
+### Generate Comprehensive Report
+
+```bash
+# Scan entire project and generate detailed report
+python -m auditor.cli scan --path C:\MyProject \
+    --output-format markdown \
+    --output-file security_audit_$(date +%Y%m%d).md \
+    --severity-filter all \
+    --advanced
+```
+
+### Example Output for External Scan
+
+```
+🔍 Scanning 156 files with llama-3.1-8b-instant
+📄 Scanning file 1/156: app.py ✅
+📄 Scanning file 2/156: database.py ✅
+📄 Scanning file 3/156: auth.py ✅
+...
+📄 Scanning file 156/156: config.py ✅
+
+🛡️ AI Code Security Audit Results
+================================================================================
+
+📁 File: C:\MyProject\app.py
+------------------------------------------------------------------
+  🔴 SQL Injection (CWE-89)
+     Severity: CRITICAL
+     Line: 45
+     Description: SQL query constructed using string concatenation...
+
+📁 File: C:\MyProject\auth.py
+------------------------------------------------------------------
+  🟠 Hardcoded Secret (CWE-798)
+     Severity: HIGH
+     Line: 12
+     Description: API key hardcoded in source code...
+
+📊 Scan complete: 23 vulnerabilities found across 8 files
+```
+
+---
+
 **Date Fixed:** 2025-01-XX
 **File Modified:** `/app/auditor/cli.py`
 **Lines Changed:** 551-561 (removed 8 lines of redundant code)
 **Testing Status:** ✅ Ready for verification
+**Scanning Capabilities:** ✅ Supports any directory on your system
