@@ -7,17 +7,27 @@ from app.config import settings
 
 class LLMService:
     def __init__(self):
-        # Model configuration
-        self.patch_model = "openai/gpt-4"
-        self.assessment_model = "openai/gpt-4" 
-        self.classification_model = "qwen/qwen-2.5-coder-32b-instruct:free"
-        self.explanation_model = "openai/gpt-4"
+        # Model configuration from settings
+        self.patch_model = settings.MODEL_PATCH_GENERATION
+        self.patch_model_secondary = settings.MODEL_PATCH_GENERATION_SECONDARY
+        self.assessment_model = settings.MODEL_QUALITY_ASSESSMENT
+        self.assessment_model_secondary = settings.MODEL_QUALITY_ASSESSMENT_SECONDARY
+        self.classification_model = settings.MODEL_FAST_CLASSIFICATION
+        self.classification_model_secondary = settings.MODEL_FAST_CLASSIFICATION_SECONDARY
+        self.explanation_model = settings.MODEL_DETAILED_EXPLANATION
+        self.explanation_model_secondary = settings.MODEL_DETAILED_EXPLANATION_SECONDARY
         
         # OpenRouter configuration
         self.openrouter_headers = {
             "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
             "HTTP-Referer": settings.OPENROUTER_REFERER,
             "X-Title": settings.OPENROUTER_TITLE,
+            "Content-Type": "application/json"
+        }
+        
+        # GroqCloud configuration
+        self.groq_headers = {
+            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
             "Content-Type": "application/json"
         }
         
