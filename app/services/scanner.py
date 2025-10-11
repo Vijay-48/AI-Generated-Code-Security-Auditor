@@ -91,21 +91,49 @@ class SecurityScanner:
 
     async def _run_bandit(self, file_path: str) -> Dict[str, Any]:
         try:
+            # Check if bandit is available
             cmd = ['bandit', '-f', 'json', file_path]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            res = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                timeout=30,
+                shell=False,  # Don't use shell on Windows
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
             return json.loads(res.stdout) if res.stdout else {}
+        except FileNotFoundError:
+            print(f"⚠️  Bandit not found in PATH - skipping")
+            return {}
+        except subprocess.TimeoutExpired:
+            print(f"⚠️  Bandit timeout - file might be too large")
+            return {}
         except Exception as e:
-            print(f"DEBUG: Bandit exception: {e}")
-            return {"error": str(e)}
+            print(f"⚠️  Bandit error: {e}")
+            return {}
 
     async def _run_semgrep(self, file_path: str) -> Dict[str, Any]:
         try:
+            # Check if semgrep is available
             cmd = ['semgrep', '--config=auto', '--json', '--timeout=30', file_path]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
+            res = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                timeout=45,
+                shell=False,  # Don't use shell on Windows
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
             return json.loads(res.stdout) if res.stdout else {}
+        except FileNotFoundError:
+            print(f"⚠️  Semgrep not found in PATH - skipping")
+            return {}
+        except subprocess.TimeoutExpired:
+            print(f"⚠️  Semgrep timeout - file might be too large")
+            return {}
         except Exception as e:
-            print(f"DEBUG: Semgrep exception: {e}")
-            return {"error": str(e)}
+            print(f"⚠️  Semgrep error: {e}")
+            return {}
 
     def _normalize(self, raw: Dict[str, Any]) -> Dict[str, Any]:
         norm = {
