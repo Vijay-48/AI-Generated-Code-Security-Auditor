@@ -51,8 +51,12 @@ def debug_scan(file_path: str):
         
         # Step 3: Initialize agent
         print("Step 3: Initializing SecurityAgent...")
+        print("⏳ This may take 10-30 seconds on first run (downloading ML models)...")
+        print("   Be patient, this is normal!")
+        print()
+        
         agent = SecurityAgent()
-        print(f"✅ Agent initialized")
+        print(f"✅ Agent initialized successfully")
         print()
         
         # Step 4: Check API keys
