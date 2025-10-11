@@ -80,11 +80,10 @@ class LLMService:
         """Call GroqCloud API for fast inference"""
         try:
             async with httpx.AsyncClient() as client:
-                # Remove provider prefix for Groq models
-                groq_model = model.replace("groq/", "")
-                
+                # Groq API supports both with and without prefix (groq/compound and compound)
+                # Keep the model name as-is since Groq handles both formats
                 data = {
-                    "model": groq_model,
+                    "model": model,
                     "messages": messages,
                     "max_tokens": max_tokens,
                     "temperature": temperature
