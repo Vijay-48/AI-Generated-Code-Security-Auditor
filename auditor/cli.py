@@ -72,7 +72,7 @@ def cli(api_url):
 
 @cli.command()
 @click.option('--path', required=True, help='File or directory to scan')
-@click.option('--model', default='openai/gpt-4', help='AI model to use')
+@click.option('--model', default=None, help='AI model to use (defaults to configured MODEL_CODE_GENERATION)')
 @click.option('--output-format', default='table', 
               type=click.Choice(['json', 'table', 'github', 'markdown', 'sarif']),
               help='Output format')
