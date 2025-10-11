@@ -76,6 +76,30 @@ class LLMService:
         except Exception as e:
             raise Exception(f"OpenRouter API error: {str(e)}")
 
+    async def _call_groq(self, messages: list, model: str, max_tokens: int = 2000, temperature: float = 0.1) -> Dict[str, Any]:
+        """Call GroqCloud API for fast inference"""
+        try:
+            async with httpx.AsyncClient() as client:
+                # Remove provider prefix for Groq models
+                groq_model = model.replace("groq/", "")
+                
+                data = {
+                    "model": groq_model,
+                    "messages": messages,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature
+                }
+                response = await client.post(
+                    settings.GROQ_BASE_URL,
+                    headers=self.groq_headers,
+                    json=data,
+                    timeout=60.0
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            raise Exception(f"GroqCloud API error: {str(e)}")
+
     async def _call_llm(self, messages: list, model: str, max_tokens: int = 2000, temperature: float = 0.1) -> Dict[str, Any]:
         """Smart LLM caller - routes to appropriate API based on model and available keys"""
         
