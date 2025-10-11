@@ -548,8 +548,18 @@ def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, A
         if not language:
             return None
         
-        # Create agent and scan
+        # Create agent and scan with timeout
         agent = SecurityAgent()
+        
+        # Run with proper event loop handling
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         
         result = asyncio.run(agent.run(
             code=code,
@@ -561,6 +571,8 @@ def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, A
         
         return result
         
+    except asyncio.TimeoutError:
+        return {"error": "Scan timeout - file too large or complex", "vulnerabilities": []}
     except Exception as e:
         return {"error": str(e), "vulnerabilities": []}
 
