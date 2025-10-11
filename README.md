@@ -49,24 +49,33 @@ python -m auditor.cli scan --path ./your_project --output-format github --output
 
 ## 🎯 **Core Features**
 
+### **⚡ Dual-AI Provider Integration**
+- **GroqCloud Models**: Ultra-fast inference (Llama 3.1, GPT-OSS, Compound)
+- **OpenRouter Models**: 20+ models (Qwen, Mistral, DeepSeek, Llama)
+- **Automatic Fallback**: Secondary models for reliability
+- **Configurable**: Change models via .env file
+
 ### **🤖 Multi-Model AI Analysis**
-- **GPT-4**: Premium analysis with OpenAI's latest model
-- **GPT-3.5**: Fast and efficient analysis  
-- **DeepCoder 14B**: Specialized for code patches
-- **LLaMA 3.3**: Balanced quality assessment
-- **Qwen Coder**: Ultra-fast vulnerability classification
+- **Patch Generation**: `groq/compound` - Built-in Python code execution
+- **Quality Assessment**: `qwen/qwen-2.5-72b-instruct` - High coding capability
+- **Fast Classification**: `llama-3.1-8b-instant` - Ultra-fast scanning
+- **Code Generation**: `qwen/qwen-2.5-coder-32b-instruct` - Optimized for code
+- **Security Analysis**: `openai/gpt-oss-20b` - Multi-purpose analysis
+- **Detailed Explanation**: `meta-llama/llama-3.3-70b-instruct` - Comprehensive insights
 
-### **🔍 Security Scanning**
+### **🔍 Triple-Layer Security Scanning**
 - **Static Analysis**: Bandit (Python) + Semgrep (multi-language)
-- **Secret Detection**: AWS keys, API tokens, passwords, certificates
+- **Secret Detection**: AWS keys, API tokens, passwords, certificates, GitHub tokens
+- **AI Analysis**: LLM-powered vulnerability detection and classification
 - **Multi-Language**: Python, JavaScript, TypeScript, Java, Go
-- **Real-time Analysis**: Instant feedback on security issues
+- **Real-time**: Instant feedback on security issues
 
-### **📊 Smart Reporting** 
-- **Multiple Formats**: Table, JSON, CSV, SARIF, GitHub Actions
-- **AI-Generated Fixes**: Automatic patch suggestions
+### **📊 Professional Reporting** 
+- **Multiple Formats**: Table, JSON, Markdown, SARIF, GitHub Actions
+- **AI-Generated Fixes**: Automatic patch suggestions with confidence scores
 - **Severity Scoring**: Critical, High, Medium, Low classification
-- **Detailed Explanations**: Educational security insights
+- **Educational**: Detailed security explanations
+- **CI/CD Ready**: SARIF format for pipeline integration
 
 ---
 
