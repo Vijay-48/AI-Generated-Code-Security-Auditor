@@ -100,20 +100,72 @@ class LLMService:
         except Exception as e:
             raise Exception(f"GroqCloud API error: {str(e)}")
 
-    async def _call_llm(self, messages: list, model: str, max_tokens: int = 2000, temperature: float = 0.1) -> Dict[str, Any]:
+    async def _call_llm(self, messages: list, model: str, max_tokens: int = 2000, temperature: float = 0.1, use_fallback: bool = False) -> Dict[str, Any]:
         """Smart LLM caller - routes to appropriate API based on model and available keys"""
         
-        # If it's an OpenAI model and we have OpenAI API key, use direct API
-        if model.startswith("openai/") and settings.OPENAI_API_KEY:
-            openai_model = model.replace("openai/", "")
-            return await self._call_openai_direct(messages, openai_model, max_tokens, temperature)
+        # Determine which provider to use based on model prefix or name
+        is_groq_model = (
+            model.startswith("groq/") or 
+            model.startswith("llama-3.1") or 
+            model.startswith("llama-3.3") or
+            "gpt-oss" in model
+        )
         
-        # Otherwise use OpenRouter
-        elif settings.OPENROUTER_API_KEY:
-            return await self._call_openrouter(messages, model, max_tokens, temperature)
+        is_openrouter_model = (
+            "qwen" in model.lower() or
+            "mistral" in model.lower() or
+            "deepseek" in model.lower() or
+            "kimi" in model.lower() or
+            "nemotron" in model.lower() or
+            "glm" in model.lower() or
+            model.startswith("meta-llama/") or
+            model.startswith("nvidia/")
+        )
         
-        else:
-            raise Exception("No API keys available. Set OPENAI_API_KEY or OPENROUTER_API_KEY")
+        try:
+            # Route to GroqCloud for Groq models
+            if is_groq_model and settings.GROQ_API_KEY:
+                return await self._call_groq(messages, model, max_tokens, temperature)
+            
+            # Route to OpenRouter for OpenRouter models
+            elif is_openrouter_model and settings.OPENROUTER_API_KEY:
+                return await self._call_openrouter(messages, model, max_tokens, temperature)
+            
+            # If it's an OpenAI model and we have OpenAI API key, use direct API
+            elif model.startswith("openai/") and settings.OPENAI_API_KEY:
+                openai_model = model.replace("openai/", "")
+                return await self._call_openai_direct(messages, openai_model, max_tokens, temperature)
+            
+            # Fallback to OpenRouter if available
+            elif settings.OPENROUTER_API_KEY:
+                return await self._call_openrouter(messages, model, max_tokens, temperature)
+            
+            # Fallback to Groq if available
+            elif settings.GROQ_API_KEY:
+                return await self._call_groq(messages, model, max_tokens, temperature)
+            
+            else:
+                raise Exception("No API keys available. Set GROQ_API_KEY, OPENROUTER_API_KEY, or OPENAI_API_KEY")
+                
+        except Exception as e:
+            # If primary model fails and we haven't tried fallback yet, try secondary model
+            if not use_fallback:
+                # Map to secondary models
+                secondary_model = self._get_secondary_model(model)
+                if secondary_model and secondary_model != model:
+                    print(f"⚠️  Primary model {model} failed, trying fallback {secondary_model}")
+                    return await self._call_llm(messages, secondary_model, max_tokens, temperature, use_fallback=True)
+            raise e
+    
+    def _get_secondary_model(self, primary_model: str) -> Optional[str]:
+        """Get secondary/fallback model for a given primary model"""
+        model_fallback_map = {
+            self.patch_model: self.patch_model_secondary,
+            self.assessment_model: self.assessment_model_secondary,
+            self.classification_model: self.classification_model_secondary,
+            self.explanation_model: self.explanation_model_secondary
+        }
+        return model_fallback_map.get(primary_model, None)
 
     async def generate_fix_diff(self, vulnerable_code: str, vulnerability: Dict[str, Any], remediation_pattern: Dict[str, Any]) -> Dict[str, Any]:
         """Generate security fix using AI (prefers GPT-4 for best results)"""
