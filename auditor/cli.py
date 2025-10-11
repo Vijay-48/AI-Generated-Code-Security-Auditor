@@ -551,16 +551,7 @@ def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, A
         # Create agent and scan with timeout
         agent = SecurityAgent()
         
-        # Run with proper event loop handling
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_closed():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
+        # asyncio.run() handles event loop creation automatically
         result = asyncio.run(agent.run(
             code=code,
             language=language,
