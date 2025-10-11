@@ -1,60 +1,48 @@
 # 🛡️ AI Code Security Auditor v2.0.0
 
-> **AI-powered security scanning tool for detecting vulnerabilities in your code with intelligent fix suggestions**
+> **Multi-AI powered security scanning tool with GroqCloud & OpenRouter integration for lightning-fast vulnerability detection**
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-orange.svg)](https://openai.com)
+[![GroqCloud](https://img.shields.io/badge/GroqCloud-Ultra--Fast-00D4AA.svg)](https://console.groq.com/)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Multi--Model-purple.svg)](https://openrouter.ai)
 
-## 🚀 **Quick Start (Hackathon Ready!)**
+## 🚀 **Super Quick Start (5 Minutes!)**
 
-### **1. Clone & Install**
+### **1. Run Setup Script**
 ```bash
-# Clone the repository
-git clone https://github.com/Vijay-48/AI-Generated-Code-Security-Auditor.git
-cd AI-Generated-Code-Security-Auditor
-
-# Install dependencies
-pip install -r requirements.txt
+# One command installation
+bash setup.sh
 ```
 
-### **2. Setup API Keys**
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env file and add your API key (choose one):
-# For OpenRouter (recommended): https://openrouter.ai/
-# For OpenAI direct: https://platform.openai.com/api-keys
-```
-
-**Edit `.env` file:**
-```bash
-# Option 1: OpenRouter (gives access to multiple models including GPT-4)
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-
-# Option 2: Direct OpenAI (for GPT-4 only)  
-OPENAI_API_KEY=sk-your_openai_api_key_here
-```
+### **2. API Keys Already Configured! ✅**
+Your `.env` file is ready with:
+- ✅ **GroqCloud API** - Ultra-fast inference
+- ✅ **OpenRouter API** - Access to 20+ models
+- ✅ **Automatic fallback** - Secondary models configured
 
 ### **3. Test Installation**
 ```bash
-# Check CLI is working
-python -m auditor.cli --help
+# View available models
+python -m auditor.cli models
 
-# Test with sample vulnerable code
-echo 'import os; os.system(user_input)' > test.py
-python -m auditor.cli scan --path test.py
-rm test.py
+# Scan sample vulnerable code
+python -m auditor.cli scan --path test_vulnerable.py
+
+# Quick code analysis
+python -m auditor.cli analyze --code "os.system(user_input)" --language python
 ```
 
-### **4. Start API Server (Optional)**
+### **4. You're Ready! 🎉**
 ```bash
-# Start FastAPI server
-uvicorn app.main:app --reload
+# Scan your project
+python -m auditor.cli scan --path ./your_project
 
-# View API docs at: http://localhost:8000/docs
+# Advanced AI analysis
+python -m auditor.cli scan --path ./your_project --advanced
+
+# Generate report for hackathon
+python -m auditor.cli scan --path ./your_project --output-format github --output-file security-report.md
 ```
 
 ---
