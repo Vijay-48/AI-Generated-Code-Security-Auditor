@@ -241,62 +241,69 @@ def models():
     """
     
     click.echo("🤖 Available AI Models:")
-    click.echo("=" * 50)
+    click.echo("=" * 80)
     
-    models_info = {
-        "openai/gpt-4": {
-            "name": "OpenAI GPT-4",
-            "quality": "★★★★★",
-            "speed": "★★★☆☆", 
-            "cost": "High",
-            "best_for": "Production, highest quality analysis"
-        },
-        "openai/gpt-3.5-turbo": {
-            "name": "OpenAI GPT-3.5 Turbo",
-            "quality": "★★★★☆",
-            "speed": "★★★★☆",
-            "cost": "Medium",
-            "best_for": "Development, fast analysis"
-        },
-        "agentica-org/deepcoder-14b-preview:free": {
-            "name": "DeepCoder 14B",
-            "quality": "★★★★☆",
-            "speed": "★★★☆☆",
-            "cost": "Free",
-            "best_for": "Code patches and fixes"
-        },
-        "meta-llama/llama-3.3-70b-instruct:free": {
-            "name": "LLaMA 3.3 70B", 
-            "quality": "★★★★☆",
-            "speed": "★★☆☆☆",
-            "cost": "Free",
-            "best_for": "Balanced analysis"
-        },
-        "qwen/qwen-2.5-coder-32b-instruct:free": {
-            "name": "Qwen Coder 32B",
-            "quality": "★★★☆☆",
-            "speed": "★★★★★",
-            "cost": "Free", 
-            "best_for": "Fast classification"
-        }
-    }
+    # Show currently configured models
+    click.echo("\n📌 Currently Configured Models (Primary):")
+    click.echo(f"   • Patch Generation: {settings.MODEL_PATCH_GENERATION}")
+    click.echo(f"   • Quality Assessment: {settings.MODEL_QUALITY_ASSESSMENT}")
+    click.echo(f"   • Fast Classification: {settings.MODEL_FAST_CLASSIFICATION}")
+    click.echo(f"   • Code Generation: {settings.MODEL_CODE_GENERATION}")
+    click.echo(f"   • Security Analysis: {settings.MODEL_SECURITY_ANALYSIS}")
+    click.echo(f"   • Detailed Explanation: {settings.MODEL_DETAILED_EXPLANATION}")
     
-    for model_id, info in models_info.items():
-        click.echo(f"\n🔸 {info['name']}")
-        click.echo(f"   Model ID: {model_id}")
-        click.echo(f"   Quality: {info['quality']}")
-        click.echo(f"   Speed: {info['speed']}")
-        click.echo(f"   Cost: {info['cost']}")
-        click.echo(f"   Best for: {info['best_for']}")
+    click.echo("\n🔄 Fallback Models (Secondary):")
+    click.echo(f"   • Patch Generation: {settings.MODEL_PATCH_GENERATION_SECONDARY}")
+    click.echo(f"   • Quality Assessment: {settings.MODEL_QUALITY_ASSESSMENT_SECONDARY}")
+    click.echo(f"   • Fast Classification: {settings.MODEL_FAST_CLASSIFICATION_SECONDARY}")
+    click.echo(f"   • Detailed Explanation: {settings.MODEL_DETAILED_EXPLANATION_SECONDARY}")
     
-    click.echo(f"\n💡 Recommendations:")
-    click.echo(f"   • For best results: --model openai/gpt-4")
-    click.echo(f"   • For fast analysis: --model openai/gpt-3.5-turbo") 
-    click.echo(f"   • For free usage: --model qwen/qwen-2.5-coder-32b-instruct:free")
+    click.echo("\n" + "=" * 80)
+    click.echo("🌟 Recommended Models by Use Case:")
+    click.echo("=" * 80)
+    
+    recommendations = [
+        ("Patch Generation", "groq/compound", "Built-in Python code execution"),
+        ("Quality Assessment", "qwen/qwen-2.5-72b-instruct", "High coding & math capabilities"),
+        ("Fast Classification", "llama-3.1-8b-instant", "Ultra-fast vulnerability classification"),
+        ("Code Generation", "qwen/qwen-2.5-coder-32b-instruct", "Optimized for code generation"),
+        ("Security Analysis", "openai/gpt-oss-20b", "Strong multi-purpose analysis"),
+        ("Detailed Explanation", "meta-llama/llama-3.3-70b-instruct", "Multilingual, instruction-tuned")
+    ]
+    
+    for use_case, model, description in recommendations:
+        click.echo(f"\n🔸 {use_case}")
+        click.echo(f"   Model: {model}")
+        click.echo(f"   Description: {description}")
+    
+    click.echo("\n" + "=" * 80)
+    click.echo("📦 All Available Models:")
+    click.echo("=" * 80)
+    
+    # Group models by provider
+    groq_models = [m for m in settings.AVAILABLE_MODELS.keys() if m.startswith("groq/") or m.startswith("llama-3") or "gpt-oss" in m]
+    openrouter_models = [m for m in settings.AVAILABLE_MODELS.keys() if m not in groq_models]
+    
+    click.echo("\n🚀 GroqCloud Models (Ultra-fast inference):")
+    for model in groq_models:
+        click.echo(f"   • {model}")
+        click.echo(f"     {settings.AVAILABLE_MODELS[model]}")
+    
+    click.echo("\n🌐 OpenRouter Models (Multi-model access):")
+    for model in openrouter_models:
+        click.echo(f"   • {model}")
+        click.echo(f"     {settings.AVAILABLE_MODELS[model]}")
+    
+    click.echo("\n" + "=" * 80)
+    click.echo("💡 Usage Tips:")
+    click.echo("   • Use --model flag to specify a model: python -m auditor.cli scan --path file.py --model groq/compound")
+    click.echo("   • Models automatically fallback to secondary if primary fails")
+    click.echo("   • Configure models in .env file (MODEL_PATCH_GENERATION, etc.)")
     
     click.echo(f"\n🔑 API Key Status:")
-    click.echo(f"   • OpenAI: {'✅ Configured' if settings.OPENAI_API_KEY else '❌ Not set'}")
+    click.echo(f"   • GroqCloud: {'✅ Configured' if settings.GROQ_API_KEY else '❌ Not set'}")
     click.echo(f"   • OpenRouter: {'✅ Configured' if settings.OPENROUTER_API_KEY else '❌ Not set'}")
+    click.echo(f"   • OpenAI: {'✅ Configured' if settings.OPENAI_API_KEY else '❌ Not set (optional)'}")
 
 @cli.command()
 def test():
