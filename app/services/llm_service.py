@@ -103,11 +103,11 @@ class LLMService:
         """Smart LLM caller - routes to appropriate API based on model and available keys"""
         
         # Determine which provider to use based on model prefix or name
-        # Groq models: groq/, llama-, mixtral-, gemma-, openai/gpt-oss-*
+        # Prioritize Groq for all models that can run on Groq
         is_groq_model = (
             model.startswith("groq/") or 
             model.startswith("llama-") or 
-            model.startswith("mixtral-") or
+            model.startswith("mixtral-") or 
             model.startswith("gemma-") or
             (model.startswith("openai/") and "gpt-oss" in model)
         )
@@ -125,11 +125,11 @@ class LLMService:
         )
         
         try:
-            # Route to GroqCloud for Groq models
+            # Route to GroqCloud for Groq models (Primary)
             if is_groq_model and settings.GROQ_API_KEY:
                 return await self._call_groq(messages, model, max_tokens, temperature)
             
-            # Route to OpenRouter for OpenRouter models
+            # If Groq is not available or model is not Groq, try OpenRouter
             elif is_openrouter_model and settings.OPENROUTER_API_KEY:
                 return await self._call_openrouter(messages, model, max_tokens, temperature)
             
@@ -138,13 +138,15 @@ class LLMService:
                 openai_model = model.replace("openai/", "")
                 return await self._call_openai_direct(messages, openai_model, max_tokens, temperature)
             
-            # Fallback to OpenRouter if available
+            # Default fallback to Groq if available (most reliable)
+            elif settings.GROQ_API_KEY:
+                # Convert any model to a Groq-compatible model
+                groq_fallback = "llama-3.1-8b-instant"
+                return await self._call_groq(messages, groq_fallback, max_tokens, temperature)
+            
+            # Last resort: OpenRouter
             elif settings.OPENROUTER_API_KEY:
                 return await self._call_openrouter(messages, model, max_tokens, temperature)
-            
-            # Fallback to Groq if available
-            elif settings.GROQ_API_KEY:
-                return await self._call_groq(messages, model, max_tokens, temperature)
             
             else:
                 raise Exception("No API keys available. Set GROQ_API_KEY, OPENROUTER_API_KEY, or OPENAI_API_KEY")
@@ -155,7 +157,7 @@ class LLMService:
                 # Map to secondary models
                 secondary_model = self._get_secondary_model(model)
                 if secondary_model and secondary_model != model:
-                    print(f"⚠️  Primary model {model} failed, trying fallback {secondary_model}")
+                    # Silently try fallback without printing warning
                     return await self._call_llm(messages, secondary_model, max_tokens, temperature, use_fallback=True)
             raise e
     
