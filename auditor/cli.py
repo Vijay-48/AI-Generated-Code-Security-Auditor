@@ -178,6 +178,10 @@ def analyze(code, language, model, advanced):
     if not check_api_keys():
         sys.exit(1)
     
+    # Use default model if none specified
+    if not model:
+        model = settings.MODEL_CODE_GENERATION
+    
     try:
         click.echo(f"🤖 Analyzing code with {model}...")
         
