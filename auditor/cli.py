@@ -11,9 +11,15 @@ import sys
 import os
 import time
 import asyncio
+import platform
 from pathlib import Path
 from typing import List, Dict, Any
 import fnmatch
+
+# Fix for Windows async issues
+if platform.system() == 'Windows':
+    # Use ProactorEventLoop on Windows for better compatibility
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 # Add current directory to Python path to enable imports
 current_dir = Path(__file__).parent.parent.absolute()
