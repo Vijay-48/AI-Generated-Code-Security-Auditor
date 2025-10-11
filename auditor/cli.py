@@ -350,7 +350,7 @@ API_KEY = "sk-1234567890abcdef"  # Hardcoded secret
             code=test_code,
             language="python", 
             filename="test.py",
-            preferred_model="openai/gpt-4",
+            preferred_model=settings.MODEL_CODE_GENERATION,
             use_advanced_analysis=False
         ))
         
