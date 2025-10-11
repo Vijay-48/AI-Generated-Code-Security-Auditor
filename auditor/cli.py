@@ -97,6 +97,10 @@ def scan(path, model, output_format, output_file, severity_filter, include, excl
     if not check_api_keys():
         sys.exit(1)
     
+    # Use default model if none specified
+    if not model:
+        model = settings.MODEL_CODE_GENERATION
+    
     try:
         # Discover files to scan
         files_to_scan = discover_files(path, include, exclude)
