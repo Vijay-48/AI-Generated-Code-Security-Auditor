@@ -36,25 +36,60 @@ The `click.progressbar()` context manager had compatibility issues on Windows, c
 ### Issue 3: Missing Timeout
 No timeout was set for API calls, so if an API call hung, the entire scan would freeze indefinitely.
 
-## The Fix Applied
+## The Fixes Applied
 
+### Fix 1: Proper Event Loop Handling
 **Fixed Code:**
 ```python
+# Wrap in async function with timeout for Windows compatibility
+async def scan_with_timeout():
+    try:
+        return await asyncio.wait_for(
+            agent.run(...),
+            timeout=120.0  # 2 minute timeout per file
+        )
+    except asyncio.TimeoutError:
+        return {"error": "Scan timeout after 120s", "vulnerabilities": []}
+
 # asyncio.run() handles event loop creation automatically
-result = asyncio.run(agent.run(
-    code=code,
-    language=language,
-    filename=str(file_path.name),
-    preferred_model=model,
-    use_advanced_analysis=advanced
-))
+result = asyncio.run(scan_with_timeout())
 ```
 
 **Why This Works:**
 - `asyncio.run()` automatically creates and manages the event loop
 - It properly handles the Windows ProactorEventLoop (set at line 22)
 - No conflicts between multiple event loop creation attempts
+- Added timeout protection to prevent indefinite hangs
 - Clean and follows Python async best practices
+
+### Fix 2: Windows-Compatible Progress Display
+**Old Code:**
+```python
+with click.progressbar(files_to_scan, label='Scanning files') as files:
+    for file_path in files:
+        result = scan_file_direct(file_path, model, advanced)
+```
+
+**Fixed Code:**
+```python
+# Windows-compatible progress display
+for i, file_path in enumerate(files_to_scan, 1):
+    click.echo(f"📄 Scanning file {i}/{len(files_to_scan)}: {file_path.name}", nl=False)
+    result = scan_file_direct(file_path, model, advanced)
+    click.echo(" ✅")
+```
+
+**Why This Works:**
+- Avoids click.progressbar which has Windows rendering issues
+- Shows clear, real-time progress for each file
+- Users can see exactly what's being scanned
+- Better debugging - can identify which file causes issues
+
+### Fix 3: Timeout Protection
+- Added 120-second timeout per file scan
+- Prevents indefinite hangs on API failures
+- Returns graceful error message on timeout
+- Allows scan to continue with remaining files
 
 ## What Was Changed
 
