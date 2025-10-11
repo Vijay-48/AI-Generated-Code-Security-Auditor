@@ -45,14 +45,14 @@ SUPPORTED_EXTENSIONS = {
 
 def check_api_keys():
     """Check if API keys are configured"""
-    if not settings.OPENROUTER_API_KEY and not settings.OPENAI_API_KEY:
+    if not settings.OPENROUTER_API_KEY and not settings.GROQ_API_KEY and not settings.OPENAI_API_KEY:
         print("❌ No API keys found!")
         print("\n📖 Quick Setup:")
-        print("1. Copy: cp .env.example .env")
-        print("2. Edit .env and add your API key:")
+        print("1. Edit .env file and add your API keys:")
+        print("   • GROQ_API_KEY=your_key (from https://console.groq.com/keys)")
         print("   • OPENROUTER_API_KEY=your_key (from https://openrouter.ai/)")
-        print("   • OPENAI_API_KEY=sk-your_key (from https://platform.openai.com/)")
-        print("3. Run: python -m auditor.cli --help")
+        print("   • OPENAI_API_KEY=sk-your_key (from https://platform.openai.com/) [Optional]")
+        print("2. Run: python -m auditor.cli --help")
         return False
     return True
 
