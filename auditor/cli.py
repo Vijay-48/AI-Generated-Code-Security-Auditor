@@ -164,7 +164,7 @@ def scan(path, model, output_format, output_file, severity_filter, include, excl
 @click.option('--language', required=True, 
               type=click.Choice(['python', 'javascript', 'java', 'go']),
               help='Programming language') 
-@click.option('--model', default='openai/gpt-4', help='AI model to use')
+@click.option('--model', default=None, help='AI model to use (defaults to configured MODEL_CODE_GENERATION)')
 @click.option('--advanced/--no-advanced', default=False, help='Enable advanced analysis')
 def analyze(code, language, model, advanced):
     """🤖 Analyze a code snippet directly with AI
