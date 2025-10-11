@@ -122,21 +122,27 @@ def scan(path, model, output_format, output_file, severity_filter, include, excl
         all_results = []
         high_severity_found = False
         
-        with click.progressbar(files_to_scan, label='Scanning files') as files:
-            for file_path in files:
-                try:
-                    result = scan_file_direct(file_path, model, advanced)
-                    if result:
-                        result['file_path'] = str(file_path)
-                        all_results.append(result)
-                        
-                        # Check for high severity vulnerabilities
-                        for vuln in result.get('vulnerabilities', []):
-                            if vuln.get('severity', '').upper() in ['HIGH', 'CRITICAL']:
-                                high_severity_found = True
-                                
-                except Exception as e:
-                    click.echo(f"\n❌ Error scanning {file_path}: {str(e)}")
+        # Windows-compatible progress display
+        for i, file_path in enumerate(files_to_scan, 1):
+            try:
+                click.echo(f"📄 Scanning file {i}/{len(files_to_scan)}: {file_path.name}", nl=False)
+                result = scan_file_direct(file_path, model, advanced)
+                if result:
+                    result['file_path'] = str(file_path)
+                    all_results.append(result)
+                    
+                    # Check for high severity vulnerabilities
+                    for vuln in result.get('vulnerabilities', []):
+                        if vuln.get('severity', '').upper() in ['HIGH', 'CRITICAL']:
+                            high_severity_found = True
+                    
+                    click.echo(" ✅")
+                else:
+                    click.echo(" ⏭️ (skipped)")
+                    
+            except Exception as e:
+                click.echo(f" ❌")
+                click.echo(f"Error: {str(e)}")
         
         # Filter by severity
         if severity_filter != 'all':
