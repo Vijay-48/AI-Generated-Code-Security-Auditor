@@ -1,4 +1,4 @@
-# 🛠️ Windows Scan Fix - Applied
+# 🛠️ Windows Scan Fix - Applied (Enhanced v2)
 
 ## Problem Summary
 
@@ -8,8 +8,9 @@ The CLI scan command was freezing at 0% progress on Windows with this symptom:
 Scanning files  [------------------------------------]    0%
 ```
 
-## Root Cause
+## Root Causes (Multiple Issues Fixed)
 
+### Issue 1: Event Loop Conflict
 The issue was in `/app/auditor/cli.py` at the `scan_file_direct()` function (lines 555-562).
 
 **The Problem Code:**
@@ -28,6 +29,12 @@ result = asyncio.run(agent.run(...))  # This creates ANOTHER event loop!
 ```
 
 This code tried to manually manage the event loop, then called `asyncio.run()` which creates its own fresh event loop. This caused a conflict on Windows, resulting in the scan freezing.
+
+### Issue 2: Progress Bar Incompatibility
+The `click.progressbar()` context manager had compatibility issues on Windows, causing the display to freeze even when scanning was in progress.
+
+### Issue 3: Missing Timeout
+No timeout was set for API calls, so if an API call hung, the entire scan would freeze indefinitely.
 
 ## The Fix Applied
 
