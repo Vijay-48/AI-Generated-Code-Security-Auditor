@@ -118,23 +118,44 @@ def parse_patch_data(patch_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Properly parsed patch data with extracted diff
     """
-    # Check if explanation contains JSON
+    import re
+    
+    # Check if explanation contains JSON or diff
     explanation = patch_data.get('explanation', '')
     
+    # Try to extract diff directly from explanation using regex
+    if 'diff --git' in explanation:
+        # Extract the diff block
+        diff_match = re.search(r'(diff --git.*?)(?:```|\n\n|$)', explanation, re.DOTALL)
+        if diff_match:
+            diff_content = diff_match.group(1).strip()
+            # Clean up escaped quotes and newlines
+            diff_content = diff_content.replace('\\"', '"').replace('\\n', '\n')
+            patch_data['diff'] = diff_content
+    
+    # Try to parse JSON from markdown code block
     if '```json' in explanation or '```' in explanation:
-        # Extract JSON from markdown code block
-        import re
         json_match = re.search(r'```json\s*(.*?)\s*```', explanation, re.DOTALL)
         if not json_match:
             json_match = re.search(r'```\s*(.*?)\s*```', explanation, re.DOTALL)
         
         if json_match:
+            json_str = json_match.group(1)
+            # Try to fix common JSON issues
+            # Replace literal newlines in strings with \n
+            json_str = re.sub(r'"\s*\n\s*diff', r'" diff', json_str)
+            
             try:
-                parsed_json = json.loads(json_match.group(1))
-                # Merge parsed JSON into patch_data
+                parsed_json = json.loads(json_str)
                 if isinstance(parsed_json, dict):
-                    return {**patch_data, **parsed_json}
+                    # Merge but preserve already extracted diff
+                    if 'diff' not in patch_data and 'diff' in parsed_json:
+                        patch_data['diff'] = parsed_json['diff']
+                    for key in ['explanation', 'confidence', 'potential_issues', 'additional_recommendations']:
+                        if key in parsed_json:
+                            patch_data[key] = parsed_json[key]
             except json.JSONDecodeError:
+                # JSON parsing failed, but we might have extracted diff already
                 pass
     
     return patch_data
