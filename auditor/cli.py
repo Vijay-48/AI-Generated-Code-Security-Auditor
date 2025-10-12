@@ -640,7 +640,13 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
                             continue
                     
                     # Apply the fix
-                    success = apply_fix_to_file(path_obj, vulnerable_code, fixed_code, backup)
+                    success = apply_fix_to_file(
+                        path_obj, 
+                        vuln.get('code_snippet', ''), 
+                        diff, 
+                        vuln.get('line_number', 0),
+                        backup
+                    )
                     
                     if success:
                         click.echo(f"   ✅ Fix applied successfully!")
