@@ -62,6 +62,78 @@ def check_api_keys():
         return False
     return True
 
+def apply_fix_to_file(file_path: Path, vulnerable_code: str, fixed_code: str, backup: bool = True) -> bool:
+    """Apply a security fix to a file
+    
+    Args:
+        file_path: Path to the file to fix
+        vulnerable_code: The vulnerable code snippet to replace
+        fixed_code: The secure code to replace with
+        backup: Whether to create a backup file
+    
+    Returns:
+        True if fix was applied successfully, False otherwise
+    """
+    try:
+        # Read the original file
+        with open(file_path, 'r', encoding='utf-8') as f:
+            original_content = f.read()
+        
+        # Check if vulnerable code exists in file
+        if vulnerable_code.strip() not in original_content:
+            click.echo(f"⚠️  Warning: Vulnerable code not found exactly in file. Attempting fuzzy match...")
+            # Try to find a close match by removing extra whitespace
+            normalized_original = ' '.join(original_content.split())
+            normalized_vulnerable = ' '.join(vulnerable_code.split())
+            if normalized_vulnerable not in normalized_original:
+                click.echo(f"❌ Could not locate vulnerable code in file. Skipping fix.")
+                return False
+        
+        # Create backup if requested
+        if backup:
+            backup_path = file_path.with_suffix(file_path.suffix + '.backup')
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                f.write(original_content)
+            click.echo(f"💾 Backup created: {backup_path}")
+        
+        # Apply the fix
+        fixed_content = original_content.replace(vulnerable_code.strip(), fixed_code.strip())
+        
+        # Write the fixed content
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(fixed_content)
+        
+        return True
+        
+    except Exception as e:
+        click.echo(f"❌ Error applying fix: {str(e)}")
+        return False
+
+def extract_code_from_diff(diff: str, get_fixed: bool = True) -> str:
+    """Extract vulnerable or fixed code from a git diff
+    
+    Args:
+        diff: Git diff format string
+        get_fixed: If True, extract the fixed code (+ lines), else vulnerable code (- lines)
+    
+    Returns:
+        Extracted code snippet
+    """
+    lines = diff.split('\n')
+    code_lines = []
+    
+    for line in lines:
+        if get_fixed:
+            # Extract lines that were added (start with +)
+            if line.startswith('+') and not line.startswith('+++'):
+                code_lines.append(line[1:])  # Remove the + prefix
+        else:
+            # Extract lines that were removed (start with -)
+            if line.startswith('-') and not line.startswith('---'):
+                code_lines.append(line[1:])  # Remove the - prefix
+    
+    return '\n'.join(code_lines)
+
 @click.group()
 @click.option('--api-url', default=DEFAULT_API_URL, help='API base URL (for server mode)')
 def cli(api_url):
