@@ -466,6 +466,76 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
             
             fix_report.append("\n" + "-" * 80)
         
+        # Apply fixes if requested
+        fixes_applied = 0
+        fixes_failed = 0
+        
+        if apply:
+            click.echo("\n" + "=" * 80)
+            click.echo("🔧 APPLYING FIXES TO FILE")
+            click.echo("=" * 80 + "\n")
+            
+            for i, vuln in enumerate(vulnerabilities, 1):
+                matching_patches = [p for p in patches if p.get('vuln', {}).get('id') == vuln.get('id')]
+                
+                if not matching_patches:
+                    continue
+                
+                for patch in matching_patches:
+                    patch_data = patch.get('patch', {})
+                    
+                    if 'error' in patch_data or not patch_data.get('diff'):
+                        click.echo(f"⏭️  Skipping fix {i}: No valid patch available")
+                        fixes_failed += 1
+                        continue
+                    
+                    # Extract vulnerable and fixed code from diff
+                    diff = patch_data.get('diff', '')
+                    vulnerable_code = vuln.get('code_snippet', extract_code_from_diff(diff, get_fixed=False))
+                    fixed_code = extract_code_from_diff(diff, get_fixed=True)
+                    
+                    if not fixed_code:
+                        click.echo(f"⏭️  Skipping fix {i}: Could not extract fixed code from diff")
+                        fixes_failed += 1
+                        continue
+                    
+                    # Show what will be fixed
+                    click.echo(f"🔍 Fix {i}/{len(vulnerabilities)}: {vuln.get('title', 'Unknown')}")
+                    click.echo(f"   Severity: {vuln.get('severity', 'Unknown')}")
+                    click.echo(f"   Confidence: {patch_data.get('confidence', 'MEDIUM')}")
+                    
+                    # Ask for confirmation in interactive mode
+                    if interactive:
+                        click.echo(f"\n   Vulnerable code:")
+                        click.echo(f"   {vulnerable_code[:100]}...")
+                        click.echo(f"\n   Will be replaced with:")
+                        click.echo(f"   {fixed_code[:100]}...")
+                        
+                        if not click.confirm("\n   Apply this fix?", default=True):
+                            click.echo("   ⏭️  Skipped by user")
+                            continue
+                    
+                    # Apply the fix
+                    success = apply_fix_to_file(path_obj, vulnerable_code, fixed_code, backup)
+                    
+                    if success:
+                        click.echo(f"   ✅ Fix applied successfully!")
+                        fixes_applied += 1
+                    else:
+                        click.echo(f"   ❌ Failed to apply fix")
+                        fixes_failed += 1
+                    
+                    click.echo()
+            
+            # Summary of applied fixes
+            click.echo("\n" + "=" * 80)
+            click.echo(f"✅ Fixes applied: {fixes_applied}")
+            click.echo(f"❌ Fixes failed: {fixes_failed}")
+            click.echo(f"📝 Total vulnerabilities: {len(vulnerabilities)}")
+            if backup and fixes_applied > 0:
+                click.echo(f"💾 Backup saved: {path_obj.with_suffix(path_obj.suffix + '.backup')}")
+            click.echo("=" * 80 + "\n")
+        
         # Output report
         report_text = "\n".join(fix_report)
         
@@ -474,9 +544,14 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
                 f.write(report_text)
             click.echo(f"💾 Fix report saved to: {output_file}")
         else:
-            click.echo(report_text)
+            if not apply:  # Only show full report if not applying fixes
+                click.echo(report_text)
         
-        click.echo(f"\n📊 Summary: Generated fixes for {len(vulnerabilities)} vulnerabilities")
+        if apply:
+            click.echo(f"\n📊 Summary: Applied {fixes_applied} of {len(vulnerabilities)} fixes")
+        else:
+            click.echo(f"\n📊 Summary: Generated fixes for {len(vulnerabilities)} vulnerabilities")
+            click.echo(f"💡 Tip: Use --apply flag to automatically apply fixes to the file")
         
     except Exception as e:
         click.echo(f"❌ Fix generation failed: {str(e)}")
