@@ -258,15 +258,21 @@ def analyze(code, language, model, advanced):
 @click.option('--model', default=None, help='AI model to use for fix generation')
 @click.option('--output-file', help='Save fixes to file')
 @click.option('--vuln-id', help='Fix specific vulnerability ID only')
-def fix(path, model, output_file, vuln_id):
-    """🔧 Generate code fix suggestions for vulnerabilities
+@click.option('--apply/--no-apply', default=False, help='Apply fixes directly to the file')
+@click.option('--backup/--no-backup', default=True, help='Create backup before applying fixes (enabled by default)')
+@click.option('--interactive/--no-interactive', default=False, help='Ask for confirmation before each fix')
+def fix(path, model, output_file, vuln_id, apply, backup, interactive):
+    """🔧 Generate and optionally apply code fix suggestions for vulnerabilities
     
     Scans a file and provides AI-generated code fixes for detected vulnerabilities.
+    Use --apply flag to automatically apply fixes to the source file.
     
     Examples:
       python -m auditor.cli fix --path app.py
       python -m auditor.cli fix --path app.py --output-file fixes.md
       python -m auditor.cli fix --path app.py --vuln-id B605
+      python -m auditor.cli fix --path app.py --apply --backup
+      python -m auditor.cli fix --path app.py --apply --interactive
     """
     
     # Check API keys first
