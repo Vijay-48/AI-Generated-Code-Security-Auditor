@@ -526,6 +526,9 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
                 for patch in matching_patches:
                     patch_data = patch.get('patch', {})
                     
+                    # Parse patch data (handles JSON in explanation)
+                    patch_data = parse_patch_data(patch_data)
+                    
                     if 'error' in patch_data or not patch_data.get('diff'):
                         click.echo(f"⏭️  Skipping fix {i}: No valid patch available")
                         fixes_failed += 1
@@ -533,7 +536,12 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
                     
                     # Extract vulnerable and fixed code from diff
                     diff = patch_data.get('diff', '')
-                    vulnerable_code = vuln.get('code_snippet', extract_code_from_diff(diff, get_fixed=False))
+                    vulnerable_code = vuln.get('code_snippet', '').strip()
+                    
+                    # If vulnerable code not in snippet, extract from diff
+                    if not vulnerable_code:
+                        vulnerable_code = extract_code_from_diff(diff, get_fixed=False)
+                    
                     fixed_code = extract_code_from_diff(diff, get_fixed=True)
                     
                     if not fixed_code:
