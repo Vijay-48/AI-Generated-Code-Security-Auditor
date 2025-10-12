@@ -62,51 +62,104 @@ def check_api_keys():
         return False
     return True
 
-def apply_fix_to_file(file_path: Path, vulnerable_code: str, fixed_code: str, backup: bool = True) -> bool:
-    """Apply a security fix to a file
+def apply_fix_to_file(file_path: Path, vuln_code_snippet: str, diff: str, line_number: int, backup: bool = True) -> bool:
+    """Apply a security fix to a file using diff and line number
     
     Args:
         file_path: Path to the file to fix
-        vulnerable_code: The vulnerable code snippet to replace
-        fixed_code: The secure code to replace with
+        vuln_code_snippet: The vulnerable code snippet from vulnerability detection  
+        diff: Git diff format patch
+        line_number: Line number where vulnerability is located
         backup: Whether to create a backup file
     
     Returns:
         True if fix was applied successfully, False otherwise
     """
+    import re
+    
     try:
         # Read the original file
         with open(file_path, 'r', encoding='utf-8') as f:
-            original_content = f.read()
+            lines = f.readlines()
         
-        # Check if vulnerable code exists in file
-        if vulnerable_code.strip() not in original_content:
-            click.echo(f"⚠️  Warning: Vulnerable code not found exactly in file. Attempting fuzzy match...")
-            # Try to find a close match by removing extra whitespace
-            normalized_original = ' '.join(original_content.split())
-            normalized_vulnerable = ' '.join(vulnerable_code.split())
-            if normalized_vulnerable not in normalized_original:
-                click.echo(f"❌ Could not locate vulnerable code in file. Skipping fix.")
-                return False
+        original_content = ''.join(lines)
         
         # Create backup if requested
         if backup:
             backup_path = file_path.with_suffix(file_path.suffix + '.backup')
-            with open(backup_path, 'w', encoding='utf-8') as f:
-                f.write(original_content)
-            click.echo(f"💾 Backup created: {backup_path}")
+            # Only create backup if it doesn't exist
+            if not backup_path.exists():
+                with open(backup_path, 'w', encoding='utf-8') as f:
+                    f.write(original_content)
+                click.echo(f"💾 Backup created: {backup_path}")
         
-        # Apply the fix
-        fixed_content = original_content.replace(vulnerable_code.strip(), fixed_code.strip())
+        # Extract the vulnerable and fixed lines from diff
+        diff_lines = diff.split('\n')
+        vulnerable_lines = []
+        fixed_lines = []
         
-        # Write the fixed content
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(fixed_content)
+        for line in diff_lines:
+            if line.startswith('-') and not line.startswith('---'):
+                vulnerable_lines.append(line[1:].strip())
+            elif line.startswith('+') and not line.startswith('+++'):
+                fixed_lines.append(line[1:].strip())
         
-        return True
+        if not fixed_lines:
+            click.echo(f"❌ No fixed code found in diff")
+            return False
+        
+        # Try to find and replace the vulnerable code
+        # Strategy 1: Use the code snippet from vulnerability
+        if vuln_code_snippet:
+            snippet_lines = [l.strip() for l in vuln_code_snippet.split('\n') if l.strip()]
+            # Find the core vulnerable line (usually the middle line in snippet)
+            if len(snippet_lines) >= 2:
+                # Take the most significant line (usually not a comment)
+                core_vuln_line = None
+                for sline in snippet_lines:
+                    if not sline.startswith('#') and not sline.startswith('//'):
+                        core_vuln_line = sline
+                        break
+                
+                if core_vuln_line:
+                    # Find this line in the file
+                    for i, file_line in enumerate(lines):
+                        if core_vuln_line in file_line.strip():
+                            # Replace this line with the fixed version
+                            if fixed_lines:
+                                # Preserve indentation
+                                indent = len(file_line) - len(file_line.lstrip())
+                                lines[i] = ' ' * indent + fixed_lines[0] + '\n'
+                                
+                                # Write back
+                                with open(file_path, 'w', encoding='utf-8') as f:
+                                    f.writelines(lines)
+                                return True
+        
+        # Strategy 2: Use line number if available
+        if line_number and line_number > 0 and line_number <= len(lines):
+            target_line_idx = line_number - 1
+            original_line = lines[target_line_idx]
+            
+            # Check if any vulnerable pattern matches
+            for vuln_pattern in vulnerable_lines:
+                if vuln_pattern in original_line.strip():
+                    # Replace with fixed version
+                    if fixed_lines:
+                        indent = len(original_line) - len(original_line.lstrip())
+                        lines[target_line_idx] = ' ' * indent + fixed_lines[0] + '\n'
+                        
+                        with open(file_path, 'w', encoding='utf-8') as f:
+                            f.writelines(lines)
+                        return True
+        
+        click.echo(f"❌ Could not match vulnerable code in file")
+        return False
         
     except Exception as e:
         click.echo(f"❌ Error applying fix: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def parse_patch_data(patch_data: Dict[str, Any]) -> Dict[str, Any]:
