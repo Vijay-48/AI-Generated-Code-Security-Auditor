@@ -109,6 +109,36 @@ def apply_fix_to_file(file_path: Path, vulnerable_code: str, fixed_code: str, ba
         click.echo(f"❌ Error applying fix: {str(e)}")
         return False
 
+def parse_patch_data(patch_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse patch data, handling JSON within explanation field
+    
+    Args:
+        patch_data: Patch data dictionary
+    
+    Returns:
+        Properly parsed patch data with extracted diff
+    """
+    # Check if explanation contains JSON
+    explanation = patch_data.get('explanation', '')
+    
+    if '```json' in explanation or '```' in explanation:
+        # Extract JSON from markdown code block
+        import re
+        json_match = re.search(r'```json\s*(.*?)\s*```', explanation, re.DOTALL)
+        if not json_match:
+            json_match = re.search(r'```\s*(.*?)\s*```', explanation, re.DOTALL)
+        
+        if json_match:
+            try:
+                parsed_json = json.loads(json_match.group(1))
+                # Merge parsed JSON into patch_data
+                if isinstance(parsed_json, dict):
+                    return {**patch_data, **parsed_json}
+            except json.JSONDecodeError:
+                pass
+    
+    return patch_data
+
 def extract_code_from_diff(diff: str, get_fixed: bool = True) -> str:
     """Extract vulnerable or fixed code from a git diff
     
@@ -119,10 +149,22 @@ def extract_code_from_diff(diff: str, get_fixed: bool = True) -> str:
     Returns:
         Extracted code snippet
     """
+    if not diff:
+        return ""
+    
     lines = diff.split('\n')
     code_lines = []
+    in_diff_section = False
     
     for line in lines:
+        # Start processing after @@
+        if line.startswith('@@'):
+            in_diff_section = True
+            continue
+        
+        if not in_diff_section:
+            continue
+        
         if get_fixed:
             # Extract lines that were added (start with +)
             if line.startswith('+') and not line.startswith('+++'):
