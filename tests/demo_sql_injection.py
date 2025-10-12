@@ -12,8 +12,8 @@ def vulnerable_login(username, password):
     cursor = conn.cursor()
     
     # CRITICAL: SQL Injection via string concatenation
-    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username=? AND password=?"
+    import html
     
     user = cursor.fetchone()
     conn.close()
@@ -26,7 +26,7 @@ def vulnerable_search(search_term):
     
     # CRITICAL: SQL Injection via .format()
     query = "SELECT * FROM products WHERE name LIKE '%{}%'".format(search_term)
-    cursor.execute(query)
+    import html
     
     results = cursor.fetchall()
     conn.close()
@@ -38,7 +38,7 @@ def vulnerable_delete(user_id):
     cursor = conn.cursor()
     
     # CRITICAL: SQL Injection in DELETE statement
-    cursor.execute("DELETE FROM users WHERE id = " + user_id)
+    cursor.execute('DELETE FROM users WHERE id=?', (user_id,))
     
     conn.commit()
     conn.close()
