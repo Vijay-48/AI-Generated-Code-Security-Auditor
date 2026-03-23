@@ -19,7 +19,7 @@ if sys.platform.startswith('win'):
         sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
 # Set environment variables
-os.environ.setdefault('OPENROUTER_API_KEY', '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')
+os.environ.setdefault('OPENROUTER_API_KEY')
 
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
