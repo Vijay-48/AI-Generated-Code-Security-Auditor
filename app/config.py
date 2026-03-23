@@ -72,6 +72,20 @@ class Settings(BaseSettings):
     SUPPORTED_LANGUAGES: list = ["python", "javascript", "java", "go", "typescript"]
     MAX_FILE_SIZE_MB: int = 10
     SCAN_TIMEOUT_SECONDS: int = 300
+
+    # Redis/Cache Configuration
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
+
+    CACHE_TTL_SCAN_RESULTS: int = int(os.getenv("CACHE_TTL_SCAN_RESULTS", "3600"))
+    CACHE_TTL_LLM_RESPONSES: int = int(os.getenv("CACHE_TTL_LLM_RESPONSES", "7200"))
+    CACHE_TTL_PATCHES: int = int(os.getenv("CACHE_TTL_PATCHES", "86400"))
+
+    # Celery Configuration
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
     
     # Output Configuration
     DEFAULT_OUTPUT_FORMAT: str = "table"
