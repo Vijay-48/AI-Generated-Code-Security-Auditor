@@ -186,7 +186,7 @@ class AISecurityAuditorTester:
                 capture_output=True,
                 text=True,
                 timeout=30,
-                env={**os.environ, "OPENROUTER_API_KEY": "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"}
+                env={**os.environ, "OPENROUTER_API_KEY": "sk-or-v1-REPLACE_WITH_YOUR_KEY"}
             )
             
             success = result.returncode == 0
@@ -218,7 +218,7 @@ class AISecurityAuditorTester:
                 capture_output=True,
                 text=True,
                 timeout=120,
-                env={**os.environ, "OPENROUTER_API_KEY": "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"}
+                env={**os.environ, "OPENROUTER_API_KEY": "sk-or-v1-REPLACE_WITH_YOUR_KEY"}
             )
             
             success = result.returncode == 0
@@ -255,7 +255,7 @@ class AISecurityAuditorTester:
                 capture_output=True,
                 text=True,
                 timeout=60,
-                env={**os.environ, "OPENROUTER_API_KEY": "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"}
+                env={**os.environ, "OPENROUTER_API_KEY": "sk-or-v1-REPLACE_WITH_YOUR_KEY"}
             )
             
             success = result.returncode == 0
@@ -290,7 +290,7 @@ class AISecurityAuditorTester:
                     capture_output=True,
                     text=True,
                     timeout=120,
-                    env={**os.environ, "OPENROUTER_API_KEY": "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"}
+                    env={**os.environ, "OPENROUTER_API_KEY": "sk-or-v1-REPLACE_WITH_YOUR_KEY"}
                 )
                 
                 success = result.returncode == 0

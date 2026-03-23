@@ -37,8 +37,8 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Set environment variables with fallbacks
-os.environ.setdefault('OPENROUTER_API_KEY')
-os.environ.setdefault('OPENROUTER_BASE_URL')
+os.environ.setdefault('OPENROUTER_API_KEY', os.environ.get('OPENROUTER_API_KEY', ''))
+os.environ.setdefault('OPENROUTER_BASE_URL', os.environ.get('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1/chat/completions'))
 
 # Server configuration for better stability
 SERVER_CONFIG = {

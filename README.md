@@ -86,11 +86,10 @@ bash setup.sh
 ```
 
 ### 2️⃣ Configuration (1 minute)
-API keys are already configured in `.env` file! ✅
-
-Alternatively, add your own:
+Create your local `.env` from `.env.example` and add your own API keys:
 ```bash
-# Edit .env file
+cp .env.example .env
+# Edit .env file with your keys
 GROQ_API_KEY=your_groq_key_here
 OPENROUTER_API_KEY=your_openrouter_key_here
 ```
@@ -271,11 +270,11 @@ AI Code Security Auditor v2.0
 
 ### Video Tutorial
 
-[▶️ Watch Full Tutorial on YouTube](https://youtube.com/your-video)
+Add your project demo/tutorial link here before public launch.
 
 ### Live Demo
 
-Try it online: [demo.yourdomain.com](https://demo.yourdomain.com)
+Add your hosted demo URL here if you provide one.
 
 ---
 
@@ -383,7 +382,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/Vijay-48/AI-Generated-Code-Security-Auditor/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Vijay-48/AI-Generated-Code-Security-Auditor/discussions)
-- **Email**: your-email@example.com
+- **Email**: maintainers@your-project-domain.example
 - **Twitter**: [@yourhandle](https://twitter.com/yourhandle)
 
 ---

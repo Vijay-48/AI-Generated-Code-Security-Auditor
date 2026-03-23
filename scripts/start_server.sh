@@ -2,8 +2,8 @@
 echo "🚀 Starting AI Code Security Auditor Server..."
 
 # Set environment variables
-export OPENROUTER_API_KEY="***********************"
-export OPENROUTER_BASE_URL="https://openrouter.ai/api/v1/chat/completions"
+export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
+export OPENROUTER_BASE_URL="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1/chat/completions}"
 export OPENROUTER_REFERER="http://localhost:8000"
 export OPENROUTER_TITLE="AI Code Security Auditor"
 

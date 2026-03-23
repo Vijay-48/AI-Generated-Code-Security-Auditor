@@ -438,6 +438,7 @@ tests/test_chroma_db/
 *.sarif
 *_report.json
 *_report.md
+!.github/ISSUE_TEMPLATE/bug_report.md
 security_report.*
 audit_report.*
 results.json
