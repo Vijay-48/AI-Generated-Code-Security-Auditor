@@ -97,6 +97,8 @@ class SecurityScanner:
                 cmd, 
                 capture_output=True, 
                 text=True, 
+                encoding='utf-8',
+                errors='ignore',
                 timeout=30,
                 shell=False,  # Don't use shell on Windows
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
@@ -120,6 +122,8 @@ class SecurityScanner:
                 cmd, 
                 capture_output=True, 
                 text=True, 
+                encoding='utf-8',
+                errors='ignore',
                 timeout=45,
                 shell=False,  # Don't use shell on Windows
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0

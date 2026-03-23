@@ -7,7 +7,4 @@ __version__ = "2.0.0"
 __author__ = "AI Security Team"
 __description__ = "AI-powered security scanner with intelligent fix suggestions"
 
-# Make CLI easily importable
-from .cli import main, cli
-
-__all__ = ['main', 'cli']
+__all__ = ["__version__", "__author__", "__description__"]

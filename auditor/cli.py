@@ -28,14 +28,29 @@ if str(current_dir) not in sys.path:
 
 # Import configuration to validate API keys
 try:
-    from app.config import settings, validate_api_keys
-    from app.services.scanner import SecurityScanner
-    from app.agents.security_agent import SecurityAgent
+    from app.config import settings
 except ImportError as e:
     print(f"❌ Error: Could not import required modules: {e}")
     print("💡 Make sure you're in the project root directory")
     print("💡 Usage: python -m auditor.cli --help")
     sys.exit(1)
+
+
+def get_security_agent_class():
+    """Lazily import SecurityAgent to keep lightweight CLI commands usable."""
+    try:
+        from app.agents.security_agent import SecurityAgent
+        return SecurityAgent
+    except Exception as e:
+        msg = str(e)
+        click.echo("❌ Failed to initialize AI analysis backend.")
+        if "WinError 1114" in msg or "c10.dll" in msg:
+            click.echo("💡 PyTorch DLL initialization failed on Windows.")
+            click.echo("💡 Reinstall CPU wheels in the venv: pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cpu")
+            click.echo("💡 Then retry: python -m auditor.cli test")
+        else:
+            click.echo(f"💡 Backend import error: {msg}")
+        return None
 
 # Configuration
 DEFAULT_API_URL = "http://localhost:8000"
@@ -296,6 +311,12 @@ def scan(path, model, output_format, output_file, severity_filter, include, excl
         model = settings.MODEL_CODE_GENERATION
     
     try:
+        security_agent_cls = None
+        if advanced:
+            security_agent_cls = get_security_agent_class()
+            if not security_agent_cls:
+                sys.exit(1)
+
         # Discover files to scan
         files_to_scan = discover_files(path, include, exclude)
         
@@ -314,7 +335,7 @@ def scan(path, model, output_format, output_file, severity_filter, include, excl
         for i, file_path in enumerate(files_to_scan, 1):
             try:
                 click.echo(f"📄 Scanning file {i}/{len(files_to_scan)}: {file_path.name}", nl=False)
-                result = scan_file_direct(file_path, model, advanced)
+                result = scan_file_direct(file_path, model, advanced, security_agent_cls)
                 if result:
                     result['file_path'] = str(file_path)
                     all_results.append(result)
@@ -386,7 +407,10 @@ def analyze(code, language, model, advanced):
         click.echo(f"🤖 Analyzing code with {model}...")
         
         # Create agent and analyze
-        agent = SecurityAgent()
+        security_agent_cls = get_security_agent_class()
+        if not security_agent_cls:
+            sys.exit(1)
+        agent = security_agent_cls()
         
         result = asyncio.run(agent.run(
             code=code,
@@ -472,6 +496,10 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
         model = settings.MODEL_CODE_GENERATION
     
     try:
+        security_agent_cls = get_security_agent_class()
+        if not security_agent_cls:
+            sys.exit(1)
+
         path_obj = Path(path)
         if not path_obj.exists():
             click.echo(f"❌ File not found: {path}")
@@ -492,7 +520,7 @@ def fix(path, model, output_file, vuln_id, apply, backup, interactive):
         click.echo()
         
         # Scan and get fixes
-        agent = SecurityAgent()
+        agent = security_agent_cls()
         result = asyncio.run(agent.run(
             code=code,
             language=language,
@@ -791,8 +819,12 @@ API_KEY = "sk-1234567890abcdef"  # Hardcoded secret
     click.echo("📝 Testing with sample vulnerable code...")
     
     try:
+        security_agent_cls = get_security_agent_class()
+        if not security_agent_cls:
+            sys.exit(1)
+
         # Create agent and test
-        agent = SecurityAgent()
+        agent = security_agent_cls()
         
         result = asyncio.run(agent.run(
             code=test_code,
@@ -823,7 +855,7 @@ API_KEY = "sk-1234567890abcdef"  # Hardcoded secret
         click.echo("💡 Check your API keys and try again")
         sys.exit(1)
 
-def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, Any]:
+def scan_file_direct(file_path: Path, model: str, advanced: bool, security_agent_cls=None) -> Dict[str, Any]:
     """Scan a single file directly using the security agent"""
     
     try:
@@ -836,9 +868,32 @@ def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, A
         language = SUPPORTED_EXTENSIONS.get(file_path.suffix)
         if not language:
             return None
+
+        # Always run a fast static scan first so scan command remains responsive.
+        from app.services.scanner import SecurityScanner
+        scanner = SecurityScanner()
+
+        async def static_scan_with_timeout():
+            try:
+                return await asyncio.wait_for(
+                    scanner.scan_code(code=code, language=language, filename=str(file_path.name)),
+                    timeout=45.0
+                )
+            except asyncio.TimeoutError:
+                return {"error": "Static scan timeout", "vulnerabilities": []}
+
+        static_result = asyncio.run(static_scan_with_timeout())
+
+        # For normal scans, return static findings immediately.
+        if not advanced:
+            return static_result
         
         # Create agent and scan with timeout
-        agent = SecurityAgent()
+        if security_agent_cls is None:
+            security_agent_cls = get_security_agent_class()
+        if not security_agent_cls:
+            return {"error": "AI backend initialization failed", "vulnerabilities": []}
+        agent = security_agent_cls()
         
         # Wrap in async function with timeout for Windows compatibility
         async def scan_with_timeout():
@@ -854,11 +909,15 @@ def scan_file_direct(file_path: Path, model: str, advanced: bool) -> Dict[str, A
                     timeout=120.0  # 2 minute timeout per file
                 )
             except asyncio.TimeoutError:
-                return {"error": "Scan timeout after 120s", "vulnerabilities": []}
+                return {"error": "AI scan timeout after 120s", "vulnerabilities": []}
         
         # asyncio.run() handles event loop creation automatically
         result = asyncio.run(scan_with_timeout())
         
+        if result.get("error"):
+            # Fallback to static findings if advanced AI path fails.
+            return static_result
+
         return result
         
     except asyncio.TimeoutError:
